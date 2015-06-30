@@ -104,8 +104,8 @@ def progress_bar(progress, total, longbar=False):
     :return: None
     """
     global __previouspercentage__
-    floatPercent = float(progress) / float(total)
-    percent = int(floatPercent * 100)
+    percent_float = float(progress) / float(total)
+    percent = int(percent_float * 100)
     if __previouspercentage__ != percent:
         if longbar:
             hashes = "#" * percent
@@ -113,14 +113,14 @@ def progress_bar(progress, total, longbar=False):
             hashes = "=" * int(percent/2)
             if percent % 2 != 0:
                 hashes += "-"
-        strTemplate = "[%s] %s%%" % (hashes,str(percent))
+        template = "[%s] %s%%" % (hashes, str(percent))
         if percent < 100:
-            sys.stdout.write('\r' + strTemplate)
+            sys.stdout.write('\r' + template)
             sys.stdout.flush()
             __previouspercentage__ = percent
         else:
             __previouspercentage__ = -1
-            print '\r' + strTemplate
+            print '\r' + template
     return None
 
 
