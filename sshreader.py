@@ -48,15 +48,13 @@ __version__ = '2.2'
 import sys
 import paramiko
 import logging
+from subprocess import Popen, PIPE, STDOUT
 from os import getpid
 from multiprocessing import Process, cpu_count
 from multiprocessing import Queue as processQueue
 from threading import Thread
 from Queue import Queue as threadQueue
 from types import FunctionType
-
-# From custom modules
-from system_helper import progress_bar, do_shell_script
 
 # Globals
 separator = "---------"
@@ -66,6 +64,7 @@ pqueue = None
 finqueue = None
 __jobHardLimit__ = (10 ** 6)
 __cpuHardLimitFactor__ = 3
+__previouspercentage__ = -1
 
 
 class InvalidHook(Exception):
@@ -94,6 +93,52 @@ class ExceededCPULimit(Exception):
     You have asked for more sub processes than your CPU is allowed to handle
     """
     pass
+
+
+def progress_bar(progress, total, longbar=False):
+    """
+    Prints a syled progress bar
+    :param progress: Current item number being processed
+    :param total: Total number of items being processed
+    :param longbar: Use a longer style progress bar
+    :return: None
+    """
+    global __previouspercentage__
+    floatPercent = float(progress) / float(total)
+    percent = int(floatPercent * 100)
+    if __previouspercentage__ != percent:
+        if longbar:
+            hashes = "#" * percent
+        else:
+            hashes = "=" * int(percent/2)
+            if percent % 2 != 0:
+                hashes += "-"
+        strTemplate = "[%s] %s%%" % (hashes,str(percent))
+        if percent < 100:
+            sys.stdout.write('\r' + strTemplate)
+            sys.stdout.flush()
+            __previouspercentage__ = percent
+        else:
+            __previouspercentage__ = -1
+            print '\r' + strTemplate
+    return None
+
+
+def do_shell_script(command, combine=False):
+    """
+    Run a specified command in the shell on localhost and return the output
+    :param command: String containing the shell script to run
+    :param combine: Combine stderr and stdout in output
+    :return: Tuple of (command,stdout,stderr) or (command,output)
+    """
+    if combine:
+        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout
+        stdout = pipeout.read()
+        return command, stdout.strip()
+    else:
+        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = pipeout.communicate()
+        return command, stdout.strip(), stderr.strip()
 
 
 def tprint(message, stderr=False):
