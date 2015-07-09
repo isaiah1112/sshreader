@@ -6,9 +6,9 @@ to have multiple commands that should be run inside of that job.  The results
 from each job will be returned as a list of tuples inside of each ServerJob object in the same order that the
 command list is in.
 
-Sshreader can also be used to create and call ssh connections without multiple processes/threads.
+SSHreader can also be used to create and call ssh connections without multiple processes/threads.
 
-Sshreader can also run multi-processed/threaded shell commands on localhost and a serverJobList can contain both
+SSHreader can also run multi-processed/threaded shell commands on localhost and a serverJobList can contain both
 serverJobs running on localhost as well as serverJobs running over ssh
 
 When using pcount and tcount in conjunction tcount will equal the total number of threads each process is allowed to
@@ -23,11 +23,11 @@ The sshread method currently limits you to processing 1 million serverJobs at a 
 The cpusoftlimit for a box is defined as (cpu_count - 1).  This means that sshreader will spawn a subprocess for all but
 one cpu on a given box.
 
-The cpuhardlimit is the maximum number of subprocesses that sshreader will spawn on a given box defined as:
-(cpuhardlimit * __cpuHardLimitFactor__).  This is so that you don't make a box unusable and was arrived at per my own
-testing.  Currently __cpuHardLimitFactor__ is set to 3.
-
-These numbers may increase in the future."""
+.. note::
+    The cpuhardlimit is the maximum number of subprocesses that sshreader will spawn on a given box defined as:
+    (cpuhardlimit * __cpuHardLimitFactor__).  This is so that you don't make a box unusable and was arrived at per my
+    own testing.  Currently __cpuHardLimitFactor__ is set to 3.
+    These numbers may increase in the future."""
 # Copyright (C) 2015 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
@@ -68,40 +68,38 @@ __previouspercentage__ = -1
 
 
 class InvalidHook(Exception):
-    """
-    A pre or post hook definition is invalid
+    """A pre or post hook definition is invalid
     """
     pass
 
 
 class ProcessesOrThreads(Exception):
-    """
-    You did not specify whether to use subprocessing or threading
+    """You did not specify whether to use subprocessing or threading
     """
     pass
 
 
 class ExceededJobLimit(Exception):
-    """
-    Your number of jobs exceeds the current limit
+    """Your number of jobs exceeds the current limit
     """
     pass
 
 
 class ExceededCPULimit(Exception):
-    """
-    You have asked for more sub processes than your CPU is allowed to handle
+    """You have asked for more sub processes than your CPU is allowed to handle
     """
     pass
 
 
 def progress_bar(progress, total, longbar=False):
-    """
-    Prints a syled progress bar
-    :param progress: Current item number being processed
-    :param total: Total number of items being processed
-    :param longbar: Use a longer style progress bar
-    :return: None
+    """Prints a syled progress bar
+
+    - **parameters** and **return types**::
+
+        :param progress: Current item number being processed
+        :param total: Total number of items being processed
+        :param longbar: Use a longer style progress bar
+        :return: None
     """
     global __previouspercentage__
     percent_float = float(progress) / float(total)
@@ -125,11 +123,13 @@ def progress_bar(progress, total, longbar=False):
 
 
 def do_shell_script(command, combine=False):
-    """
-    Run a specified command in the shell on localhost and return the output
-    :param command: String containing the shell script to run
-    :param combine: Combine stderr and stdout in output
-    :return: Tuple of (command,stdout,stderr) or (command,output)
+    """Run a specified command in the shell on localhost and return the output
+
+    - **parameters** and **return types**::
+
+        :param command: String containing the shell script to run
+        :param combine: Combine stderr and stdout in output
+        :return: Tuple of (command,stdout,stderr) or (command,output)
     """
     if combine:
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout
@@ -142,11 +142,13 @@ def do_shell_script(command, combine=False):
 
 
 def tprint(message, stderr=False):
-    """
-    Thread-safe print variation
-    :param message: Message to output to stdout
-    :param stderr: Message should go to stderr
-    :return: None
+    """Attempt at a thread-safe print variation
+
+    - **parameters** and **return types**::
+
+        :param message: Message to output to stdout
+        :param stderr: Message should go to stderr
+        :return: None
     """
     if message.endswith('\n') is False:
         message += '\n'
@@ -159,11 +161,13 @@ def tprint(message, stderr=False):
     return None
 
 
-def __validate_hook__(hook):
-    """
-    Private method to take a pre or post hook and validate it!
-    :param hook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
-    :return:
+def _validate_hook_(hook):
+    """Private method to take a pre or post hook and validate it!
+    
+    - **parameters** and **return types**::
+    
+        :param hook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
+        :return: Dictionary
     """
     if type(hook) is not dict:
         raise InvalidHook(str(hook) + " is not of type dict")
@@ -191,10 +195,9 @@ def __validate_hook__(hook):
 class ServerJob(object):
     """
     Custom class for holding all the info needed to run ssh commands or shell commands in subprocesses or threads
-    """
-    def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, debuglevel=0, timeout=30,
-                 cmdtimeout=30, runlocal=False, prehook=None, posthook=None):
-        """
+
+    - **parameters** and **return types**::
+
         :param fqdn: Fully qualified domain name or IP address
         :param cmds: List of commands to run (in the order you want them run)
         :param username: Username for SSH
@@ -208,6 +211,7 @@ class ServerJob(object):
         :param posthook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
         :return: serverJob Object
 
+    - **properties**::
         :property cmdResults: List of results of each command in tuple form (cmd, stdout, stderr)
         :propery cmdStatus: List of states for each command ( None = initial state/cmd did not run, True = no stderr,
                             False = stderr)
@@ -216,7 +220,9 @@ class ServerJob(object):
         :property prehook_return: Returned values from prehook method
         :property posthook_return: Returned values from posthook method
         :property combine_output: Combine stdout and stderr in cmdResults (default = False)
-        """
+    """
+    def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, debuglevel=0, timeout=30,
+                 cmdtimeout=30, runlocal=False, prehook=None, posthook=None):
         if type(cmds) in (list, tuple):
             self.cmds = cmds
         else:
@@ -233,12 +239,12 @@ class ServerJob(object):
         self.name = fqdn
         self.prehook_return = None
         if prehook is not None:
-            self.prehook = __validate_hook__(prehook)
+            self.prehook = _validate_hook_(prehook)
         else:
             self.prehook = None
         self.posthook_return = None
         if posthook is not None:
-            self.posthook = __validate_hook__(posthook)
+            self.posthook = _validate_hook_(posthook)
         else:
             self.posthook = None
         self.combine_output = False
@@ -262,9 +268,11 @@ class ServerJob(object):
             self.ssh_con = "localhost"
 
     def run(self):
-        """
-        Run a serverJob. SSH to server, run cmds, return result
-        :return: serverJob.status
+        """Run a serverJob. SSH to server, run cmds, return result
+
+        - **parameters** and **return types**::
+
+            :return: serverJob.status
         """
         if self.debuglevel >= 1:
             print("Running serverJob: " + self.name)
@@ -341,10 +349,12 @@ class ServerJob(object):
         return self.status
 
     def print_results(self, printname=False):
-        """
-        Prints the command run and its output
-        :param printname: Print the serverJob name
-        :return: None
+        """Prints the command run and its output
+
+        - **parameters** and **return types**::
+
+            :param printname: Print the serverJob name
+            :return: None
         """
         if printname:
             print "serverJob: " + self.name + "\n" + (separator*3)
@@ -359,18 +369,16 @@ class ServerJob(object):
         return self.__dict__[item]
 
     def keys(self):
-        """
-        So you can work with the object in Dictionary form
+        """So you can work with the object in Dictionary form
         """
         return self.__dict__.keys()
 
 
 class SSH(object):
-    """
-    SSH Session object
-    """
-    def __init__(self, fqdn, username=None, password=None, keyfile=None, port=22, timeout=30):
-        """
+    """SSH Session object
+
+    - **parameters** and **return types**::
+
         :param fqdn: Fully qualified domain name or IP address
         :param username: SSH username
         :param password: SSH password
@@ -378,7 +386,8 @@ class SSH(object):
         :param port: SSH port (default = 22)
         :param timeout: SSH connection timeout in seconds (default = 30)
         :return: SSH connection object
-        """
+    """
+    def __init__(self, fqdn, username=None, password=None, keyfile=None, port=22, timeout=30):
         self.__host__ = fqdn
         self.__username__ = username
         self.__password__ = password
@@ -390,12 +399,14 @@ class SSH(object):
         self.connect()
 
     def ssh_command(self, command, timeout=30, combine=False):
-        """
-        Run a command over an ssh connection
-        :param command: The command to run
-        :param timeout: Timeout for the command
-        :param combine: Combine stderr and stdout
-        :return: Tuple of (command, stdout, stderr) or (command, output)
+        """Run a command over an ssh connection
+
+        - **parameters** and **return types**::
+
+            :param command: The command to run
+            :param timeout: Timeout for the command
+            :param combine: Combine stderr and stdout
+            :return: Tuple of (command, stdout, stderr) or (command, output)
         """
         if combine:
             stdin, stdout = self.connection.exec_command(command, timeout=timeout, get_pty=True)
@@ -405,15 +416,13 @@ class SSH(object):
             return command, stdout.read().strip(), stderr.read().strip()
 
     def close(self):
-        """
-        Closes an established ssh connection
+        """Closes an established ssh connection
         """
         self.connection.close()
         return None
 
     def is_alive(self):
-        """
-        Is an SSH connection alive
+        """Is an SSH connection alive
         """
         if self.connection._transport is None:
             return False
@@ -421,14 +430,12 @@ class SSH(object):
             return True
             
     def reconnect(self):
-        """
-        Alias to connect
+        """Alias to connect
         """
         self.connect()
 
     def connect(self):
-        """
-        Opens an SSH Connection
+        """Opens an SSH Connection
         """
         # http://stackoverflow.com/questions/26659772/silence-no-handlers-could-be-found-for-logger-paramiko-transport-message
         logging.basicConfig()
@@ -453,16 +460,18 @@ class SSH(object):
 
 
 def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=False, prehook=None, posthook=None):
-    """
-    Takes a list of serverJob objects and puts them into threads/subprocesses and runs them
-    :param serverjobs: List of serverJob objects (A list of 1 job is acceptable)
-    :param debuglevel: Debug level of all serverJobs (0 = off, 1 = some, 2 = more, 3 = all)
-    :param pcount: Number of subprocesses to spawn (None = off, 0 = cpuSoftLimit, -1 = cpuHardLimit)
-    :param tcount: Number of threads to spawn (None = off, 0 = adjusted length of serverJobList)
-    :param progressbar: Print a progress bar
-    :param prehook: Prehook for all serverJobs
-    :param posthook: Posthook for all serverJobs
-    :return: serverJobLst with completed serverJob objects (single object returned if single job passed)
+    """Takes a list of serverJob objects and puts them into threads/subprocesses and runs them
+
+    - **parameters** and **return types**::
+
+        :param serverjobs: List of serverJob objects (A list of 1 job is acceptable)
+        :param debuglevel: Debug level of all serverJobs (0 = off, 1 = some, 2 = more, 3 = all)
+        :param pcount: Number of subprocesses to spawn (None = off, 0 = cpuSoftLimit, -1 = cpuHardLimit)
+        :param tcount: Number of threads to spawn (None = off, 0 = adjusted length of serverJobList)
+        :param progressbar: Print a progress bar
+        :param prehook: Prehook for all serverJobs
+        :param posthook: Posthook for all serverJobs
+        :return: serverJobLst with completed serverJob objects (single object returned if single job passed)
     """
     if tcount is None and pcount is None:
         raise ProcessesOrThreads("You must specify a number for pcount or tcount!")
@@ -490,9 +499,9 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
         raise TypeError("Debug level must be an integer equal to 0, 1, 2, or 3")
     progressbar = progressbar
     if prehook is not None:
-        prehook = __validate_hook__(prehook)
+        prehook = _validate_hook_(prehook)
     if posthook is not None:
-        posthook = __validate_hook__(posthook)
+        posthook = _validate_hook_(posthook)
 
     if pcount is None:
         global tqueue, tcounter
@@ -605,10 +614,12 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
 
 
 def print_results(serverjobs):
-    """
-    Print the output of all serverJobs in as serverJobList by status
-    :param serverjobs: A list of sshreaded serverJob objects
-    :return: None
+    """Print the output of all serverJobs in as serverJobList by status
+
+    - **parameters** and **return types**::
+
+        :param serverjobs: A list of sshreaded serverJob objects
+        :return: None
     """
     nonestatus = [x for x in serverjobs if x.status is None]
     completejobs = [x for x in serverjobs if x.status is True]
@@ -630,7 +641,9 @@ def print_results(serverjobs):
 
 def __pworker__(debuglevel, prehook, posthook):
     """This is a private method that is used by sshread to limit the number of processes sshreader spawns.
-DO NOT USE THIS METHOD! Use the sshread method instead!"""
+
+    DO NOT USE THIS METHOD! Use the sshread method instead!
+    """
     global pqueue, finqueue
     pid = getpid()
     if debuglevel >= 1:
@@ -650,7 +663,9 @@ DO NOT USE THIS METHOD! Use the sshread method instead!"""
 
 def __tworker__(debuglevel, prehook, posthook, progressbar, totaljobs):
     """This is a private method used to limit the number of threads that sshreader spawns.
-DO NOT USE THIS METHOD! Use the sshread method instead!"""
+
+    DO NOT USE THIS METHOD! Use the sshread method instead!
+    """
     global tqueue, tcounter
     while True:
         thisjob = tqueue.get()
@@ -668,7 +683,9 @@ DO NOT USE THIS METHOD! Use the sshread method instead!"""
 
 def __sprocess__(debuglevel, prehook, posthook, tcount, subqueue):
     """This is a private method used to have the multiprocessing and multithreading functionality combined.
-DO NOT USE THIS METHOD! Use the sshread method instead!"""
+
+    DO NOT USE THIS METHOD! Use the sshread method instead!
+    """
     global finqueue, tqueue
     pid = getpid()
     if debuglevel >= 1:
@@ -697,7 +714,9 @@ DO NOT USE THIS METHOD! Use the sshread method instead!"""
 
 def __sthread__():
     """This is a private method used to have the multiprocessing and multithreading functionality combined.
-DO NOT USE THIS METHOD! Use the sshread method instead!"""
+
+    DO NOT USE THIS METHOD! Use the sshread method instead!
+    """
     global tqueue, finqueue
     while tqueue.empty() is False:
         thisjob = tqueue.get()
