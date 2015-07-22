@@ -12,19 +12,11 @@ see the file LICENSE and LICESE.lesser for the license text.
 
 ## Installation
 
-Currently there is not an installation script. The most straightforward way to
-get sshreader.py working is to:
+The most straightforward way to get the sshreader module working for you is:
 
-  - ensure that the following modules are installed:
-    - paramiko
-    - logging
-    - multiprocessing
-    - threading
-    - Queue
-    - types
+> python setup.py
 
-  - copy, move or link the file *sshreader.py*, located in the repository
-    root directory, to your project directory
+This will ensure that all the requirements are met.
 
 ## Contributing
 
