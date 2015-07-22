@@ -1,2 +1,5 @@
 *.py[cod]
 doc/_build/
+sshreader.egg-info/
+dist/
+.idea/
