@@ -42,7 +42,7 @@ one cpu on a given box.
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-__version__ = '2.2'
+__version__ = '2.2.1'
 
 # Include
 import sys
