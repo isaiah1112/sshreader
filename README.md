@@ -14,6 +14,10 @@ see the file LICENSE and LICESE.lesser for the license text.
 
 The most straightforward way to get the sshreader module working for you is:
 
+> pip install sshreader
+
+or
+
 > python setup.py install
 
 This will ensure that all the requirements are met.
