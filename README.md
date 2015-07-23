@@ -3,7 +3,7 @@
 ## Overview
 
 [sshreader][] is a Python module for multi-processing/threading ssh connections in order to make ssh operations
-across multiple servers more parallel.  It utilizes the [paramiko][] module for its ssh client.
+across multiple servers more parallel.  It utilizes the [paramiko](http://www.paramiko.org/) module for its ssh client.
 
 ## License
 
@@ -12,19 +12,15 @@ see the file LICENSE and LICESE.lesser for the license text.
 
 ## Installation
 
-Currently there is not an installation script. The most straightforward way to
-get sshreader.py working is to:
+The most straightforward way to get the sshreader module working for you is:
 
-  - ensure that the following modules are installed:
-    - paramiko
-    - logging
-    - multiprocessing
-    - threading
-    - Queue
-    - types
+> pip install sshreader
 
-  - copy, move or link the file *sshreader.py*, located in the repository
-    root directory, to your project directory
+or
+
+> python setup.py install
+
+This will ensure that all the requirements are met.
 
 ## Contributing
 
