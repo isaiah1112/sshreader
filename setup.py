@@ -5,7 +5,7 @@
 from setuptools import setup
 
 setup(name='sshreader',
-      version='2.2.1',
+      version='2.2.2',
       description='Multi-threading/processing for Paramiko',
       author='Jesse Almanrode',
       author_email='jesse@almanrode.com',

@@ -42,7 +42,7 @@ one cpu on a given box.
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-__version__ = '2.2.1'
+__version__ = '2.2.2'
 
 # Include
 import sys
@@ -87,6 +87,11 @@ class ExceededJobLimit(Exception):
 
 class ExceededCPULimit(Exception):
     """You have asked for more sub processes than your CPU is allowed to handle
+    """
+    pass
+
+class SSHException(Exception):
+    """An SSH/Paramiko error occurred
     """
     pass
 
@@ -424,10 +429,13 @@ class SSH(object):
     def is_alive(self):
         """Is an SSH connection alive
         """
-        if self.connection._transport is None:
+        if self.connection.get_transport() is None:
             return False
         else:
-            return True
+            if self.connection.get_transport().is_alive():
+                return True
+            else:
+                raise SSHException("Unable to determine state of ssh session")
             
     def reconnect(self):
         """Alias to connect
