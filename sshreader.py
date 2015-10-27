@@ -97,6 +97,12 @@ class SSHException(Exception):
     pass
 
 
+class InvalidArgument(Exception):
+    """An invalid argument was passed to a function
+    """
+    pass
+
+
 def progress_bar(progress, total, longbar=False):
     """Prints a syled progress bar
 
@@ -227,8 +233,8 @@ class ServerJob(object):
         :property posthook_return: Returned values from posthook method
         :property combine_output: Combine stdout and stderr in cmdResults (default = False)
     """
-    def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, debuglevel=0, timeout=30,
-                 cmdtimeout=30, runlocal=False, prehook=None, posthook=None):
+    def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, debuglevel=0, timeout=(30, 30),
+                 runlocal=False, prehook=None, posthook=None):
         if type(cmds) in (list, tuple):
             self.cmds = cmds
         else:
@@ -239,8 +245,14 @@ class ServerJob(object):
         self.password = password
         self.key = keyfile
         self.status = None
-        self.timeout = timeout
-        self.cmdtimeout = cmdtimeout
+        if type(timeout) in (tuple, list):
+            if len(timeout) != 2:
+                raise InvalidArgument('You must supply two timeouts if you pass a tuple or list')
+            self.sshtimeout = timeout[0]
+            self.cmdtimeout = timeout[1]
+        else:
+            self.sshtimeout = timeout
+            self.cmdtimeout = timeout
         self.runlocal = runlocal
         self.name = fqdn
         self.prehook_return = None
@@ -294,11 +306,12 @@ class ServerJob(object):
             try:
                 if self.keyauth:
                     if self.username is None:
-                        self.ssh_con = SSH(self.name, keyfile=self.key, timeout=self.timeout)
+                        self.ssh_con = SSH(self.name, keyfile=self.key, timeout=self.sshtimeout)
                     else:
-                        self.ssh_con = SSH(self.name, username=self.username, keyfile=self.key, timeout=self.timeout)
+                        self.ssh_con = SSH(self.name, username=self.username, keyfile=self.key, timeout=self.sshtimeout)
                 else:
-                    self.ssh_con = SSH(self.name, username=self.username, password=self.password, timeout=self.timeout)
+                    self.ssh_con = SSH(self.name, username=self.username, password=self.password,
+                                       timeout=self.sshtimeout)
             except Exception, errorMsg:
                 if self.debuglevel >= 2:
                     print(errorMsg)
