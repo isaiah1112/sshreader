@@ -113,6 +113,7 @@ def progress_bar(progress, total, longbar=False):
         :param longbar: Use a longer style progress bar
         :return: None
     """
+    # TODO - Move to Click library
     global __previouspercentage__
     percent_float = float(progress) / float(total)
     percent = int(percent_float * 100)
@@ -162,6 +163,7 @@ def tprint(message, stderr=False):
         :param stderr: Message should go to stderr
         :return: None
     """
+    # TODO - Can the print function be used here?
     if message.endswith('\n') is False:
         message += '\n'
     if stderr:
@@ -216,8 +218,7 @@ class ServerJob(object):
         :param password: Password for SSH
         :param keyfile: Path to ssh key (can be used instead of password)
         :param debuglevel: 0 = off, 1 = some, 2 = more, 3 = all
-        :param timeout: Timeout for entire job (30 seconds by default)
-        :param cmdtimeout: Timeout for each command (30 seconds by default)
+        :param timeout: Tuple of timeouts (sshtimeout, cmdtimeout), if not specified both default to 30 seconds
         :param runlocal: Run job on localhost (skips ssh to localhost)
         :param prehook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
         :param posthook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
