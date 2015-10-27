@@ -1,5 +1,8 @@
 # Changelog
 
+# Version 2.3
+ * Importing __future__ statements
+
 # Version 2.2.1
  * Publishing as Open Source
 

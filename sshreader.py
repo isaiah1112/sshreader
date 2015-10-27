@@ -42,9 +42,7 @@ one cpu on a given box.
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-__version__ = '2.2.2'
-
-# Include
+from __future__ import print_function, division
 import sys
 import paramiko
 import logging
@@ -55,8 +53,10 @@ from multiprocessing import Queue as processQueue
 from threading import Thread
 from Queue import Queue as threadQueue
 from types import FunctionType
+from pkg_resources import get_distribution
 
 # Globals
+__version__ = get_distribution('sshreader').version
 separator = "---------"
 tqueue = None
 tcounter = 0
@@ -89,6 +89,7 @@ class ExceededCPULimit(Exception):
     """You have asked for more sub processes than your CPU is allowed to handle
     """
     pass
+
 
 class SSHException(Exception):
     """An SSH/Paramiko error occurred
@@ -123,7 +124,7 @@ def progress_bar(progress, total, longbar=False):
             __previouspercentage__ = percent
         else:
             __previouspercentage__ = -1
-            print '\r' + template
+            print('\r' + template)
     return None
 
 
@@ -362,7 +363,7 @@ class ServerJob(object):
             :return: None
         """
         if printname:
-            print "serverJob: " + self.name + "\n" + (separator*3)
+            print("serverJob: " + self.name + "\n" + (separator*3))
         for idx, value in enumerate(self.cmds):
             print(value + ":\n" + ";".join(self.cmdResults[idx]) + "\n" + separator)
         return None
@@ -492,8 +493,8 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
 
     # Per testing, don't allow more than 1 million jobs
     if totaljobs > __jobHardLimit__:
-        print "The jobHardLimit for sshreader is: " + str(__jobHardLimit__)
-        print "You are looking to process: " + str(totaljobs)
+        print("The jobHardLimit for sshreader is: " + str(__jobHardLimit__))
+        print("You are looking to process: " + str(totaljobs))
         raise ExceededJobLimit("Reached or exceeded jobHardLimit")
 
     # Figure out what globals we will need to apply to each serverJob object
@@ -526,7 +527,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
         # Start parent threads
         for pThread in xrange(tcount):
             if debuglevel >= 1:
-                print "Spawning parent thread " + str(pThread)
+                print("Spawning parent thread " + str(pThread))
             t = Thread(target=__tworker__, args=(debuglevel, prehook, posthook, progressbar, totaljobs))
             t.daemon = True
             t.start()
@@ -556,8 +557,8 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
             pcount = totaljobs
 
         if pcount > cpuhardlimit:
-            print "The cpuHardLimit for your system is: " + str(cpuhardlimit)
-            print "You asked for: " + str(pcount)
+            print("The cpuHardLimit for your system is: " + str(cpuhardlimit))
+            print("You asked for: " + str(pcount))
             raise ExceededCPULimit("Reached or exceeded cpuHardLimit")
 
         # Add each serverJob object to the queue
@@ -587,7 +588,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
         # Start Parent processes for processing the Queue
         plist = []
         if debuglevel >= 2:
-            print "Spawning " + str(pcount) + " subprocesses"
+            print("Spawning " + str(pcount) + " subprocesses")
         for pID in xrange(pcount):
             if subqueue is None:
                 p = Process(target=__pworker__, args=(debuglevel, prehook, posthook))
@@ -633,15 +634,15 @@ def print_results(serverjobs):
     completejobs = [x for x in serverjobs if x.status is True]
     errorjobs = [x for x in serverjobs if x.status is False]
     if len(completejobs) > 0:
-        print "\nSUCCESSFUL SERVERJOBS\n"
+        print("\nSUCCESSFUL SERVERJOBS\n")
         for x in completejobs:
             x.print_results(True)
     if len(errorjobs) > 0:
-        print "\nERRORED SERVERJOBS\n"
+        print("\nERRORED SERVERJOBS\n")
         for x in errorjobs:
             x.print_results(True)
     if len(nonestatus) > 0:
-        print "\nINCOMPLETE SERVERJOBS\n"
+        print("\nINCOMPLETE SERVERJOBS\n")
         for x in nonestatus:
             x.print_results(True)
     return None
@@ -655,7 +656,7 @@ def __pworker__(debuglevel, prehook, posthook):
     global pqueue, finqueue
     pid = getpid()
     if debuglevel >= 1:
-        print "Starting process: " + str(pid)
+        print("Starting process: " + str(pid))
     while pqueue.empty() is False:
         thisjob = pqueue.get()
         thisjob.prehook = prehook
@@ -664,7 +665,7 @@ def __pworker__(debuglevel, prehook, posthook):
         thisjob.run()
         finqueue.put(thisjob)
     if debuglevel >= 1:
-        print "Exiting process: " + str(pid)
+        print("Exiting process: " + str(pid))
     finqueue.close()
     return True
 
@@ -697,7 +698,7 @@ def __sprocess__(debuglevel, prehook, posthook, tcount, subqueue):
     global finqueue, tqueue
     pid = getpid()
     if debuglevel >= 1:
-        print "Starting process: " + str(pid)
+        print("Starting process: " + str(pid))
     tqueue = threadQueue()
     for thisJob in subqueue:
         thisJob.prehook = prehook
@@ -708,14 +709,14 @@ def __sprocess__(debuglevel, prehook, posthook, tcount, subqueue):
         # Override the number of threads if it is greater than what we actually need
         tcount = len(subqueue)
     if debuglevel >= 2:
-        print "Process " + str(pid) + " starting " + str(tcount) + " threads"
+        print("Process " + str(pid) + " starting " + str(tcount) + " threads")
     for x in xrange(tcount):
         t = Thread(target=__sthread__)
         t.daemon = True
         t.start()
     tqueue.join()
     if debuglevel >= 1:
-        print "Exiting process: " + str(pid)
+        print("Exiting process: " + str(pid))
     finqueue.close()
     return True
 
@@ -731,7 +732,7 @@ def __sthread__():
         try:
             thisjob.run()
         except Exception as errMsg:
-            print errMsg
+            print(errMsg)
         finqueue.put(thisjob)
         tqueue.task_done()
     return True
