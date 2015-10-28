@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # sshreader documentation build configuration file, created by
-# sphinx-quickstart on Thu Jul  9 10:44:37 2015.
+# sphinx-quickstart on Wed Oct 28 15:25:15 2015.
 #
 # This file is execfile()d with the current directory set to its
 # containing dir.
@@ -31,7 +31,6 @@ import shlex
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
     'sphinx.ext.coverage',
     'sphinx.ext.viewcode',
 ]
@@ -48,7 +47,7 @@ source_suffix = '.rst'
 #source_encoding = 'utf-8-sig'
 
 # The master toctree document.
-master_doc = 'sshreader'
+master_doc = 'index'
 
 # General information about the project.
 project = u'sshreader'
@@ -79,7 +78,7 @@ language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
-exclude_patterns = ['_build']
+exclude_patterns = []
 
 # The reST default role (used for this markup: `text`) to use for all
 # documents.

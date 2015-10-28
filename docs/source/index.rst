@@ -1,21 +1,22 @@
 .. sshreader documentation master file, created by
-   sphinx-quickstart on Wed Jul  8 10:03:19 2015.
+   sphinx-quickstart on Wed Oct 28 15:25:15 2015.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-SSHreader Python Module!
-========================
+Welcome to sshreader's documentation!
+=====================================
 
-.. automodule:: sshreader
-    :members:
-    :private-members:
+Contents:
 
 .. toctree::
-    :maxdepth: 1
+   :maxdepth: 2
 
-Links
-=====
+
+
+Indices and tables
+==================
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
