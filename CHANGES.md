@@ -1,7 +1,8 @@
 # Changelog
 
 # Version 2.3
- * Importing __future__ statements
+ * Importing \_\_future__ statements
+ * Moved into python package
 
 # Version 2.2.1
  * Publishing as Open Source
