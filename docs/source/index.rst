@@ -3,18 +3,28 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to sshreader's documentation!
-=====================================
+.. _sshreader:
 
-Contents:
+sshreader
+=========
+
+
+.. automodule:: sshreader
+   :members:
+   :private-members:
+
+Modules:
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
-
+   serverjob
+   shellscript
+   ssh
+   worker
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`

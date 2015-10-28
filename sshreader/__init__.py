@@ -53,4 +53,4 @@ from shellscript import do_shell_script
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 __version__ = get_distribution('sshreader').version
-__all__ = ['serverjob', 'shellscript', 'ssh', 'worker.py']
+__all__ = ['serverjob', 'shellscript', 'ssh', 'worker']
