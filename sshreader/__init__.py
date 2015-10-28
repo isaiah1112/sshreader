@@ -48,9 +48,9 @@ from pkg_resources import get_distribution
 # For backwards compatibility
 from ssh import SSH
 from serverjob import *
-from sshreader import *
+from worker import *
 from shellscript import do_shell_script
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 __version__ = get_distribution('sshreader').version
-__all__ = ['serverjob', 'shellscript', 'ssh', 'sshreader']
+__all__ = ['serverjob', 'shellscript', 'ssh', 'worker.py']
