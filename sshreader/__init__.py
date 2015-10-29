@@ -43,12 +43,16 @@ one cpu on a given box.
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
-from pkg_resources import get_distribution
+from pkg_resources import get_distribution, DistributionNotFound
 
 # For backwards compatibility
+from ssh import *
 from classes import *
 from functions import *
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
-__version__ = get_distribution('sshreader').version
-__all__ = ['classes', 'functions']
+try:
+    __version__ = get_distribution('sshreader').version
+except DistributionNotFound:
+    __version__ = 'UNKNOWN'
+__all__ = ['classes', 'functions', 'ssh']
