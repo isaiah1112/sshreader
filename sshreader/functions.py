@@ -1,5 +1,6 @@
 # coding=utf-8
-""" Module for multi-threading/multiprocessing ServerJobs
+""" All the functions within sshreader, including sshread, do_shell_script, progress_bar, tprint
+and more.
 """
 # Copyright (C) 2015 Jesse Almanrode
 #
@@ -18,11 +19,12 @@
 from __future__ import print_function, division
 import sys
 from os import getpid
+from subprocess import Popen, PIPE, STDOUT
 from multiprocessing import Process, cpu_count
 from multiprocessing import Queue as processQueue
 from threading import Thread
 from Queue import Queue as threadQueue
-from serverjob import _validate_hook_
+from classes import _validate_hook_, ProcessesOrThreads, ExceededJobLimit, ExceededCPULimit
 from pkg_resources import get_distribution
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
@@ -37,28 +39,23 @@ __cpuHardLimitFactor__ = 3
 __previouspercentage__ = -1
 
 
-class InvalidHook(Exception):
-    """A pre or post hook definition is invalid
+def do_shell_script(command, combine=False):
+    """Run a specified command in the shell on localhost and return the output
+
+    - **parameters** and **return types**::
+
+        :param command: String containing the shell script to run
+        :param combine: Combine stderr and stdout in output
+        :return: Tuple of (command,stdout,stderr) or (command,output)
     """
-    pass
-
-
-class ProcessesOrThreads(Exception):
-    """You did not specify whether to use subprocessing or threading
-    """
-    pass
-
-
-class ExceededJobLimit(Exception):
-    """Your number of jobs exceeds the current limit
-    """
-    pass
-
-
-class ExceededCPULimit(Exception):
-    """You have asked for more sub processes than your CPU is allowed to handle
-    """
-    pass
+    if combine:
+        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout
+        stdout = pipeout.read()
+        return command, stdout.strip()
+    else:
+        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = pipeout.communicate()
+        return command, stdout.strip(), stderr.strip()
 
 
 def progress_bar(progress, total, longbar=False):

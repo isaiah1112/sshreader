@@ -46,11 +46,9 @@ from __future__ import print_function
 from pkg_resources import get_distribution
 
 # For backwards compatibility
-from ssh import SSH
-from serverjob import *
-from worker import *
-from shellscript import do_shell_script
+from classes import *
+from functions import *
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 __version__ = get_distribution('sshreader').version
-__all__ = ['serverjob', 'shellscript', 'ssh', 'worker']
+__all__ = ['classes', 'functions']
