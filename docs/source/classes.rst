@@ -1,10 +1,9 @@
-.. serverjob documentation master file, created by Jesse Almanrode
+.. classes documentation master file, created by Jesse Almanrode
 
-serverjob
-=========
+classes
+=======
 
-
-.. automodule:: sshreader.serverjob
+.. automodule:: sshreader.classes
    :members:
    :private-members:
 

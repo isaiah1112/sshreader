@@ -18,10 +18,9 @@ Modules:
 .. toctree::
    :maxdepth: 1
 
-   serverjob
-   shellscript
    ssh
-   worker
+   classes
+   functions
 
 Indices and tables
 ------------------

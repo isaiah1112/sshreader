@@ -3,7 +3,6 @@
 ssh
 ===
 
-
 .. automodule:: sshreader.ssh
    :members:
    :private-members:

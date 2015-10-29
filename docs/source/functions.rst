@@ -1,10 +1,10 @@
-.. shellscript documentation master file, created by Jesse Almanrode
+.. functions documentation master file, created by Jesse Almanrode
 
-shellscript
-===========
+functions
+=========
 
 
-.. automodule:: sshreader.shellscript
+.. automodule:: sshreader.functions
    :members:
    :private-members:
 
