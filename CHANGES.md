@@ -3,6 +3,8 @@
 # Version 2.3
  * Importing \_\_future__ statements
  * Moved into python package
+ * Split SSH and do_shell_script into new ssh sub-module
+ * Rebuild Sphinx Documentation
 
 # Version 2.2.1
  * Publishing as Open Source
