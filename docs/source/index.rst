@@ -18,9 +18,8 @@ Modules:
 .. toctree::
    :maxdepth: 1
 
+   sshreader
    ssh
-   classes
-   functions
 
 Indices and tables
 ------------------

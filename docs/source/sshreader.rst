@@ -1,9 +1,10 @@
-.. classes documentation master file, created by Jesse Almanrode
+.. sshreader documentation master file, created by Jesse Almanrode
 
-classes
-=======
+sshreader
+=========
 
-.. automodule:: sshreader.classes
+
+.. automodule:: sshreader.sshreader
    :members:
    :private-members:
 
