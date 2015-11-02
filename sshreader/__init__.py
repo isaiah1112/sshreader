@@ -47,7 +47,7 @@ from pkg_resources import get_distribution, DistributionNotFound
 
 # For backwards compatibility
 from ssh import *
-from sshreader import ServerJob, sshread, print_results
+from sshreader import ServerJob, sshread, print_results, progress_bar
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 try:
