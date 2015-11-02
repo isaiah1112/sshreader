@@ -47,12 +47,11 @@ from pkg_resources import get_distribution, DistributionNotFound
 
 # For backwards compatibility
 from ssh import *
-from classes import *
-from functions import *
+from sshreader import ServerJob, sshread, print_results
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 try:
     __version__ = get_distribution('sshreader').version
 except DistributionNotFound:
     __version__ = 'UNKNOWN'
-__all__ = ['classes', 'functions', 'ssh']
+__all__ = ['sshreader', 'ssh']
