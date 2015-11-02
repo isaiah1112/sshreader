@@ -319,6 +319,32 @@ def progress_bar(progress, total, longbar=False):
     return None
 
 
+def print_results(serverjobs):
+    """Print the output of all serverJobs in as serverJobList by status
+
+    - **parameters** and **return types**::
+
+        :param serverjobs: A list of sshreaded serverJob objects
+        :return: None
+    """
+    nonestatus = [x for x in serverjobs if x.status is None]
+    completejobs = [x for x in serverjobs if x.status is True]
+    errorjobs = [x for x in serverjobs if x.status is False]
+    if len(completejobs) > 0:
+        print("\nSUCCESSFUL SERVERJOBS\n")
+        for x in completejobs:
+            x.print_results(True)
+    if len(errorjobs) > 0:
+        print("\nERRORED SERVERJOBS\n")
+        for x in errorjobs:
+            x.print_results(True)
+    if len(nonestatus) > 0:
+        print("\nINCOMPLETE SERVERJOBS\n")
+        for x in nonestatus:
+            x.print_results(True)
+    return None
+
+
 def tprint(message, stderr=False):
     """Attempt at a thread-safe print variation
 
@@ -492,32 +518,6 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
             return returnlist
         else:  # If an object, return an object
             return returnlist[0]
-
-
-def print_results(serverjobs):
-    """Print the output of all serverJobs in as serverJobList by status
-
-    - **parameters** and **return types**::
-
-        :param serverjobs: A list of sshreaded serverJob objects
-        :return: None
-    """
-    nonestatus = [x for x in serverjobs if x.status is None]
-    completejobs = [x for x in serverjobs if x.status is True]
-    errorjobs = [x for x in serverjobs if x.status is False]
-    if len(completejobs) > 0:
-        print("\nSUCCESSFUL SERVERJOBS\n")
-        for x in completejobs:
-            x.print_results(True)
-    if len(errorjobs) > 0:
-        print("\nERRORED SERVERJOBS\n")
-        for x in errorjobs:
-            x.print_results(True)
-    if len(nonestatus) > 0:
-        print("\nINCOMPLETE SERVERJOBS\n")
-        for x in nonestatus:
-            x.print_results(True)
-    return None
 
 
 def __pworker__(debuglevel, prehook, posthook):
