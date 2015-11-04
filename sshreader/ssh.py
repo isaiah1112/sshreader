@@ -80,7 +80,13 @@ class SSH(object):
             :return: Tuple of (command, stdout, stderr) or (command, output)
         """
         if combine:
-            stdin, stdout = self.connection.exec_command(command, timeout=timeout, get_pty=True)
+            # http://stackoverflow.com/questions/3823862/paramiko-combine-stdout-and-stderr
+            tran = self.connection.get_transport()
+            chan = tran.open_session()
+            chan.settimeout(timeout)
+            chan.get_pty()
+            stdout = chan.makefile()
+            chan.exec_command(command)
             return command, stdout.read().strip()
         else:
             stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
