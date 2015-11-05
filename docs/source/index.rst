@@ -14,6 +14,7 @@ sshreader
    :private-members:
 
 Modules:
+--------
 
 .. toctree::
    :maxdepth: 1
