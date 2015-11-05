@@ -4,7 +4,8 @@
  * Importing \_\_future__ statements
  * Moved into python package
  * Split SSH and do_shell_script into new ssh sub-module
- * Rebuild Sphinx Documentation
+ * Rebuilt Sphinx Documentation
+ * Fixed bug with ssh_command function when combining stderr and stdout
 
 # Version 2.2.1
  * Publishing as Open Source
