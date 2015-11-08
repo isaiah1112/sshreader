@@ -1,7 +1,7 @@
 .. sshreader documentation master file, created by Jesse Almanrode
 
-sshreader
-=========
+sshreader Module
+================
 
 
 .. automodule:: sshreader.sshreader

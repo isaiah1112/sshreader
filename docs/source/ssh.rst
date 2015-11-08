@@ -1,7 +1,7 @@
 .. ssh documentation master file, created by Jesse Almanrode
 
-ssh
-===
+ssh Module
+==========
 
 .. automodule:: sshreader.ssh
    :members:

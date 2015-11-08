@@ -5,8 +5,8 @@
 
 .. _sshreader:
 
-sshreader
-=========
+sshreader Package
+=================
 
 
 .. automodule:: sshreader
