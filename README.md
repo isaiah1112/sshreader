@@ -24,7 +24,7 @@ This will ensure that all the requirements are met.
 
 ## Documentation
 
-The documentation for sshreader can be found on the [sshreader wiki]()!
+The documentation for sshreader can be found at [JA Computing](http://pydoc.jacomputing.net/sshreader/)
 
 ## Contributing
 
