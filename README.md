@@ -22,6 +22,10 @@ or
 
 This will ensure that all the requirements are met.
 
+## Documentation
+
+The documentation for sshreader can be found at [JA Computing](http://pydoc.jacomputing.net/sshreader/)
+
 ## Contributing
 
 Comments and enhancements are very welcome.
@@ -38,4 +42,4 @@ project](https://bitbucket.org/isaiah1112/sshreader) and submit pull requests.
 
 [GNU Lesser General Public License v3.0]: http://choosealicense.com/licenses/lgpl-3.0/ "LGPL v3"
 
-[sshreader]: https://bitbucket.org/isaiah1112/sshreader "SSHreader Module"
+[sshreader]: https://bitbucket.org/isaiah1112/sshreader "sshreader Module"

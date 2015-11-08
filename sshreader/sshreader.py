@@ -1,33 +1,6 @@
 # coding=utf-8
-"""A python module for multi-processing/threading ssh connections in order to make ssh operations
-across multiple servers more parallel.  The module allows for timeouts for each ssh connection
-as well as each command given to an ssh connection to run.  ServerJob objects allow for each server
-to have multiple commands that should be run inside of that job.  The results
-from each job will be returned as a list of tuples inside of each ServerJob object in the same order that the
-command list is in.
-
-SSHreader can also be used to create and call ssh connections without multiple processes/threads.
-
-SSHreader can also run multi-processed/threaded shell commands on localhost and a serverJobList can contain both
-serverJobs running on localhost as well as serverJobs running over ssh
-
-When using pcount and tcount in conjunction tcount will equal the total number of threads each process is allowed to
-spawn.  If the total jobs per process is less than tcount then the number of threads per process will equal the number
-of jobs assigned to that process.  Thus, to find the total threads used across all processes use:
-(pcount * tcount) = total_threads!
-
-When using pcount, sshreader attempts to ensure that jobs are split evenly between the number of requested subprocesses.
-
-The sshread method currently limits you to processing 1 million serverJobs at a time, per __jobHardLimit__ global.
-
-The cpusoftlimit for a box is defined as (cpu_count - 1).  This means that sshreader will spawn a subprocess for all but
-one cpu on a given box.
-
-.. note::
-    The cpuhardlimit is the maximum number of subprocesses that sshreader will spawn on a given box defined as:
-    (cpuhardlimit * __cpuHardLimitFactor__).  This is so that you don't make a box unusable and was arrived at per my
-    own testing.  Currently __cpuHardLimitFactor__ is set to 3.
-    These numbers may increase in the future."""
+""" All the classes and functions that make sshreader tick
+"""
 # Copyright (C) 2015 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
@@ -42,21 +15,19 @@ one cpu on a given box.
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-__version__ = '2.2.2'
-
-# Include
+from __future__ import print_function, division
 import sys
 import paramiko
-import logging
-from subprocess import Popen, PIPE, STDOUT
 from os import getpid
 from multiprocessing import Process, cpu_count
 from multiprocessing import Queue as processQueue
 from threading import Thread
 from Queue import Queue as threadQueue
 from types import FunctionType
+from ssh import SSH, do_shell_script
 
-# Globals
+__author__ = 'Jesse Almanrode (jesse@almanrode.com)'
+
 separator = "---------"
 tqueue = None
 tcounter = 0
@@ -68,109 +39,40 @@ __previouspercentage__ = -1
 
 
 class InvalidHook(Exception):
-    """A pre or post hook definition is invalid
+    """ A pre or post hook definition is invalid
     """
     pass
 
 
 class ProcessesOrThreads(Exception):
-    """You did not specify whether to use subprocessing or threading
+    """ You did not specify whether to use sub-processing or threading
     """
     pass
 
 
 class ExceededJobLimit(Exception):
-    """Your number of jobs exceeds the current limit
+    """ Your number of jobs exceeds the current limit
     """
     pass
 
 
 class ExceededCPULimit(Exception):
-    """You have asked for more sub processes than your CPU is allowed to handle
-    """
-    pass
-
-class SSHException(Exception):
-    """An SSH/Paramiko error occurred
+    """ You have asked for more sub processes than your CPU is allowed to handle
     """
     pass
 
 
-def progress_bar(progress, total, longbar=False):
-    """Prints a syled progress bar
-
-    - **parameters** and **return types**::
-
-        :param progress: Current item number being processed
-        :param total: Total number of items being processed
-        :param longbar: Use a longer style progress bar
-        :return: None
+class InvalidArgument(Exception):
+    """ An invalid argument was passed to a function
     """
-    global __previouspercentage__
-    percent_float = float(progress) / float(total)
-    percent = int(percent_float * 100)
-    if __previouspercentage__ != percent:
-        if longbar:
-            hashes = "#" * percent
-        else:
-            hashes = "=" * int(percent/2)
-            if percent % 2 != 0:
-                hashes += "-"
-        template = "[%s] %s%%" % (hashes, str(percent))
-        if percent < 100:
-            sys.stdout.write('\r' + template)
-            sys.stdout.flush()
-            __previouspercentage__ = percent
-        else:
-            __previouspercentage__ = -1
-            print '\r' + template
-    return None
-
-
-def do_shell_script(command, combine=False):
-    """Run a specified command in the shell on localhost and return the output
-
-    - **parameters** and **return types**::
-
-        :param command: String containing the shell script to run
-        :param combine: Combine stderr and stdout in output
-        :return: Tuple of (command,stdout,stderr) or (command,output)
-    """
-    if combine:
-        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout
-        stdout = pipeout.read()
-        return command, stdout.strip()
-    else:
-        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = pipeout.communicate()
-        return command, stdout.strip(), stderr.strip()
-
-
-def tprint(message, stderr=False):
-    """Attempt at a thread-safe print variation
-
-    - **parameters** and **return types**::
-
-        :param message: Message to output to stdout
-        :param stderr: Message should go to stderr
-        :return: None
-    """
-    if message.endswith('\n') is False:
-        message += '\n'
-    if stderr:
-        sys.stderr.write(message)
-        sys.stderr.flush()
-    else:
-        sys.stdout.write(message)
-        sys.stdout.flush()
-    return None
+    pass
 
 
 def _validate_hook_(hook):
-    """Private method to take a pre or post hook and validate it!
-    
+    """ Private method to take a pre or post hook and validate it
+
     - **parameters** and **return types**::
-    
+
         :param hook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
         :return: Dictionary
     """
@@ -198,8 +100,7 @@ def _validate_hook_(hook):
 
 
 class ServerJob(object):
-    """
-    Custom class for holding all the info needed to run ssh commands or shell commands in subprocesses or threads
+    """ Custom class for holding all the info needed to run ssh commands or shell commands in sub-processes or threads
 
     - **parameters** and **return types**::
 
@@ -209,8 +110,7 @@ class ServerJob(object):
         :param password: Password for SSH
         :param keyfile: Path to ssh key (can be used instead of password)
         :param debuglevel: 0 = off, 1 = some, 2 = more, 3 = all
-        :param timeout: Timeout for entire job (30 seconds by default)
-        :param cmdtimeout: Timeout for each command (30 seconds by default)
+        :param timeout: Tuple of timeouts (sshtimeout, cmdtimeout), if not specified both default to 30 seconds
         :param runlocal: Run job on localhost (skips ssh to localhost)
         :param prehook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
         :param posthook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
@@ -226,8 +126,8 @@ class ServerJob(object):
         :property posthook_return: Returned values from posthook method
         :property combine_output: Combine stdout and stderr in cmdResults (default = False)
     """
-    def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, debuglevel=0, timeout=30,
-                 cmdtimeout=30, runlocal=False, prehook=None, posthook=None):
+    def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, debuglevel=0, timeout=(30, 30),
+                 runlocal=False, prehook=None, posthook=None):
         if type(cmds) in (list, tuple):
             self.cmds = cmds
         else:
@@ -238,8 +138,14 @@ class ServerJob(object):
         self.password = password
         self.key = keyfile
         self.status = None
-        self.timeout = timeout
-        self.cmdtimeout = cmdtimeout
+        if type(timeout) in (tuple, list):
+            if len(timeout) != 2:
+                raise InvalidArgument('You must supply two timeouts if you pass a tuple or list')
+            self.sshtimeout = timeout[0]
+            self.cmdtimeout = timeout[1]
+        else:
+            self.sshtimeout = timeout
+            self.cmdtimeout = timeout
         self.runlocal = runlocal
         self.name = fqdn
         self.prehook_return = None
@@ -289,15 +195,16 @@ class ServerJob(object):
             self.prehook_return = self.prehook['func'](*self.prehook['args'], **self.prehook['kwargs'])
             self.prehook['args'].remove(self)
         # Establish SSH Connection if we are not working locally
-        if self.runlocal is False:        
+        if self.runlocal is False:
             try:
                 if self.keyauth:
                     if self.username is None:
-                        self.ssh_con = SSH(self.name, keyfile=self.key, timeout=self.timeout)
+                        self.ssh_con = SSH(self.name, keyfile=self.key, timeout=self.sshtimeout)
                     else:
-                        self.ssh_con = SSH(self.name, username=self.username, keyfile=self.key, timeout=self.timeout)
+                        self.ssh_con = SSH(self.name, username=self.username, keyfile=self.key, timeout=self.sshtimeout)
                 else:
-                    self.ssh_con = SSH(self.name, username=self.username, password=self.password, timeout=self.timeout)
+                    self.ssh_con = SSH(self.name, username=self.username, password=self.password,
+                                       timeout=self.sshtimeout)
             except Exception, errorMsg:
                 if self.debuglevel >= 2:
                     print(errorMsg)
@@ -362,7 +269,7 @@ class ServerJob(object):
             :return: None
         """
         if printname:
-            print "serverJob: " + self.name + "\n" + (separator*3)
+            print("serverJob: " + self.name + "\n" + (separator*3))
         for idx, value in enumerate(self.cmds):
             print(value + ":\n" + ";".join(self.cmdResults[idx]) + "\n" + separator)
         return None
@@ -379,102 +286,93 @@ class ServerJob(object):
         return self.__dict__.keys()
 
 
-class SSH(object):
-    """SSH Session object
+def progress_bar(progress, total, longbar=False):
+    """Prints a syled progress bar
 
     - **parameters** and **return types**::
 
-        :param fqdn: Fully qualified domain name or IP address
-        :param username: SSH username
-        :param password: SSH password
-        :param keyfile: SSH keyfile (can be used instead of password)
-        :param port: SSH port (default = 22)
-        :param timeout: SSH connection timeout in seconds (default = 30)
-        :return: SSH connection object
+        :param progress: Current item number being processed
+        :param total: Total number of items being processed
+        :param longbar: Use a longer style progress bar
+        :return: None
     """
-    def __init__(self, fqdn, username=None, password=None, keyfile=None, port=22, timeout=30):
-        self.__host__ = fqdn
-        self.__username__ = username
-        self.__password__ = password
-        self.__keyfile__ = keyfile
-        self.__port__ = port
-        self.__timeout__ = timeout
-        self.connection = paramiko.SSHClient()
-        self.connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.connect()
-
-    def ssh_command(self, command, timeout=30, combine=False):
-        """Run a command over an ssh connection
-
-        - **parameters** and **return types**::
-
-            :param command: The command to run
-            :param timeout: Timeout for the command
-            :param combine: Combine stderr and stdout
-            :return: Tuple of (command, stdout, stderr) or (command, output)
-        """
-        if combine:
-            stdin, stdout = self.connection.exec_command(command, timeout=timeout, get_pty=True)
-            return command, stdout.read().strip()
+    # TODO - Move to Click library
+    global __previouspercentage__
+    percent_float = float(progress) / float(total)
+    percent = int(percent_float * 100)
+    if __previouspercentage__ != percent:
+        if longbar:
+            hashes = "#" * percent
         else:
-            stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
-            return command, stdout.read().strip(), stderr.read().strip()
-
-    def close(self):
-        """Closes an established ssh connection
-        """
-        self.connection.close()
-        return None
-
-    def is_alive(self):
-        """Is an SSH connection alive
-        """
-        if self.connection.get_transport() is None:
-            return False
+            hashes = "=" * int(percent/2)
+            if percent % 2 != 0:
+                hashes += "-"
+        template = "[%s] %s%%" % (hashes, str(percent))
+        if percent < 100:
+            sys.stdout.write('\r' + template)
+            sys.stdout.flush()
+            __previouspercentage__ = percent
         else:
-            if self.connection.get_transport().is_alive():
-                return True
-            else:
-                raise SSHException("Unable to determine state of ssh session")
-            
-    def reconnect(self):
-        """Alias to connect
-        """
-        self.connect()
+            __previouspercentage__ = -1
+            print('\r' + template)
+    return None
 
-    def connect(self):
-        """Opens an SSH Connection
-        """
-        # http://stackoverflow.com/questions/26659772/silence-no-handlers-could-be-found-for-logger-paramiko-transport-message
-        logging.basicConfig()
-        if self.is_alive():
-            raise paramiko.SSHException("Connection is already established")
-        # Per http://stackoverflow.com/questions/19152578/no-handlers-could-be-found-for-logger-paramiko
-        if self.__keyfile__ is not None:
-            if self.__username__ is not None:  # Key file with a custom username!
-                self.connection.connect(self.__host__, port=self.__port__, username=self.__username__,
-                                        key_filename=self.__keyfile__, timeout=self.__timeout__, look_for_keys=False)
-            else:
-                self.connection.connect(self.__host__, port=self.__port__, key_filename=self.__keyfile__,
-                                        timeout=self.__timeout__, look_for_keys=False)
-        else:  # Username and password combo
-            if self.__username__ is None or self.__password__ is None:
-                raise paramiko.SSHException("You must enter a username and password or supply an SSH key")
-            else:
-                self.connection.connect(self.__host__, port=self.__port__, username=self.__username__,
-                                        password=self.__password__, timeout=self.__timeout__, look_for_keys=False)
-        # per https://github.com/paramiko/paramiko/issues/175
-        self.connection.get_transport().window_size = 3 * 1024 * 1024
+
+def print_results(serverjobs):
+    """Print the output of all serverJobs in as serverJobList by status
+
+    - **parameters** and **return types**::
+
+        :param serverjobs: A list of sshreaded serverJob objects
+        :return: None
+    """
+    nonestatus = [x for x in serverjobs if x.status is None]
+    completejobs = [x for x in serverjobs if x.status is True]
+    errorjobs = [x for x in serverjobs if x.status is False]
+    if len(completejobs) > 0:
+        print("\nSUCCESSFUL SERVERJOBS\n")
+        for x in completejobs:
+            x.print_results(True)
+    if len(errorjobs) > 0:
+        print("\nERRORED SERVERJOBS\n")
+        for x in errorjobs:
+            x.print_results(True)
+    if len(nonestatus) > 0:
+        print("\nINCOMPLETE SERVERJOBS\n")
+        for x in nonestatus:
+            x.print_results(True)
+    return None
+
+
+def tprint(message, stderr=False):
+    """Attempt at a thread-safe print variation
+
+    - **parameters** and **return types**::
+
+        :param message: Message to output to stdout
+        :param stderr: Message should go to stderr
+        :return: None
+    """
+    # TODO - Can the print function be used here?
+    if message.endswith('\n') is False:
+        message += '\n'
+    if stderr:
+        sys.stderr.write(message)
+        sys.stderr.flush()
+    else:
+        sys.stdout.write(message)
+        sys.stdout.flush()
+    return None
 
 
 def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=False, prehook=None, posthook=None):
-    """Takes a list of serverJob objects and puts them into threads/subprocesses and runs them
+    """Takes a list of serverJob objects and puts them into threads/sub-processes and runs them
 
     - **parameters** and **return types**::
 
         :param serverjobs: List of serverJob objects (A list of 1 job is acceptable)
         :param debuglevel: Debug level of all serverJobs (0 = off, 1 = some, 2 = more, 3 = all)
-        :param pcount: Number of subprocesses to spawn (None = off, 0 = cpuSoftLimit, -1 = cpuHardLimit)
+        :param pcount: Number of sub-processes to spawn (None = off, 0 = cpuSoftLimit, -1 = cpuHardLimit)
         :param tcount: Number of threads to spawn (None = off, 0 = adjusted length of serverJobList)
         :param progressbar: Print a progress bar
         :param prehook: Prehook for all serverJobs
@@ -492,8 +390,8 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
 
     # Per testing, don't allow more than 1 million jobs
     if totaljobs > __jobHardLimit__:
-        print "The jobHardLimit for sshreader is: " + str(__jobHardLimit__)
-        print "You are looking to process: " + str(totaljobs)
+        print("The jobHardLimit for sshreader is: " + str(__jobHardLimit__))
+        print("You are looking to process: " + str(totaljobs))
         raise ExceededJobLimit("Reached or exceeded jobHardLimit")
 
     # Figure out what globals we will need to apply to each serverJob object
@@ -526,7 +424,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
         # Start parent threads
         for pThread in xrange(tcount):
             if debuglevel >= 1:
-                print "Spawning parent thread " + str(pThread)
+                print("Spawning parent thread " + str(pThread))
             t = Thread(target=__tworker__, args=(debuglevel, prehook, posthook, progressbar, totaljobs))
             t.daemon = True
             t.start()
@@ -544,10 +442,10 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
         finqueue = processQueue()
         # Load all but the current cpu on a box.
         cpusoftlimit = cpu_count() - 1
-        # Imposing a hard limit for number of subprocesses so you don't make the system unusable
+        # Imposing a hard limit for number of sub-processes so you don't make the system unusable
         cpuhardlimit = (cpusoftlimit * __cpuHardLimitFactor__)
 
-        # Adjust number of subprocesses to spawn.
+        # Adjust number of sub-processes to spawn.
         if pcount == 0:
             pcount = cpusoftlimit
         elif pcount < 0:
@@ -556,8 +454,8 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
             pcount = totaljobs
 
         if pcount > cpuhardlimit:
-            print "The cpuHardLimit for your system is: " + str(cpuhardlimit)
-            print "You asked for: " + str(pcount)
+            print("The cpuHardLimit for your system is: " + str(cpuhardlimit))
+            print("You asked for: " + str(pcount))
             raise ExceededCPULimit("Reached or exceeded cpuHardLimit")
 
         # Add each serverJob object to the queue
@@ -566,7 +464,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
                 pqueue.put(thisJob)
             subqueue = None
         else:
-            # Set the number of threads for each subprocess to use
+            # Set the number of threads for each sub-process to use
             # This could end up being smaller than what is set here
             # due to the number of items in the sub queues we are
             # about to set up.
@@ -575,7 +473,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
             # Build a "sub queue" for each process to use
             subqueue = []
             subqueueitems = int(totaljobs / pcount)
-            # Balance the totaljobs into subQueues for each subprocess
+            # Balance the totaljobs into subQueues for each sub-process
             while subqueueitems * pcount < totaljobs:
                 subqueueitems += 1
             for x in xrange(0, totaljobs, subqueueitems):
@@ -587,7 +485,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
         # Start Parent processes for processing the Queue
         plist = []
         if debuglevel >= 2:
-            print "Spawning " + str(pcount) + " subprocesses"
+            print("Spawning " + str(pcount) + " sub-processes")
         for pID in xrange(pcount):
             if subqueue is None:
                 p = Process(target=__pworker__, args=(debuglevel, prehook, posthook))
@@ -621,32 +519,6 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
             return returnlist[0]
 
 
-def print_results(serverjobs):
-    """Print the output of all serverJobs in as serverJobList by status
-
-    - **parameters** and **return types**::
-
-        :param serverjobs: A list of sshreaded serverJob objects
-        :return: None
-    """
-    nonestatus = [x for x in serverjobs if x.status is None]
-    completejobs = [x for x in serverjobs if x.status is True]
-    errorjobs = [x for x in serverjobs if x.status is False]
-    if len(completejobs) > 0:
-        print "\nSUCCESSFUL SERVERJOBS\n"
-        for x in completejobs:
-            x.print_results(True)
-    if len(errorjobs) > 0:
-        print "\nERRORED SERVERJOBS\n"
-        for x in errorjobs:
-            x.print_results(True)
-    if len(nonestatus) > 0:
-        print "\nINCOMPLETE SERVERJOBS\n"
-        for x in nonestatus:
-            x.print_results(True)
-    return None
-
-
 def __pworker__(debuglevel, prehook, posthook):
     """This is a private method that is used by sshread to limit the number of processes sshreader spawns.
 
@@ -655,7 +527,7 @@ def __pworker__(debuglevel, prehook, posthook):
     global pqueue, finqueue
     pid = getpid()
     if debuglevel >= 1:
-        print "Starting process: " + str(pid)
+        print("Starting process: " + str(pid))
     while pqueue.empty() is False:
         thisjob = pqueue.get()
         thisjob.prehook = prehook
@@ -664,7 +536,7 @@ def __pworker__(debuglevel, prehook, posthook):
         thisjob.run()
         finqueue.put(thisjob)
     if debuglevel >= 1:
-        print "Exiting process: " + str(pid)
+        print("Exiting process: " + str(pid))
     finqueue.close()
     return True
 
@@ -697,7 +569,7 @@ def __sprocess__(debuglevel, prehook, posthook, tcount, subqueue):
     global finqueue, tqueue
     pid = getpid()
     if debuglevel >= 1:
-        print "Starting process: " + str(pid)
+        print("Starting process: " + str(pid))
     tqueue = threadQueue()
     for thisJob in subqueue:
         thisJob.prehook = prehook
@@ -708,14 +580,14 @@ def __sprocess__(debuglevel, prehook, posthook, tcount, subqueue):
         # Override the number of threads if it is greater than what we actually need
         tcount = len(subqueue)
     if debuglevel >= 2:
-        print "Process " + str(pid) + " starting " + str(tcount) + " threads"
+        print("Process " + str(pid) + " starting " + str(tcount) + " threads")
     for x in xrange(tcount):
         t = Thread(target=__sthread__)
         t.daemon = True
         t.start()
     tqueue.join()
     if debuglevel >= 1:
-        print "Exiting process: " + str(pid)
+        print("Exiting process: " + str(pid))
     finqueue.close()
     return True
 
@@ -731,7 +603,7 @@ def __sthread__():
         try:
             thisjob.run()
         except Exception as errMsg:
-            print errMsg
+            print(errMsg)
         finqueue.put(thisjob)
         tqueue.task_done()
     return True
