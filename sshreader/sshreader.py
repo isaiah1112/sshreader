@@ -39,37 +39,37 @@ __previouspercentage__ = -1
 
 
 class InvalidHook(Exception):
-    """A pre or post hook definition is invalid
+    """ A pre or post hook definition is invalid
     """
     pass
 
 
 class ProcessesOrThreads(Exception):
-    """You did not specify whether to use subprocessing or threading
+    """ You did not specify whether to use sub-processing or threading
     """
     pass
 
 
 class ExceededJobLimit(Exception):
-    """Your number of jobs exceeds the current limit
+    """ Your number of jobs exceeds the current limit
     """
     pass
 
 
 class ExceededCPULimit(Exception):
-    """You have asked for more sub processes than your CPU is allowed to handle
+    """ You have asked for more sub processes than your CPU is allowed to handle
     """
     pass
 
 
 class InvalidArgument(Exception):
-    """An invalid argument was passed to a function
+    """ An invalid argument was passed to a function
     """
     pass
 
 
 def _validate_hook_(hook):
-    """Private method to take a pre or post hook and validate it!
+    """ Private method to take a pre or post hook and validate it
 
     - **parameters** and **return types**::
 
@@ -100,8 +100,7 @@ def _validate_hook_(hook):
 
 
 class ServerJob(object):
-    """
-    Custom class for holding all the info needed to run ssh commands or shell commands in subprocesses or threads
+    """ Custom class for holding all the info needed to run ssh commands or shell commands in sub-processes or threads
 
     - **parameters** and **return types**::
 
@@ -367,13 +366,13 @@ def tprint(message, stderr=False):
 
 
 def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=False, prehook=None, posthook=None):
-    """Takes a list of serverJob objects and puts them into threads/subprocesses and runs them
+    """Takes a list of serverJob objects and puts them into threads/sub-processes and runs them
 
     - **parameters** and **return types**::
 
         :param serverjobs: List of serverJob objects (A list of 1 job is acceptable)
         :param debuglevel: Debug level of all serverJobs (0 = off, 1 = some, 2 = more, 3 = all)
-        :param pcount: Number of subprocesses to spawn (None = off, 0 = cpuSoftLimit, -1 = cpuHardLimit)
+        :param pcount: Number of sub-processes to spawn (None = off, 0 = cpuSoftLimit, -1 = cpuHardLimit)
         :param tcount: Number of threads to spawn (None = off, 0 = adjusted length of serverJobList)
         :param progressbar: Print a progress bar
         :param prehook: Prehook for all serverJobs
@@ -443,10 +442,10 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
         finqueue = processQueue()
         # Load all but the current cpu on a box.
         cpusoftlimit = cpu_count() - 1
-        # Imposing a hard limit for number of subprocesses so you don't make the system unusable
+        # Imposing a hard limit for number of sub-processes so you don't make the system unusable
         cpuhardlimit = (cpusoftlimit * __cpuHardLimitFactor__)
 
-        # Adjust number of subprocesses to spawn.
+        # Adjust number of sub-processes to spawn.
         if pcount == 0:
             pcount = cpusoftlimit
         elif pcount < 0:
@@ -465,7 +464,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
                 pqueue.put(thisJob)
             subqueue = None
         else:
-            # Set the number of threads for each subprocess to use
+            # Set the number of threads for each sub-process to use
             # This could end up being smaller than what is set here
             # due to the number of items in the sub queues we are
             # about to set up.
@@ -474,7 +473,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
             # Build a "sub queue" for each process to use
             subqueue = []
             subqueueitems = int(totaljobs / pcount)
-            # Balance the totaljobs into subQueues for each subprocess
+            # Balance the totaljobs into subQueues for each sub-process
             while subqueueitems * pcount < totaljobs:
                 subqueueitems += 1
             for x in xrange(0, totaljobs, subqueueitems):
@@ -486,7 +485,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
         # Start Parent processes for processing the Queue
         plist = []
         if debuglevel >= 2:
-            print("Spawning " + str(pcount) + " subprocesses")
+            print("Spawning " + str(pcount) + " sub-processes")
         for pID in xrange(pcount):
             if subqueue is None:
                 p = Process(target=__pworker__, args=(debuglevel, prehook, posthook))
