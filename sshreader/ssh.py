@@ -18,6 +18,7 @@ do_shell_script funtion for running local shell scripts!
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
+import os
 import paramiko
 import logging
 from subprocess import Popen, PIPE, STDOUT
@@ -62,7 +63,7 @@ class SSH(object):
         self.__host__ = fqdn
         self.__username__ = username
         self.__password__ = password
-        self.__keyfile__ = keyfile
+        self.__keyfile__ = os.path.abspath(os.path.expanduser(keyfile))
         self.__port__ = port
         self.__timeout__ = timeout
         self.connection = paramiko.SSHClient()
