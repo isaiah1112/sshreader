@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
-"""A wrapper for Paramiko that attemps to make ssh sessions easier to work with.  It also contains the
-do_shell_script funtion for running local shell scripts!
+"""A wrapper for Paramiko that attempts to make ssh sessions easier to work with.  It also contains the
+do_shell_script function for running local shell scripts!
 """
 # Copyright (C) 2015 Jesse Almanrode
 #
