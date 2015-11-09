@@ -14,7 +14,7 @@ setup(name='sshreader',
       license='GNU Lesser General Public License v3 or later (LGPLv3+)',
       install_requires=['paramiko>=1.15',
                         ],
-      platforms=['Linux', 'Unix', 'Mac OS X'],
+      platforms=['Linux', 'Mac OS X'],
       classifiers=[
           'Programming Language :: Python',
           'Intended Audience :: Developers',
