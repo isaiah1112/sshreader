@@ -6,7 +6,7 @@ from setuptools import setup
 
 setup(name='sshreader',
       version='2.3',
-      description='Multi-threading/processing for Paramiko',
+      description='Multi-threading/processing wrapper for Paramiko',
       author='Jesse Almanrode',
       author_email='jesse@almanrode.com',
       url='https://bitbucket.org/isaiah1112/sshreader',
