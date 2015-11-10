@@ -14,7 +14,7 @@ serverJobs running on localhost as well as serverJobs running over ssh.
 Threads vs. sub-Processes vs. (sub-Processes and Threads)
 ---------------------------------------------------------
 
-When using **pcount** and **tcount** in conjunction tcount will equal the total number of threads each process is
+When using **pcount** and **tcount** in conjunction, tcount will equal the total number of threads each process is
 allowed to spawn.  If the total jobs per process is less than tcount then the number of threads per process will equal
 the number of jobs assigned to that process.  Thus, to find the total threads used across all processes use:
 
