@@ -14,7 +14,7 @@ serverJobs running on localhost as well as serverJobs running over ssh.
 Threads vs. sub-Processes vs. (sub-Processes and Threads)
 ---------------------------------------------------------
 
-When using **pcount** and **tcount** in conjunction tcount will equal the total number of threads each process is
+When using **pcount** and **tcount** in conjunction, tcount will equal the total number of threads each process is
 allowed to spawn.  If the total jobs per process is less than tcount then the number of threads per process will equal
 the number of jobs assigned to that process.  Thus, to find the total threads used across all processes use:
 
@@ -67,6 +67,7 @@ This is so that you don't make a box unusable and was arrived at per my own test
 from __future__ import print_function
 from pkg_resources import get_distribution, DistributionNotFound
 
+# TODO - Get this module working in Python 3!
 # For backwards compatibility
 from ssh import SSH, do_shell_script
 from sshreader import ServerJob, sshread, print_results, progress_bar

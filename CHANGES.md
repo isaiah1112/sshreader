@@ -3,7 +3,7 @@
 # Version 2.3
  * Importing \_\_future__ statements for **print_function** and **division**
  * Moved into Python Package
- * Split SSH and **do_shell_script** into new ssh sub-module (called 'ssh')
+ * Split **SSH** and **do_shell_script** into new ssh sub-module (called '**ssh**')
  * Rebuilt Sphinx Documentation (and cleanded up docstrings)
  * Fixed bug with **ssh_command** function when combining *stderr* and *stdout*
  * Fixed bug when path to *keyfile* was relative to `~`
