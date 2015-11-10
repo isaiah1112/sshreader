@@ -1,6 +1,8 @@
-#!/usr/bin/env python2
-
-# Imports
+#!/usr/bin/env python
+# coding=utf-8
+"""Examples for sshreader module
+"""
+from __future__ import print_function
 import sshreader
 
 hosts = ['host1.example.com', 'host2.example.com']
@@ -19,3 +21,15 @@ results = sshreader.sshread(serverjobs, pcount=0, tcount=0, progressbar=True)
 # Output the results from each job
 for result in results:
     result.print_results()
+
+
+# You can also use sshreader to work with ssh connections without threading/multiprocessing
+host = 'host1.example.com'
+s = sshreader.ssh.SSH(host, username='myuser', password='password')
+print(s.ssh_command('uname -a'))
+s.close()
+
+# Or you can run shell commands on the localhost
+
+print(sshreader.do_shell_script('uname -a'))
+
