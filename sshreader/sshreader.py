@@ -18,6 +18,7 @@
 from __future__ import print_function, division
 import sys
 import paramiko
+import warnings
 from os import getpid
 from multiprocessing import Process, cpu_count
 from multiprocessing import Queue as processQueue
@@ -403,7 +404,9 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
             raise TypeError("Debug level must be either 0, 1, 2, or 3")
     except:
         raise TypeError("Debug level must be an integer equal to 0, 1, 2, or 3")
-    progressbar = progressbar
+    if debuglevel > 0 and progressbar:
+        progressbar = False
+        warnings.warn('You should not use progressbar and debuglevel together. Silencing progressbar.')
     if prehook is not None:
         prehook = _validate_hook_(prehook)
     if posthook is not None:
