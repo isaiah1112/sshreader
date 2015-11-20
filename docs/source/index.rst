@@ -13,7 +13,7 @@ sshreader Package
    :members:
    :private-members:
 
-Modules:
+Modules
 --------
 
 .. toctree::
@@ -28,7 +28,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-* `JA Computing`_
-
-.. _JA Computing: http://www.jacomputing.net
-

@@ -30,11 +30,9 @@ __version__ = '1.0'
 def do_shell_script(command, combine=False):
     """Run a specified command in the shell on localhost and return the output
 
-    - **parameters** and **return types**::
-
-        :param command: String containing the shell script to run
-        :param combine: Combine stderr and stdout in output
-        :return: Tuple of (command,stdout,stderr) or (command,output)
+    :param command: String containing the shell script to run
+    :param combine: Combine stderr and stdout in output
+    :return: Tuple of (command,stdout,stderr) or (command,output)
     """
     if combine:
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout
@@ -49,15 +47,13 @@ def do_shell_script(command, combine=False):
 class SSH(object):
     """SSH Session object
 
-    - **parameters** and **return types**::
-
-        :param fqdn: Fully qualified domain name or IP address
-        :param username: SSH username
-        :param password: SSH password
-        :param keyfile: SSH keyfile (can be used instead of password)
-        :param port: SSH port (default = 22)
-        :param timeout: SSH connection timeout in seconds (default = 30)
-        :return: SSH connection object
+    :param fqdn: Fully qualified domain name or IP address
+    :param username: SSH username
+    :param password: SSH password
+    :param keyfile: SSH keyfile (can be used instead of password)
+    :param port: SSH port (default = 22)
+    :param timeout: SSH connection timeout in seconds (default = 30)
+    :return: SSH connection object
     """
     def __init__(self, fqdn, username=None, password=None, keyfile=None, port=22, timeout=30):
         self.__host__ = fqdn
@@ -73,12 +69,10 @@ class SSH(object):
     def ssh_command(self, command, timeout=30, combine=False):
         """Run a command over an ssh connection
 
-        - **parameters** and **return types**::
-
-            :param command: The command to run
-            :param timeout: Timeout for the command
-            :param combine: Combine stderr and stdout
-            :return: Tuple of (command, stdout, stderr) or (command, output)
+        :param command: The command to run
+        :param timeout: Timeout for the command
+        :param combine: Combine stderr and stdout
+        :return: Tuple of (command, stdout, stderr) or (command, output)
         """
         if combine:
             # http://stackoverflow.com/questions/3823862/paramiko-combine-stdout-and-stderr

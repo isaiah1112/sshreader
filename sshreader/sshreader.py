@@ -72,10 +72,8 @@ class InvalidArgument(Exception):
 def _validate_hook_(hook):
     """ Private method to take a pre or post hook and validate it
 
-    - **parameters** and **return types**::
-
-        :param hook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
-        :return: Dictionary
+    :param hook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
+    :return: Dictionary
     """
     if type(hook) is not dict:
         raise InvalidHook(str(hook) + " is not of type dict")
@@ -103,29 +101,26 @@ def _validate_hook_(hook):
 class ServerJob(object):
     """ Custom class for holding all the info needed to run ssh commands or shell commands in sub-processes or threads
 
-    - **parameters** and **return types**::
+    :param fqdn: Fully qualified domain name or IP address
+    :param cmds: List of commands to run (in the order you want them run)
+    :param username: Username for SSH
+    :param password: Password for SSH
+    :param keyfile: Path to ssh key (can be used instead of password)
+    :param debuglevel: 0 = off, 1 = some, 2 = more, 3 = all
+    :param timeout: Tuple of timeouts (sshtimeout, cmdtimeout), if not specified both default to 30 seconds
+    :param runlocal: Run job on localhost (skips ssh to localhost)
+    :param prehook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
+    :param posthook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
+    :return: serverJob Object
 
-        :param fqdn: Fully qualified domain name or IP address
-        :param cmds: List of commands to run (in the order you want them run)
-        :param username: Username for SSH
-        :param password: Password for SSH
-        :param keyfile: Path to ssh key (can be used instead of password)
-        :param debuglevel: 0 = off, 1 = some, 2 = more, 3 = all
-        :param timeout: Tuple of timeouts (sshtimeout, cmdtimeout), if not specified both default to 30 seconds
-        :param runlocal: Run job on localhost (skips ssh to localhost)
-        :param prehook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
-        :param posthook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
-        :return: serverJob Object
-
-    - **properties**::
-        :property cmdResults: List of results of each command in tuple form (cmd, stdout, stderr)
-        :propery cmdStatus: List of states for each command ( None = initial state/cmd did not run, True = no stderr,
-                            False = stderr)
-        :property status: State of entire job (None = initial state/ssh failed, True = all cmd statuses is True,
-                            False = one or more cmd statuses is False)
-        :property prehook_return: Returned values from prehook method
-        :property posthook_return: Returned values from posthook method
-        :property combine_output: Combine stdout and stderr in cmdResults (default = False)
+    :property cmdResults: List of results of each command in tuple form (cmd, stdout, stderr)
+    :propery cmdStatus: List of states for each command ( None = initial state/cmd did not run, True = no stderr,
+                        False = stderr)
+    :property status: State of entire job (None = initial state/ssh failed, True = all cmd statuses is True,
+                        False = one or more cmd statuses is False)
+    :property prehook_return: Returned values from prehook method
+    :property posthook_return: Returned values from posthook method
+    :property combine_output: Combine stdout and stderr in cmdResults (default = False)
     """
     def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, debuglevel=0, timeout=(30, 30),
                  runlocal=False, prehook=None, posthook=None):
@@ -182,9 +177,7 @@ class ServerJob(object):
     def run(self):
         """Run a serverJob. SSH to server, run cmds, return result
 
-        - **parameters** and **return types**::
-
-            :return: serverJob.status
+        :return: serverJob.status
         """
         if self.debuglevel >= 1:
             print("Running serverJob: " + self.name)
@@ -264,10 +257,8 @@ class ServerJob(object):
     def print_results(self, printname=False):
         """Prints the command run and its output
 
-        - **parameters** and **return types**::
-
-            :param printname: Print the serverJob name
-            :return: None
+        :param printname: Print the serverJob name
+        :return: None
         """
         if printname:
             print("serverJob: " + self.name + "\n" + (separator*3))
@@ -290,12 +281,10 @@ class ServerJob(object):
 def progress_bar(progress, total, longbar=False):
     """Prints a syled progress bar
 
-    - **parameters** and **return types**::
-
-        :param progress: Current item number being processed
-        :param total: Total number of items being processed
-        :param longbar: Use a longer style progress bar
-        :return: None
+    :param progress: Current item number being processed
+    :param total: Total number of items being processed
+    :param longbar: Use a longer style progress bar
+    :return: None
     """
     # TODO - Move to Click library
     global __previouspercentage__
@@ -322,10 +311,8 @@ def progress_bar(progress, total, longbar=False):
 def print_results(serverjobs):
     """Print the output of all serverJobs in as serverJobList by status
 
-    - **parameters** and **return types**::
-
-        :param serverjobs: A list of sshreaded serverJob objects
-        :return: None
+    :param serverjobs: A list of sshreaded serverJob objects
+    :return: None
     """
     nonestatus = [x for x in serverjobs if x.status is None]
     completejobs = [x for x in serverjobs if x.status is True]
@@ -348,11 +335,9 @@ def print_results(serverjobs):
 def tprint(message, stderr=False):
     """Attempt at a thread-safe print variation
 
-    - **parameters** and **return types**::
-
-        :param message: Message to output to stdout
-        :param stderr: Message should go to stderr
-        :return: None
+    :param message: Message to output to stdout
+    :param stderr: Message should go to stderr
+    :return: None
     """
     # TODO - Can the print function be used here?
     if message.endswith('\n') is False:
@@ -369,16 +354,14 @@ def tprint(message, stderr=False):
 def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=False, prehook=None, posthook=None):
     """Takes a list of serverJob objects and puts them into threads/sub-processes and runs them
 
-    - **parameters** and **return types**::
-
-        :param serverjobs: List of serverJob objects (A list of 1 job is acceptable)
-        :param debuglevel: Debug level of all serverJobs (0 = off, 1 = some, 2 = more, 3 = all)
-        :param pcount: Number of sub-processes to spawn (None = off, 0 = cpuSoftLimit, -1 = cpuHardLimit)
-        :param tcount: Number of threads to spawn (None = off, 0 = adjusted length of serverJobList)
-        :param progressbar: Print a progress bar
-        :param prehook: Prehook for all serverJobs
-        :param posthook: Posthook for all serverJobs
-        :return: serverJobLst with completed serverJob objects (single object returned if single job passed)
+    :param serverjobs: List of serverJob objects (A list of 1 job is acceptable)
+    :param debuglevel: Debug level of all serverJobs (0 = off, 1 = some, 2 = more, 3 = all)
+    :param pcount: Number of sub-processes to spawn (None = off, 0 = cpuSoftLimit, -1 = cpuHardLimit)
+    :param tcount: Number of threads to spawn (None = off, 0 = adjusted length of serverJobList)
+    :param progressbar: Print a progress bar
+    :param prehook: Prehook for all serverJobs
+    :param posthook: Posthook for all serverJobs
+    :return: serverJobLst with completed serverJob objects (single object returned if single job passed)
     """
     if tcount is None and pcount is None:
         raise ProcessesOrThreads("You must specify a number for pcount or tcount!")
