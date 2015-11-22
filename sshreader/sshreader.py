@@ -114,7 +114,7 @@ class ServerJob(object):
     :return: serverJob Object
 
     :property cmdResults: List of results of each command in tuple form (cmd, stdout, stderr)
-    :propery cmdStatus: List of states for each command ( None = initial state/cmd did not run, True = no stderr,
+    :property cmdStatus: List of states for each command ( None = initial state/cmd did not run, True = no stderr,
                         False = stderr)
     :property status: State of entire job (None = initial state/ssh failed, True = all cmd statuses is True,
                         False = one or more cmd statuses is False)
