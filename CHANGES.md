@@ -1,5 +1,8 @@
 # Changelog
 
+# Version 2.4
+ * Python 3 compatibility!
+
 # Version 2.3
  * Importing \_\_future__ statements for **print_function** and **division**
  * Moved into Python Package

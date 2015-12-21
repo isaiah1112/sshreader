@@ -15,21 +15,22 @@
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import print_function, division
+from __future__ import absolute_import, print_function, division
 import sys
 import paramiko
 import warnings
+from builtins import range  # Replaces xrange in Python2
 from os import getpid
 from multiprocessing import Process, cpu_count
 from multiprocessing import Queue as processQueue
 from threading import Thread
-from Queue import Queue as threadQueue
+from queue import Queue as threadQueue
 from types import FunctionType
-from ssh import SSH, do_shell_script
+from sshreader.ssh import SSH, do_shell_script
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
-separator = "---------"
+separator = "-" * 10
 tqueue = None
 tcounter = 0
 pqueue = None
@@ -75,23 +76,23 @@ def _validate_hook_(hook):
     :param hook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
     :return: Dictionary
     """
-    if type(hook) is not dict:
+    if isinstance(hook, dict) is False:
         raise InvalidHook(str(hook) + " is not of type dict")
     hookkeys = hook.keys()
     if 'func' in hookkeys:
-        if type(hook['func']) is not FunctionType:
+        if isinstance(hook['func'], FunctionType) is False:
             raise TypeError("'func' is not type FunctionType")
     if 'args' in hookkeys:
-        if type(hook['args']) is list:
+        if isinstance(hook['args'], list):
             pass
-        elif type(hook['args']) is tuple:
+        elif isinstance(hook['args'], tuple):
             hook['args'] = list(hook['args'])
         else:
             hook['args'] = [hook['args']]
     else:
         hook['args'] = []
     if 'kwargs' in hookkeys:
-        if type(hook['kwargs']) is not dict:
+        if isinstance(hook['kwargs'], dict) is False:
             raise TypeError("'kwargs' is not type dict")
     else:
         hook['kwargs'] = {}
@@ -199,7 +200,7 @@ class ServerJob(object):
                 else:
                     self.ssh_con = SSH(self.name, username=self.username, password=self.password,
                                        timeout=self.sshtimeout)
-            except Exception, errorMsg:
+            except Exception as errorMsg:
                 if self.debuglevel >= 2:
                     print(errorMsg)
                 self.ssh_con = None
@@ -408,7 +409,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
             tcount = totaljobs
 
         # Start parent threads
-        for pThread in xrange(tcount):
+        for pThread in range(tcount):
             if debuglevel >= 1:
                 print("Spawning parent thread " + str(pThread))
             t = Thread(target=__tworker__, args=(debuglevel, prehook, posthook, progressbar, totaljobs))
@@ -462,7 +463,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
             # Balance the totaljobs into subQueues for each sub-process
             while subqueueitems * pcount < totaljobs:
                 subqueueitems += 1
-            for x in xrange(0, totaljobs, subqueueitems):
+            for x in range(0, totaljobs, subqueueitems):
                 subqueue.append(serverjobs[x: x + subqueueitems])
             # If the balanced sub queue requires fewer processes, make it so
             if len(subqueue) < pcount:
@@ -472,7 +473,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
         plist = []
         if debuglevel >= 2:
             print("Spawning " + str(pcount) + " sub-processes")
-        for pID in xrange(pcount):
+        for pID in range(pcount):
             if subqueue is None:
                 p = Process(target=__pworker__, args=(debuglevel, prehook, posthook))
             else:
@@ -567,7 +568,7 @@ def __sprocess__(debuglevel, prehook, posthook, tcount, subqueue):
         tcount = len(subqueue)
     if debuglevel >= 2:
         print("Process " + str(pid) + " starting " + str(tcount) + " threads")
-    for x in xrange(tcount):
+    for x in range(tcount):
         t = Thread(target=__sthread__)
         t.daemon = True
         t.start()
