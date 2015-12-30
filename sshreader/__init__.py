@@ -28,7 +28,8 @@ Limitations
 
 **ServerJob**:
 
-The sshread method currently limits you to processing 1 million ServerJobs at a time [1]_ , per \_\_jobHardLimit__ global.
+The sshread method currently limits you to processing 1 million ServerJobs at a time [1]_ ,
+per \_\_jobHardLimit__ global.
 
 
 **cpusoftlimit**:
