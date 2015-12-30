@@ -16,14 +16,13 @@
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import absolute_import, print_function, division
+import os
 import paramiko
+import multiprocessing
+import threading
+import queue
 import warnings
 from builtins import range  # Replaces xrange in Python2
-from os import getpid
-from multiprocessing import Process, cpu_count
-from multiprocessing import Queue as processQueue
-from threading import Thread
-from queue import Queue as threadQueue
 from types import FunctionType
 from sshreader.ssh import SSH, do_shell_script
 from progressbar import ProgressBar
@@ -31,10 +30,6 @@ from progressbar import ProgressBar
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
 separator = "-" * 10
-tqueue = None
-tcounter = 0
-pqueue = None
-finqueue = None
 __jobHardLimit__ = (10 ** 6)
 __cpuHardLimitFactor__ = 3
 
@@ -158,14 +153,20 @@ class ServerJob(object):
             self.cmdtimeout = timeout
         self.runlocal = runlocal
         self.name = fqdn
-        if prehook is not None and isinstance(prehook, Hook):
+        if prehook is not None:
+            if isinstance(prehook, Hook):
+                self.prehook = prehook
+            else:
+                raise InvalidArgument('prehook should be of type: <Hook>')
+        else:
             self.prehook = prehook
+        if posthook is not None:
+            if isinstance(posthook, Hook):
+                self.posthook = posthook
+            else:
+                raise InvalidArgument('prehook should be of type: <Hook>')
         else:
-            raise InvalidArgument('prehook should be of type: <Hook>')
-        if posthook is not None and isinstance(posthook, Hook):
             self.posthook = posthook
-        else:
-            raise InvalidArgument('prehook should be of type: <Hook>')
         self.combine_output = False
         try:
             if int(debuglevel) <= 3:
@@ -314,25 +315,23 @@ def print_results(serverjobs):
     return None
 
 
-def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=False, prehook=None, posthook=None):
+def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=False):
     """Takes a list of serverJob objects and puts them into threads/sub-processes and runs them
 
     :param serverjobs: List of serverJob objects (A list of 1 job is acceptable)
-    :param debuglevel: Debug level of all serverJobs (0 = off, 1 = some, 2 = more, 3 = all)
+    :param debuglevel: Debug level for threads/processes (0 = off, 1 = some, 2 = more, 3 = all)
     :param pcount: Number of sub-processes to spawn (None = off, 0 = cpuSoftLimit, -1 = cpuHardLimit)
     :param tcount: Number of threads to spawn (None = off, 0 = adjusted length of serverJobList)
     :param progress_bar: Print a progress bar
-    :param prehook: Prehook for all serverJobs
-    :param posthook: Posthook for all serverJobs
     :return: serverJobLst with completed serverJob objects (single object returned if single job passed)
     """
     if tcount is None and pcount is None:
         raise ProcessesOrThreads("You must specify a number for pcount or tcount!")
-    if type(serverjobs) is not list:
+    if isinstance(serverjobs, list):
+        islist = True
+    else:
         islist = False
         serverjobs = [serverjobs]
-    else:
-        islist = True
     totaljobs = len(serverjobs)
 
     # Per testing, don't allow more than 1 million jobs
@@ -341,8 +340,6 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         print("You are looking to process: " + str(totaljobs))
         raise ExceededJobLimit("Reached or exceeded jobHardLimit")
 
-    # Figure out what globals we will need to apply to each serverJob object
-    # before it is processed
     try:
         if int(debuglevel) <= 3:
             debuglevel = debuglevel
@@ -350,50 +347,41 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
             raise TypeError("Debug level must be either 0, 1, 2, or 3")
     except:
         raise TypeError("Debug level must be an integer equal to 0, 1, 2, or 3")
+
     if debuglevel > 0 and progress_bar:
         progress_bar = False
         warnings.warn('You should not use progress_bar and debuglevel together. Silencing progress_bar.')
 
+    item_counter = multiprocessing.Value('L', 1)
     if progress_bar:
         bar = ProgressBar(max_value=totaljobs)
     else:
         bar = None
 
     if pcount is None:
-        global tqueue, tcounter
-        # Ensure the thread job counter is reset to 0
-        tcounter = 0
-        tqueue = threadQueue()
+        task_queue = queue.Queue(maxsize=totaljobs)
+        result_queue = queue.Queue(maxsize=totaljobs)
         # Fill up the Queue
-        for thisJob in serverjobs:
-            tqueue.put(thisJob)
+        for job in serverjobs:
+            task_queue.put(job)
         # Limit the number of threads to spawn
         if tcount == 0 or tcount > totaljobs:
             tcount = totaljobs
 
-        # Start parent threads
-        for pThread in range(tcount):
-            if debuglevel >= 1:
-                print("Spawning parent thread " + str(pThread))
-            t = Thread(target=__tworker__, args=(debuglevel, prehook, posthook, bar))
-            t.daemon = True
-            t.start()
-
-        # Wait for the queue to empty
-        tqueue.join()
-
-        if len(serverjobs) > 1 or islist:
-            return serverjobs
-        else:
-            return serverjobs[0]
+        if debuglevel >= 1:
+            print("Spawning " + str(tcount) + " threads")
+        # Start a thread pool
+        for thread in range(tcount):
+            if debuglevel >= 2:
+                print("Spawning: Thread-" + str(thread))
+            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter))
+            thread.daemon = True
+            thread.start()
     else:
-        global pqueue, finqueue
-        pqueue = processQueue()
-        finqueue = processQueue()
-        # Load all but the current cpu on a box.
-        cpusoftlimit = cpu_count() - 1
+        # Limit the number of sub processes we spawn
+        cpusoftlimit = multiprocessing.cpu_count() - 1
         # Imposing a hard limit for number of sub-processes so you don't make the system unusable
-        cpuhardlimit = (cpusoftlimit * __cpuHardLimitFactor__)
+        cpuhardlimit = cpusoftlimit * __cpuHardLimitFactor__
 
         # Adjust number of sub-processes to spawn.
         if pcount == 0:
@@ -408,155 +396,82 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
             print("You asked for: " + str(pcount))
             raise ExceededCPULimit("Reached or exceeded cpuHardLimit")
 
+        if tcount is not None:
+            if tcount == 0:
+                tcount = totaljobs // pcount
+                if tcount <= 1:
+                    tcount = None
+
+        task_queue = multiprocessing.Queue(maxsize=totaljobs)
+        result_queue = multiprocessing.Queue(maxsize=totaljobs)
+
         # Add each serverJob object to the queue
-        if tcount is None:
-            for thisJob in serverjobs:
-                pqueue.put(thisJob)
-            subqueue = None
-        else:
-            # Set the number of threads for each sub-process to use
-            # This could end up being smaller than what is set here
-            # due to the number of items in the sub queues we are
-            # about to set up.
-            if tcount == 0 or tcount > totaljobs:
-                tcount = totaljobs
-            # Build a "sub queue" for each process to use
-            subqueue = []
-            subqueueitems = int(totaljobs / pcount)
-            # Balance the totaljobs into subQueues for each sub-process
-            while subqueueitems * pcount < totaljobs:
-                subqueueitems += 1
-            for x in range(0, totaljobs, subqueueitems):
-                subqueue.append(serverjobs[x: x + subqueueitems])
-            # If the balanced sub queue requires fewer processes, make it so
-            if len(subqueue) < pcount:
-                pcount = len(subqueue)
+        for job in serverjobs:
+            task_queue.put(job)
 
-        # Start Parent processes for processing the Queue
-        plist = []
-        if debuglevel >= 2:
+        if debuglevel >= 1:
             print("Spawning " + str(pcount) + " sub-processes")
-        for pID in range(pcount):
-            if subqueue is None:
-                p = Process(target=__pworker__, args=(debuglevel, prehook, posthook))
-            else:
-                p = Process(target=__sprocess__, args=(debuglevel, prehook, posthook, tcount, subqueue[pID]))
-            plist.append(p)
-            p.start()
+        for pid in range(pcount):
+            pid = multiprocessing.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter),
+                                          kwargs={'thread_count': tcount, 'debuglevel': debuglevel})
+            pid.daemon = True
+            pid.start()
 
-        # Get the results from the Queue
-        returnlist = []
-        returnlen = len(returnlist)
-        while returnlen < totaljobs:
-            # I think there is a bug with the following line that randomly causes pickle errors.
-            # Not sure how to fix it.
-            returnlist.append(finqueue.get())
-            returnlen = len(returnlist)
-            if progress_bar:
-                bar.update(returnlen)
+    # Non blocking way to wait for threads/processes
+    while result_queue.full() is False:
+        if progress_bar:
+            bar.update(item_counter.value)
 
-        # Ensure all processes are closed
-        for p in plist:
-            p.join()
-
-        # If we were passed a list then we will return a list
-        if len(returnlist) > 1 or islist:
-            return returnlist
-        else:  # If an object, return an object
-            return returnlist[0]
+    completed_jobs = list()
+    while result_queue.empty() is False:
+        completed_jobs.append(result_queue.get())
+    # If we were passed a list then we will return a list
+    if len(completed_jobs) > 1 or islist:
+        return completed_jobs
+    else:  # If an object, return an object
+        return completed_jobs[0]
 
 
-def __pworker__(debuglevel, prehook, posthook):
-    """This is a private method that is used by sshread to limit the number of processes sshreader spawns.
+def _sub_process_(task_queue, result_queue, item_counter, thread_count=None, debuglevel=0):
+    """ Private method for managing multi-processing and spawning thread pools.
 
-    DO NOT USE THIS METHOD! Use the sshread method instead!
+    DO NOT USE THIS METHOD!
     """
-    global pqueue, finqueue
-    pid = getpid()
-    if debuglevel >= 1:
-        print("Starting process: " + str(pid))
-    while pqueue.empty() is False:
-        thisjob = pqueue.get()
-        if prehook is not None:
-            thisjob.prehook = prehook
-        if posthook is not None:
-            thisjob.posthook = posthook
-        thisjob.debuglevel = debuglevel
-        thisjob.run()
-        finqueue.put(thisjob)
-    if debuglevel >= 1:
-        print("Exiting process: " + str(pid))
-    finqueue.close()
-    return True
-
-
-def __tworker__(debuglevel, prehook, posthook, progress_bar):
-    """This is a private method used to limit the number of threads that sshreader spawns.
-
-    DO NOT USE THIS METHOD! Use the sshread method instead!
-    """
-    global tqueue, tcounter
-    while True:
-        thisjob = tqueue.get()
-        if prehook is not None:
-            thisjob.prehook = prehook
-        if posthook is not None:
-            thisjob.posthook = posthook
-        thisjob.debuglevel = debuglevel
-        cthread = Thread(target=thisjob.run)
-        cthread.start()
-        cthread.join()
-        if progress_bar is not None:
-            tcounter += 1
-            progress_bar.update(tcounter)
-        tqueue.task_done()
-
-
-def __sprocess__(debuglevel, prehook, posthook, tcount, subqueue):
-    """This is a private method used to have the multiprocessing and multithreading functionality combined.
-
-    DO NOT USE THIS METHOD! Use the sshread method instead!
-    """
-    global finqueue, tqueue
-    pid = getpid()
-    if debuglevel >= 1:
-        print("Starting process: " + str(pid))
-    tqueue = threadQueue()
-    for thisjob in subqueue:
-        if prehook is not None:
-            thisjob.prehook = prehook
-        if posthook is not None:
-            thisjob.posthook = posthook
-        thisjob.debuglevel = debuglevel
-        tqueue.put(thisjob)
-    if tcount > len(subqueue):
-        # Override the number of threads if it is greater than what we actually need
-        tcount = len(subqueue)
+    pid = os.getpid()
     if debuglevel >= 2:
-        print("Process " + str(pid) + " starting " + str(tcount) + " threads")
-    for x in range(tcount):
-        t = Thread(target=__sthread__)
-        t.daemon = True
-        t.start()
-    tqueue.join()
-    if debuglevel >= 1:
+        print("Starting process: " + str(pid))
+    if thread_count is None:
+        while task_queue.empty() is False:
+            job = task_queue.get()
+            job.run()
+            result_queue.put(job)
+            with item_counter.get_lock():
+                item_counter.value += 1
+    else:
+        if debuglevel >= 1:
+            print("Process: " + str(pid) + " spawning: " + str(thread_count) + " threads")
+        for thread in range(thread_count):
+            if debuglevel >= 2:
+                print("Process: " + str(pid) + " spawning: Thread-" + str(thread))
+            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter))
+            thread.daemon = True
+            thread.start()
+        while threading.active_count() > 1:
+            pass
+    if debuglevel >= 2:
         print("Exiting process: " + str(pid))
-    finqueue.close()
-    return True
+    return None
 
 
-def __sthread__():
-    """This is a private method used to have the multiprocessing and multithreading functionality combined.
+def _sub_thread_(task_queue, result_queue, item_counter):
+    """ Private method for managing multi-processing and spawning thread pools.
 
-    DO NOT USE THIS METHOD! Use the sshread method instead!
+    DO NOT USE THIS METHOD!
     """
-    global tqueue, finqueue
-    while tqueue.empty() is False:
-        thisjob = tqueue.get()
-        try:
-            thisjob.run()
-        except Exception as errMsg:
-            print(errMsg)
-        finqueue.put(thisjob)
-        tqueue.task_done()
-    return True
+    while task_queue.empty() is False:
+        job = task_queue.get()
+        job.run()
+        result_queue.put(job)
+        with item_counter.get_lock():
+            item_counter.value += 1
+    return None
