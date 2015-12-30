@@ -16,7 +16,6 @@
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import absolute_import, print_function, division
-import sys
 import paramiko
 import warnings
 from builtins import range  # Replaces xrange in Python2
@@ -135,7 +134,7 @@ class ServerJob(object):
         self.password = password
         self.key = keyfile
         self.status = None
-        if type(timeout) in (tuple, list):
+        if isinstance(timeout, (tuple, list)):
             if len(timeout) != 2:
                 raise InvalidArgument('You must supply two timeouts if you pass a tuple or list')
             self.sshtimeout = timeout[0]
@@ -161,7 +160,7 @@ class ServerJob(object):
                 self.debuglevel = debuglevel
             else:
                 raise TypeError("Debug level must be an integer between 0 and 3")
-        except Exception:
+        except TypeError:
             raise TypeError("Debug level must be an integer between 0 and 3")
         if runlocal is False:
             self.ssh_con = None
@@ -300,25 +299,6 @@ def print_results(serverjobs):
         print("\nINCOMPLETE SERVERJOBS\n")
         for x in nonestatus:
             x.print_results(True)
-    return None
-
-
-def tprint(message, stderr=False):
-    """Attempt at a thread-safe print variation
-
-    :param message: Message to output to stdout
-    :param stderr: Message should go to stderr
-    :return: None
-    """
-    # TODO - Can the print function be used here?
-    if message.endswith('\n') is False:
-        message += '\n'
-    if stderr:
-        sys.stderr.write(message)
-        sys.stderr.flush()
-    else:
-        sys.stdout.write(message)
-        sys.stdout.flush()
     return None
 
 
