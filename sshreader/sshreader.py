@@ -27,6 +27,7 @@ from threading import Thread
 from queue import Queue as threadQueue
 from types import FunctionType
 from sshreader.ssh import SSH, do_shell_script
+from progressbar import ProgressBar
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
@@ -37,7 +38,6 @@ pqueue = None
 finqueue = None
 __jobHardLimit__ = (10 ** 6)
 __cpuHardLimitFactor__ = 3
-__previouspercentage__ = -1
 
 
 class InvalidHook(Exception):
@@ -279,36 +279,6 @@ class ServerJob(object):
         return self.__dict__.keys()
 
 
-def progress_bar(progress, total, longbar=False):
-    """Prints a syled progress bar
-
-    :param progress: Current item number being processed
-    :param total: Total number of items being processed
-    :param longbar: Use a longer style progress bar
-    :return: None
-    """
-    # TODO - Move to Click library
-    global __previouspercentage__
-    percent_float = float(progress) / float(total)
-    percent = int(percent_float * 100)
-    if __previouspercentage__ != percent:
-        if longbar:
-            hashes = "#" * percent
-        else:
-            hashes = "=" * int(percent/2)
-            if percent % 2 != 0:
-                hashes += "-"
-        template = "[%s] %s%%" % (hashes, str(percent))
-        if percent < 100:
-            sys.stdout.write('\r' + template)
-            sys.stdout.flush()
-            __previouspercentage__ = percent
-        else:
-            __previouspercentage__ = -1
-            print('\r' + template)
-    return None
-
-
 def print_results(serverjobs):
     """Print the output of all serverJobs in as serverJobList by status
 
@@ -352,14 +322,14 @@ def tprint(message, stderr=False):
     return None
 
 
-def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=False, prehook=None, posthook=None):
+def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=False, prehook=None, posthook=None):
     """Takes a list of serverJob objects and puts them into threads/sub-processes and runs them
 
     :param serverjobs: List of serverJob objects (A list of 1 job is acceptable)
     :param debuglevel: Debug level of all serverJobs (0 = off, 1 = some, 2 = more, 3 = all)
     :param pcount: Number of sub-processes to spawn (None = off, 0 = cpuSoftLimit, -1 = cpuHardLimit)
     :param tcount: Number of threads to spawn (None = off, 0 = adjusted length of serverJobList)
-    :param progressbar: Print a progress bar
+    :param progress_bar: Print a progress bar
     :param prehook: Prehook for all serverJobs
     :param posthook: Posthook for all serverJobs
     :return: serverJobLst with completed serverJob objects (single object returned if single job passed)
@@ -388,13 +358,18 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
             raise TypeError("Debug level must be either 0, 1, 2, or 3")
     except:
         raise TypeError("Debug level must be an integer equal to 0, 1, 2, or 3")
-    if debuglevel > 0 and progressbar:
-        progressbar = False
-        warnings.warn('You should not use progressbar and debuglevel together. Silencing progressbar.')
+    if debuglevel > 0 and progress_bar:
+        progress_bar = False
+        warnings.warn('You should not use progress_bar and debuglevel together. Silencing progress_bar.')
     if prehook is not None:
         prehook = _validate_hook_(prehook)
     if posthook is not None:
         posthook = _validate_hook_(posthook)
+
+    if progress_bar:
+        bar = ProgressBar(max_value=totaljobs)
+    else:
+        bar = None
 
     if pcount is None:
         global tqueue, tcounter
@@ -412,7 +387,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
         for pThread in range(tcount):
             if debuglevel >= 1:
                 print("Spawning parent thread " + str(pThread))
-            t = Thread(target=__tworker__, args=(debuglevel, prehook, posthook, progressbar, totaljobs))
+            t = Thread(target=__tworker__, args=(debuglevel, prehook, posthook, bar, totaljobs))
             t.daemon = True
             t.start()
 
@@ -485,15 +460,12 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
         returnlist = []
         returnlen = len(returnlist)
         while returnlen < totaljobs:
-            if progressbar:
-                progress_bar(returnlen, totaljobs)
             # I think there is a bug with the following line that randomly causes pickle errors.
             # Not sure how to fix it.
             returnlist.append(finqueue.get())
             returnlen = len(returnlist)
-        # This ensures that we print a final 100% progress bar
-        if progressbar:
-            progress_bar(returnlen, totaljobs)
+            if progress_bar:
+                bar.update(returnlen)
 
         # Ensure all processes are closed
         for p in plist:
@@ -528,7 +500,7 @@ def __pworker__(debuglevel, prehook, posthook):
     return True
 
 
-def __tworker__(debuglevel, prehook, posthook, progressbar, totaljobs):
+def __tworker__(debuglevel, prehook, posthook, progress_bar, totaljobs):
     """This is a private method used to limit the number of threads that sshreader spawns.
 
     DO NOT USE THIS METHOD! Use the sshread method instead!
@@ -542,9 +514,9 @@ def __tworker__(debuglevel, prehook, posthook, progressbar, totaljobs):
         cthread = Thread(target=thisjob.run)
         cthread.start()
         cthread.join()
-        if progressbar:
+        if progress_bar is not None:
             tcounter += 1
-            progress_bar(tcounter, totaljobs)
+            progress_bar.update(tcounter)
         tqueue.task_done()
 
 

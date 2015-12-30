@@ -67,10 +67,9 @@ This is so that you don't make a box unusable and was arrived at per my own test
 from __future__ import print_function, absolute_import
 from pkg_resources import get_distribution, DistributionNotFound
 
-# TODO - Get this module working in Python 3!
 # For backwards compatibility
 from sshreader.ssh import SSH, do_shell_script
-from sshreader.sshreader import ServerJob, sshread, print_results, progress_bar
+from sshreader.sshreader import ServerJob, sshread, print_results
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 try:
