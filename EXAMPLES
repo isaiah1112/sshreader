@@ -16,7 +16,7 @@ for host in hosts:
 # sshread the list of ServerJobs as quickly as possible!
 # setting pcount and tcount to 0 will let sshreader figure out the number of processes and threads to spawn for best
 # results.
-results = sshreader.sshread(serverjobs, pcount=0, tcount=0, progressbar=True)
+results = sshreader.sshread(serverjobs, pcount=0, tcount=0, progress_bar=True)
 
 # Output the results from each job
 for result in results:
