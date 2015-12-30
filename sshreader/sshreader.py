@@ -69,33 +69,49 @@ class InvalidArgument(Exception):
     pass
 
 
-def _validate_hook_(hook):
-    """ Private method to take a pre or post hook and validate it
+class Hook(object):
+    """ Custom class for pre and post hooks
 
-    :param hook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
-    :return: Dictionary
+    :param target: Function to call when using the hook
+    :param args: List of args to pass to target
+    :param kwargs: Dictionary of kwargs to pass to target
+    :return: Hook
     """
-    if isinstance(hook, dict) is False:
-        raise InvalidHook(str(hook) + " is not of type dict")
-    hookkeys = hook.keys()
-    if 'func' in hookkeys:
-        if isinstance(hook['func'], FunctionType) is False:
-            raise TypeError("'func' is not type FunctionType")
-    if 'args' in hookkeys:
-        if isinstance(hook['args'], list):
-            pass
-        elif isinstance(hook['args'], tuple):
-            hook['args'] = list(hook['args'])
+
+    def __init__(self, target, args=None, kwargs=None):
+        if isinstance(target, FunctionType):
+            self.target = target
         else:
-            hook['args'] = [hook['args']]
-    else:
-        hook['args'] = []
-    if 'kwargs' in hookkeys:
-        if isinstance(hook['kwargs'], dict) is False:
-            raise TypeError("'kwargs' is not type dict")
-    else:
-        hook['kwargs'] = {}
-    return hook
+            raise InvalidArgument('target should be of type: <function>')
+        if args is None:
+            self.args = list()
+        else:
+            if isinstance(args, (list, tuple)):
+                self.args = args
+            else:
+                raise InvalidArgument('args should be of type: <list>, <tuple>')
+        if kwargs is None:
+            self.kwargs = dict()
+        else:
+            if isinstance(kwargs, dict):
+                self.kwargs = kwargs
+            else:
+                raise InvalidArgument('kwargs should be of type: <dict>')
+        self.result = None
+
+    def run(self, *args, **kwargs):
+        """ Run the Hook.
+
+        :param args: Override args
+        :param kwargs: Override kwargs
+        :return: Result from target function
+        """
+        if len(args) == 0:
+            args = self.args
+        if len(kwargs) == 0:
+            kwargs = self.kwargs
+        self.result = self.target(*args, **kwargs)
+        return self.result
 
 
 class ServerJob(object):
@@ -109,8 +125,8 @@ class ServerJob(object):
     :param debuglevel: 0 = off, 1 = some, 2 = more, 3 = all
     :param timeout: Tuple of timeouts (sshtimeout, cmdtimeout), if not specified both default to 30 seconds
     :param runlocal: Run job on localhost (skips ssh to localhost)
-    :param prehook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
-    :param posthook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
+    :param prehook: Optional Hook object
+    :param posthook: Optional Hook object
     :return: serverJob Object
 
     :property cmdResults: List of results of each command in tuple form (cmd, stdout, stderr)
@@ -118,13 +134,11 @@ class ServerJob(object):
                         False = stderr)
     :property status: State of entire job (None = initial state/ssh failed, True = all cmd statuses is True,
                         False = one or more cmd statuses is False)
-    :property prehook_return: Returned values from prehook method
-    :property posthook_return: Returned values from posthook method
     :property combine_output: Combine stdout and stderr in cmdResults (default = False)
     """
     def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, debuglevel=0, timeout=(30, 30),
                  runlocal=False, prehook=None, posthook=None):
-        if type(cmds) in (list, tuple):
+        if isinstance(cmds, (list, tuple)):
             self.cmds = cmds
         else:
             self.cmds = [cmds]
@@ -144,16 +158,14 @@ class ServerJob(object):
             self.cmdtimeout = timeout
         self.runlocal = runlocal
         self.name = fqdn
-        self.prehook_return = None
-        if prehook is not None:
-            self.prehook = _validate_hook_(prehook)
+        if prehook is not None and isinstance(prehook, Hook):
+            self.prehook = prehook
         else:
-            self.prehook = None
-        self.posthook_return = None
-        if posthook is not None:
-            self.posthook = _validate_hook_(posthook)
+            raise InvalidArgument('prehook should be of type: <Hook>')
+        if posthook is not None and isinstance(posthook, Hook):
+            self.posthook = posthook
         else:
-            self.posthook = None
+            raise InvalidArgument('prehook should be of type: <Hook>')
         self.combine_output = False
         try:
             if int(debuglevel) <= 3:
@@ -185,9 +197,9 @@ class ServerJob(object):
         if self.prehook is not None:
             if self.debuglevel >= 2:
                 print("Running prehook")
-            self.prehook['args'].append(self)
-            self.prehook_return = self.prehook['func'](*self.prehook['args'], **self.prehook['kwargs'])
-            self.prehook['args'].remove(self)
+            self.prehook.args.append(self)
+            self.prehook.run()
+            self.prehook.args.remove(self)
         # Establish SSH Connection if we are not working locally
         if self.runlocal is False:
             try:
@@ -247,9 +259,9 @@ class ServerJob(object):
         if self.posthook is not None:
             if self.debuglevel >= 2:
                 print("Running posthook")
-            self.posthook['args'].append(self)
-            self.posthook_return = self.posthook['func'](*self.posthook['args'], **self.posthook['kwargs'])
-            self.posthook['args'].remove(self)
+            self.posthook.args.append(self)
+            self.posthook.run()
+            self.posthook.args.remove(self)
         if self.debuglevel >= 1:
             print("Finished running serverJob: " + self.name)
         return self.status
@@ -341,10 +353,6 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
     if debuglevel > 0 and progress_bar:
         progress_bar = False
         warnings.warn('You should not use progress_bar and debuglevel together. Silencing progress_bar.')
-    if prehook is not None:
-        prehook = _validate_hook_(prehook)
-    if posthook is not None:
-        posthook = _validate_hook_(posthook)
 
     if progress_bar:
         bar = ProgressBar(max_value=totaljobs)
@@ -367,7 +375,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         for pThread in range(tcount):
             if debuglevel >= 1:
                 print("Spawning parent thread " + str(pThread))
-            t = Thread(target=__tworker__, args=(debuglevel, prehook, posthook, bar, totaljobs))
+            t = Thread(target=__tworker__, args=(debuglevel, prehook, posthook, bar))
             t.daemon = True
             t.start()
 
@@ -469,8 +477,10 @@ def __pworker__(debuglevel, prehook, posthook):
         print("Starting process: " + str(pid))
     while pqueue.empty() is False:
         thisjob = pqueue.get()
-        thisjob.prehook = prehook
-        thisjob.posthook = posthook
+        if prehook is not None:
+            thisjob.prehook = prehook
+        if posthook is not None:
+            thisjob.posthook = posthook
         thisjob.debuglevel = debuglevel
         thisjob.run()
         finqueue.put(thisjob)
@@ -480,7 +490,7 @@ def __pworker__(debuglevel, prehook, posthook):
     return True
 
 
-def __tworker__(debuglevel, prehook, posthook, progress_bar, totaljobs):
+def __tworker__(debuglevel, prehook, posthook, progress_bar):
     """This is a private method used to limit the number of threads that sshreader spawns.
 
     DO NOT USE THIS METHOD! Use the sshread method instead!
@@ -488,8 +498,10 @@ def __tworker__(debuglevel, prehook, posthook, progress_bar, totaljobs):
     global tqueue, tcounter
     while True:
         thisjob = tqueue.get()
-        thisjob.prehook = prehook
-        thisjob.posthook = posthook
+        if prehook is not None:
+            thisjob.prehook = prehook
+        if posthook is not None:
+            thisjob.posthook = posthook
         thisjob.debuglevel = debuglevel
         cthread = Thread(target=thisjob.run)
         cthread.start()
@@ -510,11 +522,13 @@ def __sprocess__(debuglevel, prehook, posthook, tcount, subqueue):
     if debuglevel >= 1:
         print("Starting process: " + str(pid))
     tqueue = threadQueue()
-    for thisJob in subqueue:
-        thisJob.prehook = prehook
-        thisJob.posthook = posthook
-        thisJob.debuglevel = debuglevel
-        tqueue.put(thisJob)
+    for thisjob in subqueue:
+        if prehook is not None:
+            thisjob.prehook = prehook
+        if posthook is not None:
+            thisjob.posthook = posthook
+        thisjob.debuglevel = debuglevel
+        tqueue.put(thisjob)
     if tcount > len(subqueue):
         # Override the number of threads if it is greater than what we actually need
         tcount = len(subqueue)

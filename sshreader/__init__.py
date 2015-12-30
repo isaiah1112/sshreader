@@ -69,7 +69,7 @@ from pkg_resources import get_distribution, DistributionNotFound
 
 # For backwards compatibility
 from sshreader.ssh import SSH, do_shell_script
-from sshreader.sshreader import ServerJob, sshread, print_results
+from sshreader.sshreader import ServerJob, Hook, sshread, print_results
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 try:
