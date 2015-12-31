@@ -7,6 +7,7 @@ from builtins import range
 import os
 import sys
 import unittest
+import warnings
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -216,4 +217,5 @@ class TestSshreader(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    with warnings.catch_warnings(record=True):
+        unittest.main()

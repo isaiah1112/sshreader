@@ -241,11 +241,9 @@ class ServerJob(object):
                     # We are combining stdout and stderr
                     self.cmdStatus[idX] = True
                 else:
-                    if len(result[2]) == 0:
-                        # No stderr output
+                    if len(result.stderr) == 0:
                         self.cmdStatus[idX] = True
                     else:
-                        # Something was output to stdError
                         self.cmdStatus[idX] = False
                 if self.debuglevel >= 3:
                     print(self.name + ": " + thiscmd + ": Finished")
@@ -353,9 +351,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         progress_bar = False
         warnings.warn('You should not use progress_bar and debuglevel together. Silencing progress_bar.')
 
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')  # For Python3
-        item_counter = multiprocessing.Value('L', 1)
+    item_counter = multiprocessing.Value('L', 1)
     if progress_bar:
         bar = ProgressBar(max_value=totaljobs)
     else:
@@ -476,8 +472,6 @@ def _sub_thread_(task_queue, result_queue, item_counter):
         job = task_queue.get()
         job.run()
         result_queue.put(job)
-        with warnings.catch_warnings():  # For python3
-            warnings.simplefilter('ignore')
-            with item_counter.get_lock():
-                item_counter.value += 1
+        with item_counter.get_lock():
+            item_counter.value += 1
     return None
