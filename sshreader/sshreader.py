@@ -123,7 +123,7 @@ class ServerJob(object):
     :param runlocal: Run job on localhost (skips ssh to localhost)
     :param prehook: Optional Hook object
     :param posthook: Optional Hook object
-    :return: serverJob Object
+    :return: ServerJob Object
 
     :property cmdResults: List of results of each command in tuple form (cmd, stdout, stderr)
     :property cmdStatus: List of states for each command ( None = initial state/cmd did not run, True = no stderr,
@@ -189,12 +189,12 @@ class ServerJob(object):
             self.ssh_con = "localhost"
 
     def run(self):
-        """Run a serverJob. SSH to server, run cmds, return result
+        """Run a ServerJob. SSH to server, run cmds, return result
 
-        :return: serverJob.status
+        :return: ServerJob.status
         """
         if self.debuglevel >= 1:
-            print("Running serverJob: " + self.name)
+            print("Running ServerJob: " + self.name)
         # Run prehook if it is defined
         if self.prehook is not None:
             if self.debuglevel >= 2:
@@ -263,17 +263,17 @@ class ServerJob(object):
             self.posthook.run()
             self.posthook.args.remove(self)
         if self.debuglevel >= 1:
-            print("Finished running serverJob: " + self.name)
+            print("Finished running ServerJob: " + self.name)
         return self.status
 
     def print_results(self, printname=False):
         """Prints the command run and its output
 
-        :param printname: Print the serverJob name
+        :param printname: Print the ServerJob name
         :return: None
         """
         if printname:
-            print("serverJob: " + self.name + "\n" + (separator*3))
+            print("ServerJob: " + self.name + "\n" + (separator*3))
         for idx, value in enumerate(self.cmds):
             print(value + ":\n" + ";".join(self.cmdResults[idx]) + "\n" + separator)
         return None
@@ -291,9 +291,9 @@ class ServerJob(object):
 
 
 def print_results(serverjobs):
-    """Print the output of all serverJobs in as serverJobList by status
+    """Print the output of all ServerJobs in as ServerJobList by status
 
-    :param serverjobs: A list of sshreaded serverJob objects
+    :param serverjobs: List of ServerJob objects
     :return: None
     """
     nonestatus = [x for x in serverjobs if x.status is None]
@@ -315,14 +315,14 @@ def print_results(serverjobs):
 
 
 def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=False):
-    """Takes a list of serverJob objects and puts them into threads/sub-processes and runs them
+    """Takes a list of ServerJob objects and puts them into threads/sub-processes and runs them
 
-    :param serverjobs: List of serverJob objects (A list of 1 job is acceptable)
+    :param serverjobs: List of ServerJob objects (A list of 1 job is acceptable)
     :param debuglevel: Debug level for threads/processes (0 = off, 1 = some, 2 = more, 3 = all)
     :param pcount: Number of sub-processes to spawn (None = off, 0 = cpuSoftLimit, -1 = cpuHardLimit)
-    :param tcount: Number of threads to spawn (None = off, 0 = adjusted length of serverJobList)
+    :param tcount: Number of threads to spawn (None = off, 0 = adjusted length of ServerJobList)
     :param progress_bar: Print a progress bar
-    :return: serverJobLst with completed serverJob objects (single object returned if single job passed)
+    :return: List with completed ServerJob objects (single object returned if 1 job was passed)
     """
     if tcount is None and pcount is None:
         raise ProcessesOrThreads("You must specify a number for pcount or tcount!")
@@ -404,7 +404,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         task_queue = multiprocessing.Queue(maxsize=totaljobs)
         result_queue = multiprocessing.Queue(maxsize=totaljobs)
 
-        # Add each serverJob object to the queue
+        # Add each ServerJob object to the queue
         for job in serverjobs:
             task_queue.put(job)
 

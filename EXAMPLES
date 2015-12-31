@@ -22,7 +22,6 @@ results = sshreader.sshread(serverjobs, pcount=0, tcount=0, progress_bar=True)
 for result in results:
     result.print_results()
 
-
 # You can also use sshreader to work with ssh connections without threading/multiprocessing
 host = 'host1.example.com'
 s = sshreader.ssh.SSH(host, username='myuser', password='password')
@@ -31,5 +30,5 @@ s.close()
 
 # Or you can run shell commands on the localhost
 
-print(sshreader.do_shell_script('uname -a'))
+print(sshreader.shell_command('uname -a'))
 
