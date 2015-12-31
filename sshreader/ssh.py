@@ -60,7 +60,10 @@ class SSH(object):
         self.__host__ = fqdn
         self.__username__ = username
         self.__password__ = password
-        self.__keyfile__ = os.path.abspath(os.path.expanduser(keyfile))
+        if keyfile is not None:
+            self.__keyfile__ = os.path.abspath(os.path.expanduser(keyfile))
+        else:
+            self.__keyfile__ = keyfile
         self.__port__ = port
         self.__timeout__ = timeout
         self.connection = paramiko.SSHClient()
