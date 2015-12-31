@@ -35,12 +35,12 @@ def do_shell_script(command, combine=False):
     :return: Tuple of (command,stdout,stderr) or (command,output)
     """
     if combine:
-        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout
-        stdout = pipeout.read()
+        with Popen(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout as pipeout:
+            stdout = pipeout.read()
         return command, stdout.strip()
     else:
-        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = pipeout.communicate()
+        with Popen(command, shell=True, stdout=PIPE, stderr=PIPE) as pipeout:
+            stdout, stderr = pipeout.communicate()
         return command, stdout.strip(), stderr.strip()
 
 
