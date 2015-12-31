@@ -43,18 +43,10 @@ def shell_command(command, combine=False):
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
         stdout, stderr = pipeout.communicate()
         assert stderr is None
-        try:
-            pipeout.close()
-        except AttributeError:
-            pass  # Must be running Python2
         script = ShellScript(cmd=command, stdout=stdout.strip())
     else:
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = pipeout.communicate()
-        try:
-            pipeout.close()
-        except AttributeError:
-            pass  # Must be running Python2
         script = ShellScript(cmd=command, stdout=stdout.strip(), stderr=stderr.strip())
     return script
 
