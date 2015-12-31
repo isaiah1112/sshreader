@@ -25,7 +25,7 @@ import queue
 import warnings
 from builtins import range  # Replaces xrange in Python2
 from types import FunctionType
-from sshreader.ssh import SSH, do_shell_script
+from sshreader.ssh import SSH, shell_command
 from progressbar import ProgressBar
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
@@ -228,9 +228,9 @@ class ServerJob(object):
                     print(self.name + " running: " + thiscmd)
                 if self.runlocal:
                     if self.combine_output:
-                        result = do_shell_script(thiscmd, combine=True)
+                        result = shell_command(thiscmd, combine=True)
                     else:
-                        result = do_shell_script(thiscmd)
+                        result = shell_command(thiscmd)
                 else:
                     if self.combine_output:
                         result = self.ssh_con.ssh_command(thiscmd, timeout=self.cmdtimeout, combine=True)

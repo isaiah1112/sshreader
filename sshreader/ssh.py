@@ -21,21 +21,22 @@ from __future__ import print_function
 import os
 import paramiko
 import logging
+import warnings
 from subprocess import Popen, PIPE, STDOUT
 from collections import namedtuple
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
-__version__ = '1.0.1'
+__version__ = '1.1'
 
 # Using namedtuple because... why not?
 ShellScript = namedtuple('ShellScript', ['cmd', 'stdout', 'stderr'])
 
 
-def do_shell_script(command, combine=False):
-    """Run a specified command in the shell on localhost and return the output
+def shell_command(command, combine=False):
+    """Run a command in the shell on localhost and return the output
 
     :param command: String containing the shell script to run
-    :param combine: Combine stderr and stdout in output
+    :param combine: Direct stderr to stdout (combine output)
     :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
     """
     if combine:
@@ -56,6 +57,17 @@ def do_shell_script(command, combine=False):
             pass  # Must be running Python2
         script = ShellScript(cmd=command, stdout=stdout.strip(), stderr=stderr.strip())
     return script
+
+
+def do_shell_script(command, combine=False):
+    """ Alias to shell_command.  Use that one!  This call will go away in sshreader v4.0
+
+    :param command: String containing the shell script to run
+    :param combine: Combine stderr and stdout in output
+    :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
+    """
+    warnings.warn('do_shell_script will be removed in v4.0.  Use shell_command instead!')
+    return shell_command(command, combine=combine)
 
 
 class SSH(object):

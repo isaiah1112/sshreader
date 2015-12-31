@@ -25,28 +25,28 @@ class TestShellScript(unittest.TestCase):
     """ Test Cases for the shell script portion of SSH module
     """
 
-    def test_do_shell_script(self):
-        """ Test do_shell_script method
+    def test_shell_command(self):
+        """ Test shell_command method
         """
-        result = sshreader.do_shell_script('echo "foo"')
+        result = sshreader.shell_command('echo "foo"')
         self.assertIsInstance(result, tuple)
         self.assertEqual(len(result), 3, msg='tuple does not match (cmd, stdout, stderr)')
         self.assertEqual(result[1], b'foo', msg='stdout did not match input')
         self.assertEqual(len(result[2]), 0, msg='stderr should be empty')
         pass
 
-    def test_do_shell_script_combined(self):
-        """ Test combining stdout and stderr of do_shell_script method
+    def test_shell_command_combined(self):
+        """ Test combining stdout and stderr of shell_command method
         """
-        result = sshreader.do_shell_script('echo "foo"; echo "bar" 1>&2', combine=True)
+        result = sshreader.shell_command('echo "foo"; echo "bar" 1>&2', combine=True)
         self.assertIsInstance(result, tuple)
         self.assertEqual(len(result), 2, msg='stdout and stderr not combined')
         pass
 
-    def test_do_shell_script_stderr(self):
-        """ Test stderr of do_shell_script method
+    def test_shell_command_stderr(self):
+        """ Test stderr of shell_command method
         """
-        result = sshreader.do_shell_script('echo "bar" 1>&2')
+        result = sshreader.shell_command('echo "bar" 1>&2')
         self.assertIsInstance(result, tuple)
         self.assertEqual(len(result), 3, msg='tuple does not match (cmd, stdout, stderr)')
         self.assertEqual(result[2], b'bar', msg='stderr was not what we expected')
