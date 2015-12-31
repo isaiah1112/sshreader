@@ -90,20 +90,22 @@ class SSH(object):
         """
         if self.is_alive() is False:
             raise paramiko.SSHException("Connection is not established")
-        if combine:
-            # http://stackoverflow.com/questions/3823862/paramiko-combine-stdout-and-stderr
-            tran = self.connection.get_transport()
-            chan = tran.open_session()
-            chan.settimeout(timeout)
-            chan.get_pty()
-            stdout_file = chan.makefile()
-            chan.exec_command(command)
-            stdout = stdout_file.read().strip()
-            stdout_file.close()
-            return command, stdout
-        else:
-            stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
-            return command, stdout.read().strip(), stderr.read().strip()
+        with warnings.catch_warnings():  # For Python3
+            warnings.simplefilter('ignore')
+            if combine:
+                # http://stackoverflow.com/questions/3823862/paramiko-combine-stdout-and-stderr
+                tran = self.connection.get_transport()
+                chan = tran.open_session()
+                chan.settimeout(timeout)
+                chan.get_pty()
+                stdout_file = chan.makefile()
+                chan.exec_command(command)
+                stdout = stdout_file.read().strip()
+                stdout_file.close()
+                return command, stdout
+            else:
+                stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
+                return command, stdout.read().strip(), stderr.read().strip()
 
     def close(self):
         """Closes an established ssh connection
