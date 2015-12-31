@@ -21,6 +21,7 @@ from __future__ import print_function
 import os
 import paramiko
 import logging
+import warnings
 from subprocess import Popen, PIPE, STDOUT
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
@@ -35,12 +36,20 @@ def do_shell_script(command, combine=False):
     :return: Tuple of (command,stdout,stderr) or (command,output)
     """
     if combine:
-        with Popen(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout as pipeout:
-            stdout = pipeout.read()
+        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout
+        stdout = pipeout.read()
+        try:
+            pipeout.close()
+        except AttributeError:
+            pass  # must be running python2
         return command, stdout.strip()
     else:
-        with Popen(command, shell=True, stdout=PIPE, stderr=PIPE) as pipeout:
-            stdout, stderr = pipeout.communicate()
+        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = pipeout.communicate()
+        try:
+            pipeout.close()
+        except AttributeError:
+            pass  # Must be running python2
         return command, stdout.strip(), stderr.strip()
 
 
@@ -87,9 +96,11 @@ class SSH(object):
             chan = tran.open_session()
             chan.settimeout(timeout)
             chan.get_pty()
-            stdout = chan.makefile()
+            stdout_file = chan.makefile()
             chan.exec_command(command)
-            return command, stdout.read().strip()
+            stdout = stdout_file.read().strip()
+            stdout_file.close()
+            return command, stdout
         else:
             stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
             return command, stdout.read().strip(), stderr.read().strip()
@@ -124,18 +135,22 @@ class SSH(object):
         if self.is_alive():
             raise paramiko.SSHException("Connection is already established")
         # Per http://stackoverflow.com/questions/19152578/no-handlers-could-be-found-for-logger-paramiko
-        if self.__keyfile__ is not None:
-            if self.__username__ is not None:  # Key file with a custom username!
-                self.connection.connect(self.__host__, port=self.__port__, username=self.__username__,
-                                        key_filename=self.__keyfile__, timeout=self.__timeout__, look_for_keys=False)
-            else:
-                self.connection.connect(self.__host__, port=self.__port__, key_filename=self.__keyfile__,
-                                        timeout=self.__timeout__, look_for_keys=False)
-        else:  # Username and password combo
-            if self.__username__ is None or self.__password__ is None:
-                raise paramiko.SSHException("You must enter a username and password or supply an SSH key")
-            else:
-                self.connection.connect(self.__host__, port=self.__port__, username=self.__username__,
-                                        password=self.__password__, timeout=self.__timeout__, look_for_keys=False)
-        # per https://github.com/paramiko/paramiko/issues/175
-        self.connection.get_transport().window_size = 3 * 1024 * 1024
+        with warnings.catch_warnings():
+            # This is so you don't get an ResourceWarning: unclosed <socket.socket> warning in python3
+            warnings.simplefilter('ignore')
+            if self.__keyfile__ is not None:
+                if self.__username__ is not None:  # Key file with a custom username!
+                    self.connection.connect(self.__host__, port=self.__port__, username=self.__username__,
+                                            key_filename=self.__keyfile__, timeout=self.__timeout__, look_for_keys=False)
+                else:
+                    self.connection.connect(self.__host__, port=self.__port__, key_filename=self.__keyfile__,
+                                            timeout=self.__timeout__, look_for_keys=False)
+            else:  # Username and password combo
+                if self.__username__ is None or self.__password__ is None:
+                    raise paramiko.SSHException("You must enter a username and password or supply an SSH key")
+                else:
+                    self.connection.connect(self.__host__, port=self.__port__, username=self.__username__,
+                                            password=self.__password__, timeout=self.__timeout__, look_for_keys=False)
+            # per https://github.com/paramiko/paramiko/issues/175
+            self.connection.get_transport().window_size = 3 * 1024 * 1024
+        return True

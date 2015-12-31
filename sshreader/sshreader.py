@@ -81,10 +81,10 @@ class Hook(object):
         if args is None:
             self.args = list()
         else:
-            if isinstance(args, (list, tuple)):
+            if isinstance(args, list):
                 self.args = args
             else:
-                raise InvalidArgument('args should be of type: <list>, <tuple>')
+                raise InvalidArgument('args should be of type: <list>')
         if kwargs is None:
             self.kwargs = dict()
         else:
@@ -352,7 +352,9 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         progress_bar = False
         warnings.warn('You should not use progress_bar and debuglevel together. Silencing progress_bar.')
 
-    item_counter = multiprocessing.Value('L', 1)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')  # For Python3
+        item_counter = multiprocessing.Value('L', 1)
     if progress_bar:
         bar = ProgressBar(max_value=totaljobs)
     else:
@@ -472,6 +474,8 @@ def _sub_thread_(task_queue, result_queue, item_counter):
         job = task_queue.get()
         job.run()
         result_queue.put(job)
-        with item_counter.get_lock():
-            item_counter.value += 1
+        with warnings.catch_warnings():  # For python3
+            warnings.simplefilter('ignore')
+            with item_counter.get_lock():
+                item_counter.value += 1
     return None
