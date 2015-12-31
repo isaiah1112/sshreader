@@ -24,7 +24,7 @@ import logging
 from subprocess import Popen, PIPE, STDOUT
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
-__version__ = '1.0'
+__version__ = '1.0.1'
 
 
 def do_shell_script(command, combine=False):
@@ -53,9 +53,10 @@ class SSH(object):
     :param keyfile: SSH keyfile (can be used instead of password)
     :param port: SSH port (default = 22)
     :param timeout: SSH connection timeout in seconds (default = 30)
+    :param connect: Initiate the connect (default = True)
     :return: SSH connection object
     """
-    def __init__(self, fqdn, username=None, password=None, keyfile=None, port=22, timeout=30):
+    def __init__(self, fqdn, username=None, password=None, keyfile=None, port=22, timeout=30, connect=True):
         self.__host__ = fqdn
         self.__username__ = username
         self.__password__ = password
@@ -64,7 +65,8 @@ class SSH(object):
         self.__timeout__ = timeout
         self.connection = paramiko.SSHClient()
         self.connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.connect()
+        if connect:
+            self.connect()
 
     def ssh_command(self, command, timeout=30, combine=False):
         """Run a command over an ssh connection
@@ -74,6 +76,8 @@ class SSH(object):
         :param combine: Combine stderr and stdout
         :return: Tuple of (command, stdout, stderr) or (command, output)
         """
+        if self.is_alive() is False:
+            raise paramiko.SSHException("Connection is not established")
         if combine:
             # http://stackoverflow.com/questions/3823862/paramiko-combine-stdout-and-stderr
             tran = self.connection.get_transport()
