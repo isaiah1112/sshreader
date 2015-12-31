@@ -29,7 +29,7 @@ __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 __version__ = '1.1'
 
 # Using namedtuple because... why not?
-ShellScript = namedtuple('ShellScript', ['cmd', 'stdout', 'stderr'])
+ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr'])
 
 
 def shell_command(command, combine=False):
@@ -43,11 +43,11 @@ def shell_command(command, combine=False):
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
         stdout, stderr = pipeout.communicate()
         assert stderr is None
-        script = ShellScript(cmd=command, stdout=stdout.strip())
+        script = ShellCommand(cmd=command, stdout=stdout.strip())
     else:
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = pipeout.communicate()
-        script = ShellScript(cmd=command, stdout=stdout.strip(), stderr=stderr.strip())
+        script = ShellCommand(cmd=command, stdout=stdout.strip(), stderr=stderr.strip())
     return script
 
 
@@ -109,10 +109,10 @@ class SSH(object):
             chan.exec_command(command)
             stdout = stdout_file.read().strip()
             stdout_file.close()
-            script = ShellScript(cmd=command, stdout=stdout.strip())
+            script = ShellCommand(cmd=command, stdout=stdout.strip())
         else:
             stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
-            script = ShellScript(cmd=command, stdout=stdout.strip(), stderr=stderr.strip)
+            script = ShellCommand(cmd=command, stdout=stdout.strip(), stderr=stderr.strip)
         return script
 
     def close(self):
