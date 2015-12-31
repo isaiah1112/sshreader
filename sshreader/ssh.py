@@ -43,12 +43,12 @@ def shell_command(command, combine=False):
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
         stdout, stderr = pipeout.communicate()
         assert stderr is None
-        script = ShellCommand(cmd=command, stdout=stdout.strip())
+        result = ShellCommand(cmd=command, stdout=stdout.strip())
     else:
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = pipeout.communicate()
-        script = ShellCommand(cmd=command, stdout=stdout.strip(), stderr=stderr.strip())
-    return script
+        result = ShellCommand(cmd=command, stdout=stdout.strip(), stderr=stderr.strip())
+    return result
 
 
 def do_shell_script(command, combine=False):
@@ -58,7 +58,7 @@ def do_shell_script(command, combine=False):
     :param combine: Combine stderr and stdout in output
     :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
     """
-    warnings.warn('do_shell_script will be removed in v4.0.  Use shell_command instead!')
+    warnings.warn('<do_shell_script> will be replaced by <shell_command> in v4.0')
     return shell_command(command, combine=combine)
 
 
@@ -109,11 +109,11 @@ class SSH(object):
             chan.exec_command(command)
             stdout = stdout_file.read().strip()
             stdout_file.close()
-            script = ShellCommand(cmd=command, stdout=stdout.strip())
+            result = ShellCommand(cmd=command, stdout=stdout.strip())
         else:
             stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
-            script = ShellCommand(cmd=command, stdout=stdout.strip(), stderr=stderr.strip)
-        return script
+            result = ShellCommand(cmd=command, stdout=stdout.strip(), stderr=stderr.strip)
+        return result
 
     def close(self):
         """Closes an established ssh connection
