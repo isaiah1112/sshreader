@@ -36,8 +36,9 @@ def do_shell_script(command, combine=False):
     :return: Tuple of (command,stdout,stderr) or (command,output)
     """
     if combine:
-        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout
-        stdout = pipeout.read()
+        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
+        stdout, stderr = pipeout.communicate()
+        assert stderr is None
         try:
             pipeout.close()
         except AttributeError:
