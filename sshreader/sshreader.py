@@ -19,6 +19,7 @@ from __future__ import absolute_import, print_function, division
 import os
 import paramiko
 import multiprocessing
+import time
 import threading
 import queue
 import warnings
@@ -423,6 +424,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
     while result_queue.full() is False:
         if progress_bar:
             bar.update(item_counter.value)
+        time.sleep(1)
 
     completed_jobs = list()
     while result_queue.empty() is False:
@@ -459,7 +461,7 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count=None, deb
             thread.daemon = True
             thread.start()
         while threading.active_count() > 1:
-            pass
+            time.sleep(1)
     if debuglevel >= 2:
         print("Exiting process: " + str(pid))
     return None
