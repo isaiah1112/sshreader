@@ -19,18 +19,18 @@ from __future__ import absolute_import, print_function, division
 import os
 import paramiko
 import multiprocessing
+import queue
 import time
 import threading
-import queue
 import warnings
 from builtins import range  # Replaces xrange in Python2
+from collections import namedtuple
+from progressbar import ProgressBar
 from types import FunctionType
 from sshreader.ssh import SSH, shell_command
-from progressbar import ProgressBar
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
-separator = "-" * 10
 __jobHardLimit__ = (10 ** 6)
 __cpuHardLimitFactor__ = 3
 
@@ -125,7 +125,7 @@ class ServerJob(object):
     :param posthook: Optional Hook object
     :return: ServerJob Object
 
-    :property cmdResults: List of results of each command in tuple form (cmd, stdout, stderr)
+    :property cmdResults: List of namedtuple results (cmd, stdout, stderr)
     :property cmdStatus: List of states for each command ( None = initial state/cmd did not run, True = no stderr,
                         False = stderr)
     :property status: State of entire job (None = initial state/ssh failed, True = all cmd statuses is True,
@@ -194,11 +194,11 @@ class ServerJob(object):
         :return: ServerJob.status
         """
         if self.debuglevel >= 1:
-            print("Running ServerJob: " + self.name)
+            print(u"Running ServerJob: " + str(self.name))
         # Run prehook if it is defined
         if self.prehook is not None:
             if self.debuglevel >= 2:
-                print("Running prehook")
+                print(u"Running prehook")
             self.prehook.args.append(self)
             self.prehook.run()
             self.prehook.args.remove(self)
@@ -215,17 +215,17 @@ class ServerJob(object):
                                        timeout=self.sshtimeout)
             except Exception as errorMsg:
                 if self.debuglevel >= 2:
-                    print(errorMsg)
+                    print(str(errorMsg))
                 self.ssh_con = None
                 if self.debuglevel >= 1:
-                    print(self.name + ": Unable to establish ssh connection!")
+                    print(str(self.name) + u": Unable to establish ssh connection!")
         # This is a trick statement to allow ssh and local shell scripts to be run using similar output processing code
         if self.ssh_con is not None:
             for idX, thiscmd in enumerate(self.cmds):
                 # Now running each command in turn
                 self.cmdStatus.append(None)
                 if self.debuglevel >= 3:
-                    print(self.name + " running: " + thiscmd)
+                    print(str(self.name) + u" running: " + str(thiscmd))
                 if self.runlocal:
                     if self.combine_output:
                         result = shell_command(thiscmd, combine=True)
@@ -246,7 +246,7 @@ class ServerJob(object):
                     else:
                         self.cmdStatus[idX] = False
                 if self.debuglevel >= 3:
-                    print(self.name + ": " + thiscmd + ": Finished")
+                    print(str(self.name) + u": " + str(thiscmd) + u": Finished")
             if False in self.cmdStatus or None in self.cmdStatus:
                 self.status = False
             else:
@@ -258,24 +258,22 @@ class ServerJob(object):
             # Run post hook before we are done with this job
         if self.posthook is not None:
             if self.debuglevel >= 2:
-                print("Running posthook")
+                print(u"Running posthook")
             self.posthook.args.append(self)
             self.posthook.run()
             self.posthook.args.remove(self)
         if self.debuglevel >= 1:
-            print("Finished running ServerJob: " + self.name)
+            print(u"Finished running ServerJob: " + str(self.name))
         return self.status
 
-    def print_results(self, printname=False):
-        """Prints the command run and its output
-
-        :param printname: Print the ServerJob name
+    def print_results(self):
+        """ Prints the status of the ServerJob and details of each cmd in the job
         :return: None
         """
-        if printname:
-            print("ServerJob: " + self.name + "\n" + (separator*3))
+        print(str('-' * 20))
+        print(u'ServerJob: ' + str(self.name) + u'\tStatus: ' + str(self.status))
         for idx, value in enumerate(self.cmds):
-            print(value + ":\n" + ";".join(self.cmdResults[idx]) + "\n" + separator)
+            print(str(self.cmdResults[idx]) + u'\tStatus: ' + str(self.cmdStatus[idx]))
         return None
 
     def __str__(self):
@@ -291,27 +289,25 @@ class ServerJob(object):
 
 
 def print_results(serverjobs):
-    """Print the output of all ServerJobs in as ServerJobList by status
+    """Print the output of all ServerJobs in as ServerJobList by job status
 
     :param serverjobs: List of ServerJob objects
-    :return: None
+    :return: SortedJobs named tuple
     """
-    nonestatus = [x for x in serverjobs if x.status is None]
-    completejobs = [x for x in serverjobs if x.status is True]
-    errorjobs = [x for x in serverjobs if x.status is False]
-    if len(completejobs) > 0:
-        print("\nSUCCESSFUL SERVERJOBS\n")
-        for x in completejobs:
-            x.print_results(True)
-    if len(errorjobs) > 0:
-        print("\nERRORED SERVERJOBS\n")
-        for x in errorjobs:
-            x.print_results(True)
-    if len(nonestatus) > 0:
-        print("\nINCOMPLETE SERVERJOBS\n")
-        for x in nonestatus:
-            x.print_results(True)
-    return None
+    SortedJobs = namedtuple("SortedJobs", ['status_true', 'status_false', 'status_none'])
+    status_true = [x for x in serverjobs if x.status is True]
+    status_false = [x for x in serverjobs if x.status is False]
+    status_none = [x for x in serverjobs if x.status is None]
+    if len(status_true) > 0:
+        for job in status_true:
+            job.print_results()
+    if len(status_false) > 0:
+        for job in status_false:
+            job.print_results()
+    if len(status_none) > 0:
+        for job in status_none:
+            job.print_results()
+    return SortedJobs(status_true=status_true, status_false=status_false, status_none=status_none)
 
 
 def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=False):
@@ -335,8 +331,8 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
 
     # Per testing, don't allow more than 1 million jobs
     if totaljobs > __jobHardLimit__:
-        print("The jobHardLimit for sshreader is: " + str(__jobHardLimit__))
-        print("You are looking to process: " + str(totaljobs))
+        print(u"The jobHardLimit for sshreader is: " + str(__jobHardLimit__))
+        print(u"You are looking to process: " + str(totaljobs))
         raise ExceededJobLimit("Reached or exceeded jobHardLimit")
 
     try:
@@ -368,11 +364,11 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
             tcount = totaljobs
 
         if debuglevel >= 1:
-            print("Spawning " + str(tcount) + " threads")
+            print(u"Spawning " + str(tcount) + u" threads")
         # Start a thread pool
         for thread in range(tcount):
             if debuglevel >= 2:
-                print("Spawning: Thread-" + str(thread))
+                print(u"Spawning: Thread-" + str(thread))
             thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter))
             thread.daemon = True
             thread.start()
@@ -391,8 +387,8 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
             pcount = totaljobs
 
         if pcount > cpuhardlimit:
-            print("The cpuHardLimit for your system is: " + str(cpuhardlimit))
-            print("You asked for: " + str(pcount))
+            print(u"The cpuHardLimit for your system is: " + str(cpuhardlimit))
+            print(u"You asked for: " + str(pcount))
             raise ExceededCPULimit("Reached or exceeded cpuHardLimit")
 
         if tcount is not None:
@@ -409,7 +405,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
             task_queue.put(job)
 
         if debuglevel >= 1:
-            print("Spawning " + str(pcount) + " sub-processes")
+            print(u"Spawning " + str(pcount) + u" sub-processes")
         for pid in range(pcount):
             pid = multiprocessing.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter),
                                           kwargs={'thread_count': tcount, 'debuglevel': debuglevel})
@@ -439,7 +435,7 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count=None, deb
     """
     pid = os.getpid()
     if debuglevel >= 2:
-        print("Starting process: " + str(pid))
+        print(u"Starting process: " + str(pid))
     if thread_count is None:
         while task_queue.empty() is False:
             job = task_queue.get()
@@ -449,17 +445,17 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count=None, deb
                 item_counter.value += 1
     else:
         if debuglevel >= 1:
-            print("Process: " + str(pid) + " spawning: " + str(thread_count) + " threads")
+            print(u"Process: " + str(pid) + u" spawning: " + str(thread_count) + u" threads")
         for thread in range(thread_count):
             if debuglevel >= 2:
-                print("Process: " + str(pid) + " spawning: Thread-" + str(thread))
+                print(u"Process: " + str(pid) + u" spawning: Thread-" + str(thread))
             thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter))
             thread.daemon = True
             thread.start()
         while threading.active_count() > 1:
             time.sleep(1)
     if debuglevel >= 2:
-        print("Exiting process: " + str(pid))
+        print(u"Exiting process: " + str(pid))
     return None
 
 
