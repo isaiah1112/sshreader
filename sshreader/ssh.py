@@ -30,6 +30,7 @@ __version__ = '1.1'
 
 # Using namedtuple because... why not?
 ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr'])
+ShellCommandCombined = namedtuple('ShellCommand', ['cmd', 'stdout'])
 
 
 def shell_command(command, combine=False):
@@ -43,7 +44,7 @@ def shell_command(command, combine=False):
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
         stdout, stderr = pipeout.communicate()
         assert stderr is None
-        result = ShellCommand(cmd=command, stdout=stdout.strip())
+        result = ShellCommandCombined(cmd=command, stdout=stdout.strip())
     else:
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = pipeout.communicate()
@@ -107,12 +108,12 @@ class SSH(object):
             chan.get_pty()
             stdout_file = chan.makefile()
             chan.exec_command(command)
-            stdout = stdout_file.read().strip()
+            stdout = stdout_file.read()
             stdout_file.close()
-            result = ShellCommand(cmd=command, stdout=stdout.strip())
+            result = ShellCommandCombined(cmd=command, stdout=stdout.strip())
         else:
             stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
-            result = ShellCommand(cmd=command, stdout=stdout.strip(), stderr=stderr.strip)
+            result = ShellCommand(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip())
         return result
 
     def close(self):

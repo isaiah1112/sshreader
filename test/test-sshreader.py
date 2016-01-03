@@ -158,7 +158,8 @@ class TestSshreader(unittest.TestCase):
         for x in range(length):
             jobs.append(sshreader.ServerJob(ssh_data['fqdn'], 'sleep 1', prehook=pre, posthook=post,
                                             username=ssh_data['username'], password=ssh_data['password']))
-        jobs.append(sshreader.ServerJob('localjob', 'sleep 1', runlocal=True))
+        for x in range(length):
+            jobs.append(sshreader.ServerJob('local-' + str(x), 'sleep 1', runlocal=True))
         return jobs
 
     def test_Hook_creation(self):
