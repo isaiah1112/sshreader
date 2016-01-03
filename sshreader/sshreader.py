@@ -417,6 +417,8 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         if progress_bar:
             bar.update(item_counter.value)
         time.sleep(1)
+    if progress_bar:
+        bar.finish()
 
     completed_jobs = list()
     while result_queue.empty() is False:
