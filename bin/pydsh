@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python -u
 # coding=utf-8
 """A "pythonish" implementation of pdsh using sshreader!"""
 from __future__ import print_function
@@ -27,11 +27,11 @@ def print_job(*args):
     :return: None
     """
     thisjob = list(args).pop()
-    results = thisjob.cmdResults[0]
     if 'quick' in args:
         if thisjob.status is None:
             print(str(thisjob.name) + u": Unable to establish ssh connection")
         else:
+            results = thisjob.cmdResults[0]
             for line in str(results.stdout.decode()).split('\n'):
                 print(str(thisjob.name) + u': ' + str(line))
     else:
@@ -39,6 +39,7 @@ def print_job(*args):
         if thisjob.status is None:
             print(str(thisjob.name) + u": Unable to establish ssh connection")
         else:
+            results = thisjob.cmdResults[0]
             for line in str(results.stdout.decode()).split('\n'):
                 print(str(line))
     return None
@@ -94,7 +95,7 @@ def main():
         debug = True
         print(args)
 
-    userhome = os.path.expanduser('~/')
+    userhome = os.path.expanduser('~')
     if args.username is None:
         args.username = os.path.split(userhome)[-1]
     else:
