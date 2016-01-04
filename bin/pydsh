@@ -32,21 +32,15 @@ def print_job(*args):
         if thisjob.status is None:
             print(str(thisjob.name) + u": Unable to establish ssh connection")
         else:
-            if len(results.stderr) > 0:
-                for line in str(results.stderr).split("\n"):
-                    print(str(thisjob.name) + u": " + str(line))
-            elif len(results.stdout) > 0:
-                for line in str(results.stdout).split("\n"):
-                    print(str(thisjob.name) + u": " + str(line))
+            for line in str(results.stdout.decode()).split('\n'):
+                print(str(thisjob.name) + u': ' + str(line))
     else:
         print(str("-"*16) + u"\n" + str(thisjob.name) + u"\n" + str("-"*16))
         if thisjob.status is None:
             print(str(thisjob.name) + u": Unable to establish ssh connection")
         else:
-            if len(results.stderr) > 0:
-                print(str(results.stderr))
-            if len(thisjob.cmdResults[0].stdout) > 0:
-                print(str(results.stdout))
+            for line in str(results.stdout.decode()).split('\n'):
+                print(str(line))
     return None
 
 
@@ -131,6 +125,7 @@ def main():
             job = sshreader.ServerJob(host, args.command, username=args.username, keyfile=args.keyfile)
         else:
             job = sshreader.ServerJob(host, args.command, username=args.username, password=args.password)
+        job.combine_output = True
         if args.quick:
             job.posthook = post
         jobs.append(job)
