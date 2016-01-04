@@ -28,7 +28,8 @@ Limitations
 
 **ServerJob**:
 
-The sshread method currently limits you to processing 1 million ServerJobs at a time [1]_ , per \_\_jobHardLimit__ global.
+The sshread method currently limits you to processing 1 million ServerJobs at a time [1]_ ,
+per \_\_jobHardLimit__ global.
 
 
 **cpusoftlimit**:
@@ -64,13 +65,12 @@ This is so that you don't make a box unusable and was arrived at per my own test
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import print_function
+from __future__ import print_function, absolute_import
 from pkg_resources import get_distribution, DistributionNotFound
 
-# TODO - Get this module working in Python 3!
 # For backwards compatibility
-from ssh import SSH, do_shell_script
-from sshreader import ServerJob, sshread, print_results, progress_bar
+from sshreader.ssh import SSH, shell_command, do_shell_script
+from sshreader.sshreader import ServerJob, Hook, sshread, print_results
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 try:

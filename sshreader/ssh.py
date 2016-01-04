@@ -21,27 +21,46 @@ from __future__ import print_function
 import os
 import paramiko
 import logging
+import warnings
 from subprocess import Popen, PIPE, STDOUT
+from collections import namedtuple
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
-__version__ = '1.0'
+__version__ = '1.1'
+
+# Using namedtuple because... why not?
+ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr'])
+ShellCommandCombined = namedtuple('ShellCommand', ['cmd', 'stdout'])
 
 
-def do_shell_script(command, combine=False):
-    """Run a specified command in the shell on localhost and return the output
+def shell_command(command, combine=False):
+    """Run a command in the shell on localhost and return the output
 
     :param command: String containing the shell script to run
-    :param combine: Combine stderr and stdout in output
-    :return: Tuple of (command,stdout,stderr) or (command,output)
+    :param combine: Direct stderr to stdout (combine output)
+    :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
     """
     if combine:
-        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT).stdout
-        stdout = pipeout.read()
-        return command, stdout.strip()
+        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
+        stdout, stderr = pipeout.communicate()
+        assert stderr is None
+        result = ShellCommandCombined(cmd=command, stdout=stdout.strip())
     else:
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = pipeout.communicate()
-        return command, stdout.strip(), stderr.strip()
+        result = ShellCommand(cmd=command, stdout=stdout.strip(), stderr=stderr.strip())
+    return result
+
+
+def do_shell_script(command, combine=False):
+    """ Alias to shell_command.  Use that one!  This call will go away in sshreader v4.0
+
+    :param command: String containing the shell script to run
+    :param combine: Combine stderr and stdout in output
+    :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
+    """
+    warnings.warn('<do_shell_script> will be replaced by <shell_command> in v4.0')
+    return shell_command(command, combine=combine)
 
 
 class SSH(object):
@@ -53,18 +72,23 @@ class SSH(object):
     :param keyfile: SSH keyfile (can be used instead of password)
     :param port: SSH port (default = 22)
     :param timeout: SSH connection timeout in seconds (default = 30)
+    :param connect: Initiate the connect (default = True)
     :return: SSH connection object
     """
-    def __init__(self, fqdn, username=None, password=None, keyfile=None, port=22, timeout=30):
-        self.__host__ = fqdn
-        self.__username__ = username
-        self.__password__ = password
-        self.__keyfile__ = os.path.abspath(os.path.expanduser(keyfile))
-        self.__port__ = port
-        self.__timeout__ = timeout
+    def __init__(self, fqdn, username=None, password=None, keyfile=None, port=22, timeout=30, connect=True):
+        self.host = fqdn
+        self.username = username
+        self.password = password
+        if keyfile is not None:
+            self.keyfile = os.path.abspath(os.path.expanduser(keyfile))
+        else:
+            self.keyfile = keyfile
+        self.port = port
+        self.timeout = timeout
         self.connection = paramiko.SSHClient()
         self.connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        self.connect()
+        if connect:
+            self.connect()
 
     def ssh_command(self, command, timeout=30, combine=False):
         """Run a command over an ssh connection
@@ -74,18 +98,23 @@ class SSH(object):
         :param combine: Combine stderr and stdout
         :return: Tuple of (command, stdout, stderr) or (command, output)
         """
+        if self.is_alive() is False:
+            raise paramiko.SSHException("Connection is not established")
         if combine:
             # http://stackoverflow.com/questions/3823862/paramiko-combine-stdout-and-stderr
             tran = self.connection.get_transport()
             chan = tran.open_session()
             chan.settimeout(timeout)
             chan.get_pty()
-            stdout = chan.makefile()
+            stdout_file = chan.makefile()
             chan.exec_command(command)
-            return command, stdout.read().strip()
+            stdout = stdout_file.read()
+            stdout_file.close()
+            result = ShellCommandCombined(cmd=command, stdout=stdout.strip())
         else:
             stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
-            return command, stdout.read().strip(), stderr.read().strip()
+            result = ShellCommand(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip())
+        return result
 
     def close(self):
         """Closes an established ssh connection
@@ -112,23 +141,20 @@ class SSH(object):
     def connect(self):
         """Opens an SSH Connection
         """
-        # http://stackoverflow.com/questions/26659772/silence-no-handlers-could-be-found-for-logger-paramiko-transport-message
-        logging.basicConfig()
+        logging.basicConfig()  # http://stackoverflow.com/questions/26659772/
         if self.is_alive():
             raise paramiko.SSHException("Connection is already established")
-        # Per http://stackoverflow.com/questions/19152578/no-handlers-could-be-found-for-logger-paramiko
-        if self.__keyfile__ is not None:
-            if self.__username__ is not None:  # Key file with a custom username!
-                self.connection.connect(self.__host__, port=self.__port__, username=self.__username__,
-                                        key_filename=self.__keyfile__, timeout=self.__timeout__, look_for_keys=False)
+        if self.keyfile is not None:
+            if self.username is not None:  # Key file with a custom username!
+                self.connection.connect(self.host, port=self.port, username=self.username,
+                                        key_filename=self.keyfile, timeout=self.timeout, look_for_keys=False)
             else:
-                self.connection.connect(self.__host__, port=self.__port__, key_filename=self.__keyfile__,
-                                        timeout=self.__timeout__, look_for_keys=False)
+                self.connection.connect(self.host, port=self.port, key_filename=self.keyfile,
+                                        timeout=self.timeout, look_for_keys=False)
         else:  # Username and password combo
-            if self.__username__ is None or self.__password__ is None:
+            if self.username is None or self.password is None:
                 raise paramiko.SSHException("You must enter a username and password or supply an SSH key")
             else:
-                self.connection.connect(self.__host__, port=self.__port__, username=self.__username__,
-                                        password=self.__password__, timeout=self.__timeout__, look_for_keys=False)
-        # per https://github.com/paramiko/paramiko/issues/175
-        self.connection.get_transport().window_size = 3 * 1024 * 1024
+                self.connection.connect(self.host, port=self.port, username=self.username,
+                                        password=self.password, timeout=self.timeout, look_for_keys=False)
+        return True
