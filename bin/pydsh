@@ -141,9 +141,8 @@ def main():
 
     if args.sort:
         complete = [x for x in job_results if x.status is True]
-        errors = [x for x in job_results if x.status is False]
         failed = [x for x in job_results if x.status is None]
-        for jobresults in [complete, errors, failed]:
+        for jobresults in (complete, failed):
             process_results(jobresults, args.quiet)
     else:
         process_results(job_results, args.quiet)

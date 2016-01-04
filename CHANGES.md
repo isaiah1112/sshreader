@@ -1,6 +1,6 @@
 # Changelog
 
-# Version 2.4
+# Version 3.0
  * Python 3 compatibility!
 
 # Version 2.3

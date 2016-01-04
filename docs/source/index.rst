@@ -14,13 +14,20 @@ sshreader Package
    :private-members:
 
 Modules
---------
+-------
 
 .. toctree::
    :maxdepth: 1
 
    sshreader
    ssh
+
+Extras
+------
+.. toctree::
+   :maxdepth: 1
+
+   pydsh
 
 Indices and tables
 ------------------
