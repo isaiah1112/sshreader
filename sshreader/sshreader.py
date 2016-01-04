@@ -377,6 +377,9 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         cpusoftlimit = multiprocessing.cpu_count() - 1
         # Imposing a hard limit for number of sub-processes so you don't make the system unusable
         cpuhardlimit = cpusoftlimit * __cpuHardLimitFactor__
+        # Found this while digging around the multiprocessing API.  This might help some of the pickling errors when
+        # working with ssh
+        multiprocessing.allow_connection_pickling()
 
         # Adjust number of sub-processes to spawn.
         if pcount == 0:
