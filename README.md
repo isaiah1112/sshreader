@@ -43,7 +43,7 @@ project](https://bitbucket.org/isaiah1112/sshreader) and submit pull requests.
 
 ## Extras
 
-Included with sshreader is a binary called **pydsh** (generally installed in /usr/bin/).  This works very similar to
+Included with sshreader is a binary called **pydsh** (generally installed in /usr/local/bin/).  This works very similar to
 [pdsh](https://computing.llnl.gov/linux/pdsh.html) but uses sshreader at its core to perform ssh commands in parallel
 and return the results.  The output of *pydsh -Q* can also be piped through the **dshbak** tool that comes with pdsh.
 
