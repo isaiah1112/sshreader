@@ -30,7 +30,7 @@ __version__ = '1.1'
 
 # Using namedtuple because... why not?
 ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr'])
-ShellCommandCombined = namedtuple('ShellCommand', ['cmd', 'stdout'])
+ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout'])
 
 
 def shell_command(command, combine=False):

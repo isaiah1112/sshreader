@@ -347,7 +347,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         progress_bar = False
         warnings.warn('You should not use progress_bar and debuglevel together. Silencing progress_bar.')
 
-    item_counter = multiprocessing.Value('L', 1)
+    item_counter = multiprocessing.Value('L', 0)
     if progress_bar:
         bar = ProgressBar(max_value=totaljobs)
     else:
