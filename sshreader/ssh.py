@@ -26,7 +26,6 @@ from subprocess import Popen, PIPE, STDOUT
 from collections import namedtuple
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
-__version__ = '1.1'
 
 # Using namedtuple because... why not?
 ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr'])

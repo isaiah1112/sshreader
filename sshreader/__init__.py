@@ -1,6 +1,6 @@
 # coding=utf-8
 """A Python Package for multi-processing/threading ssh connections in order to make ssh operations
-across multiple servers more parallel.  The module allows for timeouts for each ssh connection
+across multiple servers parallel.  The module allows for timeouts for each ssh connection
 as well as each command given to an ssh connection to run.  ServerJob objects allow for each server
 to have multiple commands that should be run inside of a single job.  The results
 from each job will be returned as a list of tuples inside of each ServerJob object in the same order that the

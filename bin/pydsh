@@ -54,7 +54,7 @@ def process_results(jobresults, quiet):
     """
     for job in jobresults:
         if quiet:
-            if job.status is None or len(job.cmdResults[0][1]) > 0 or len(job.cmdResults[0][2]) > 0:
+            if job.status is None or len(job.cmdResults[0].stdout) > 0:
                 print_job(job)
         else:
             print_job(job)
