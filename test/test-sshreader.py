@@ -16,7 +16,6 @@ import sshreader
 
 # Configure this info before running your tests
 ssh_data = {'fqdn': 'DEFAULT', 'username': 'DEFAULT', 'password': 'DEFAULT', 'keyfile': 'DEFAULT'}
-ssh_data = {'fqdn': '192.168.2.5', 'username': 'jesse', 'password': 'hardenkaye', 'keyfile': '~/.ssh/id_rsa'}
 if ssh_data['fqdn'] == 'DEFAULT':
     print('Please update the ssh_data dictionary before running this test')
     sys.exit(0)
