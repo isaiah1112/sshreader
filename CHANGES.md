@@ -5,22 +5,24 @@
  * Added pydsh script (installs in /usr/local/bin) (Python implemenation of pdsh that uses sshreader) [1cbf65a](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/1cbf65a)
  * Now using progressbar2 module for progress bar! [e9431e0](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/e9431e0)
  * Initial Unittests... Many more to come! [9d1996f](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/9d1996f)
- * Created new Hook class for working with pre and post hooks. [473051a](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/473051a)
+ * Created new **Hook** class for working with pre and post hooks. [473051a](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/473051a)
  * Major rework of how sub-processes and threads are generated/managed. [160fecf](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/160fecf)
- * Moved do_shell_script to shell_command to match ssh_command from SSH class.  do_shell_script will go away in sshreader v4.0 [de4523d](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/de4523d)
- * Removed tprint function. [ea90405](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/ea90405)
- * Removed ability to override *prehook*, *posthook*, and *debuglevel* via the **sshread()** method.  Set them at the ServerJob level. [160fecf](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/160fecf)
- * Added connect option to SSH class and testing for established connection when issuing ssh_command. [35f5d24](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/35f5d24)
- * Silencing progressbar when used in conjunction with debuglevel. [dab6ac2](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/dab6ac2)
+ * Moved **do_shell_script** to **shell_command** to match **ssh_command** from SSH class.  **do_shell_script** will be removed in sshreader v4.0 [de4523d](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/de4523d)
+ * Removed *tprint* function. [ea90405](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/ea90405)
+ * Removed ability to override *prehook*, *posthook*, and *debuglevel* via the **sshread** method.  Set them at the ServerJob level. [160fecf](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/160fecf)
+ * Added *connect* kwarg to SSH class and testing for established connection when issuing **ssh_command**. [35f5d24](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/35f5d24)
+ * Silencing *progress_bar* when used in conjunction with *debuglevel*. [dab6ac2](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/dab6ac2)
  * Fixed issue with not closing file specification from Popen. [af1c641](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/af1c641)
- * Fixed bug if keyfile is not set when initializing SSH object. [46ac270](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/46ac270)
- * Added return_code to ShellCommand namedtuple.  ServerJob.status now is a sum of return codes from each cmd in the job (a status of 255 means ssh did not connect). Removed ServerJob.cmdStatus and renamed ServerJob.cmdResults to ServerJob.results [182570b](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/182570b)
+ * Fixed bug if *keyfile* is not set when initializing **SSH** object. [46ac270](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/46ac270)
+ * Added *return_code* to **ShellCommand** namedtuple. [182570b](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/182570b)
+ * ServerJob.status now is a sum of return codes from each cmd in the job (a status of 255 means ssh did not connect). 
+ * Removed ServerJob.cmdStatus and renamed ServerJob.cmdResults to ServerJob.results [182570b](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/182570b)
  * Renamed ServerJob.ssh_con to ServerJob._conn [c4fe4b5](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/c4fe4b5)
 
 # Version 2.3
  * Importing \_\_future__ statements for **print_function** and **division**
  * Moved into Python Package
- * Split **SSH** and **do_shell_script** into new ssh sub-module (called '**ssh**')
+ * Split **SSH** and **do_shell_script** into new ssh module
  * Rebuilt Sphinx Documentation (and cleanded up docstrings)
  * Fixed bug with **ssh_command** function when combining *stderr* and *stdout*
  * Fixed bug when path to *keyfile* was relative to `~`
