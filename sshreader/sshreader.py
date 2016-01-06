@@ -123,23 +123,26 @@ class ServerJob(object):
     :param runlocal: Run job on localhost (skips ssh to localhost)
     :param prehook: Optional Hook object
     :param posthook: Optional Hook object
+    :param combine_output: Combine stdout and stderr
     :return: ServerJob Object
 
     :property results: List of namedtuple results (cmd, stdout, stderr, return_code)
-    :property status: Sum of return codes for entire job
-    :property combine_output: Combine stdout and stderr in cmdResults (default = False)
+    :property status: Sum of return codes for entire job (-1 = ssh did not connect)
     """
     def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, debuglevel=0, timeout=(30, 30),
-                 runlocal=False, prehook=None, posthook=None):
-        if isinstance(cmds, (list, tuple)):
-            self.cmds = cmds
-        else:
-            self.cmds = [cmds]
+                 runlocal=False, prehook=None, posthook=None, combine_output=False):
+        self.name = fqdn
         self.results = []
         self.username = username
         self.password = password
         self.key = keyfile
         self.status = 0
+        self.combine_output = combine_output
+        self.runlocal = runlocal
+        if isinstance(cmds, (list, tuple)):
+            self.cmds = cmds
+        else:
+            self.cmds = [cmds]
         if isinstance(timeout, (tuple, list)):
             if len(timeout) != 2:
                 raise InvalidArgument('You must supply two timeouts if you pass a tuple or list')
@@ -148,8 +151,6 @@ class ServerJob(object):
         else:
             self.sshtimeout = timeout
             self.cmdtimeout = timeout
-        self.runlocal = runlocal
-        self.name = fqdn
         if prehook is not None:
             if isinstance(prehook, Hook):
                 self.prehook = prehook
@@ -164,7 +165,6 @@ class ServerJob(object):
                 raise InvalidArgument('prehook should be of type: <Hook>')
         else:
             self.posthook = posthook
-        self.combine_output = False
         try:
             if int(debuglevel) <= 3:
                 self.debuglevel = debuglevel
