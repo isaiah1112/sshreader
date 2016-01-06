@@ -29,6 +29,11 @@ Extras
 
    pydsh
 
+Compatibility
+-------------
+
+As of version 3.0, sshreader now supports both Python 2.7 and 3.5.
+
 Indices and tables
 ------------------
 
