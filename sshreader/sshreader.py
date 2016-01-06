@@ -173,7 +173,7 @@ class ServerJob(object):
         except TypeError:
             raise TypeError("Debug level must be an integer between 0 and 3")
         if runlocal is False:
-            self.ssh_con = None
+            self._conn = None
             if keyfile is None:
                 if username is None or password is None:
                     raise paramiko.SSHException("You must enter a username and password or supply an SSH key")
@@ -182,7 +182,7 @@ class ServerJob(object):
             else:
                 self.keyauth = True
         else:
-            self.ssh_con = "localhost"
+            self._conn = "localhost"
 
     def run(self):
         """Run a ServerJob. SSH to server, run cmds, return result
@@ -203,21 +203,21 @@ class ServerJob(object):
             try:
                 if self.keyauth:
                     if self.username is None:
-                        self.ssh_con = SSH(self.name, keyfile=self.key, timeout=self.sshtimeout)
+                        self._conn = SSH(self.name, keyfile=self.key, timeout=self.sshtimeout)
                     else:
-                        self.ssh_con = SSH(self.name, username=self.username, keyfile=self.key, timeout=self.sshtimeout)
+                        self._conn = SSH(self.name, username=self.username, keyfile=self.key, timeout=self.sshtimeout)
                 else:
-                    self.ssh_con = SSH(self.name, username=self.username, password=self.password,
+                    self._conn = SSH(self.name, username=self.username, password=self.password,
                                        timeout=self.sshtimeout)
             except Exception as errorMsg:
                 if self.debuglevel >= 2:
                     print(str(errorMsg))
-                self.ssh_con = None
+                self._conn = None
                 self.status = -1
                 if self.debuglevel >= 1:
                     print(str(self.name) + u": Unable to establish ssh connection!")
         # This is a trick statement to allow ssh and local shell scripts to be run using similar output processing code
-        if self.ssh_con is not None:
+        if self._conn is not None:
             for idX, thiscmd in enumerate(self.cmds):
                 # Now running each command in turn
                 if self.debuglevel >= 3:
@@ -229,17 +229,17 @@ class ServerJob(object):
                         result = shell_command(thiscmd)
                 else:
                     if self.combine_output:
-                        result = self.ssh_con.ssh_command(thiscmd, timeout=self.cmdtimeout, combine=True)
+                        result = self._conn.ssh_command(thiscmd, timeout=self.cmdtimeout, combine=True)
                     else:
-                        result = self.ssh_con.ssh_command(thiscmd, timeout=self.cmdtimeout)
+                        result = self._conn.ssh_command(thiscmd, timeout=self.cmdtimeout)
                 self.results.append(result)
                 if self.debuglevel >= 3:
                     print(str(self.name) + u": " + str(thiscmd) + u": Finished")
                 self.status += result.return_code
             # Close ssh connection if needed
             if self.runlocal is False:
-                self.ssh_con.close()
-            self.ssh_con = None
+                self._conn.close()
+            self._conn = None
             # Run post hook before we are done with this job
         if self.posthook is not None:
             if self.debuglevel >= 2:
