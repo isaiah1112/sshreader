@@ -14,6 +14,8 @@
  * Silencing progressbar when used in conjunction with debuglevel. [dab6ac2](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/dab6ac2)
  * Fixed issue with not closing file specification from Popen. [af1c641](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/af1c641)
  * Fixed bug if keyfile is not set when initializing SSH object. [46ac270](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/46ac270)
+ * Added return_code to ShellCommand namedtuple.  ServerJob.status now is a sum of return codes from each cmd in the job (a status of 255 means ssh did not connect). Removed ServerJob.cmdStatus and renamed ServerJob.cmdResults to ServerJob.results [182570b](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/182570b)
+ * Renamed ServerJob.ssh_con to ServerJob._conn [c4fe4b5](https://isaiah1112@bitbucket.org/isaiah1112/sshreader/commit/c4fe4b5)
 
 # Version 2.3
  * Importing \_\_future__ statements for **print_function** and **division**
