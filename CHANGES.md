@@ -2,22 +2,22 @@
 
 # Version 3.0
  * Now works with Python2.7 and Python3.5!
- * Added pydsh script (installs in /usr/local/bin) (Python implemenation of pdsh that uses sshreader) [1cbf65a](https://bitbucket.org/isaiah1112/sshreader/commit/1cbf65a)
- * Now using progressbar2 module for progress bar in sshread method! [e9431e0](https://bitbucket.org/isaiah1112/sshreader/commit/e9431e0)
- * Initial Unittests... Many more to come! [9d1996f](https://bitbucket.org/isaiah1112/sshreader/commit/9d1996f)
- * Created new Hook class for working with pre and post hooks. [473051a](https://bitbucket.org/isaiah1112/sshreader/commit/473051a)
- * Major rework of how sub-processes and threads are generated/managed. [160fecf](https://bitbucket.org/isaiah1112/sshreader/commit/160fecf)
- * Moved do\_shell\_script to shell\_command to match ssh\_command from SSH class.  do\_shell\_script will be removed in sshreader v4.0 [de4523d](https://bitbucket.org/isaiah1112/sshreader/commit/de4523d)
- * Removed tprint function. [ea90405](https://bitbucket.org/isaiah1112/sshreader/commit/ea90405)
- * Removed ability to override prehook, posthook, and debuglevel via the sshread method.  Set them at the ServerJob level. [160fecf](https://bitbucket.org/isaiah1112/sshreader/commit/160fecf)
- * Added connect kwarg to SSH class and testing for established connection when issuing ssh\_command. [35f5d24](https://bitbucket.org/isaiah1112/sshreader/commit/35f5d24)
- * Silencing progress\_bar when used in conjunction with debuglevel. [dab6ac2](https://bitbucket.org/isaiah1112/sshreader/commit/dab6ac2)
- * Fixed issue with not closing file specification from Popen. [af1c641](https://bitbucket.org/isaiah1112/sshreader/commit/af1c641)
- * Fixed bug if keyfile is not set when initializing SSH object. [46ac270](https://bitbucket.org/isaiah1112/sshreader/commit/46ac270)
- * Added return\_code to ShellCommand namedtuple. [182570b](https://bitbucket.org/isaiah1112/sshreader/commit/182570b)
- * ServerJob.status now is a sum of return codes from each cmd in the job (a status of 255 means ssh did not connect). [182570b](https://bitbucket.org/isaiah1112/sshreader/commit/182570b)
- * Removed ServerJob.cmdStatus and renamed ServerJob.cmdResults to ServerJob.results [182570b](https://bitbucket.org/isaiah1112/sshreader/commit/182570b)
- * Renamed ServerJob.ssh\_con to ServerJob.\_conn [c4fe4b5](https://bitbucket.org/isaiah1112/sshreader/commit/c4fe4b5)
+ * Added pydsh script (installs in /usr/local/bin) (Python implemenation of pdsh that uses sshreader) [1cbf65a](https://bitbucket.org/isaiah1112/sshreader/commits/1cbf65a)
+ * Now using progressbar2 module for progress bar in sshread method! [e9431e0](https://bitbucket.org/isaiah1112/sshreader/commits/e9431e0)
+ * Initial Unittests... Many more to come! [9d1996f](https://bitbucket.org/isaiah1112/sshreader/commits/9d1996f)
+ * Created new Hook class for working with pre and post hooks. [473051a](https://bitbucket.org/isaiah1112/sshreader/commits/473051a)
+ * Major rework of how sub-processes and threads are generated/managed. [160fecf](https://bitbucket.org/isaiah1112/sshreader/commits/160fecf)
+ * Moved do\_shell\_script to shell\_command to match ssh\_command from SSH class.  do\_shell\_script will be removed in sshreader v4.0 [de4523d](https://bitbucket.org/isaiah1112/sshreader/commits/de4523d)
+ * Removed tprint function. [ea90405](https://bitbucket.org/isaiah1112/sshreader/commits/ea90405)
+ * Removed ability to override prehook, posthook, and debuglevel via the sshread method.  Set them at the ServerJob level. [160fecf](https://bitbucket.org/isaiah1112/sshreader/commits/160fecf)
+ * Added connect kwarg to SSH class and testing for established connection when issuing ssh\_command. [35f5d24](https://bitbucket.org/isaiah1112/sshreader/commits/35f5d24)
+ * Silencing progress\_bar when used in conjunction with debuglevel. [dab6ac2](https://bitbucket.org/isaiah1112/sshreader/commits/dab6ac2)
+ * Fixed issue with not closing file specification from Popen. [af1c641](https://bitbucket.org/isaiah1112/sshreader/commits/af1c641)
+ * Fixed bug if keyfile is not set when initializing SSH object. [46ac270](https://bitbucket.org/isaiah1112/sshreader/commits/46ac270)
+ * Added return\_code to ShellCommand namedtuple. [182570b](https://bitbucket.org/isaiah1112/sshreader/commits/182570b)
+ * ServerJob.status now is a sum of return codes from each cmd in the job (a status of 255 means ssh did not connect). [182570b](https://bitbucket.org/isaiah1112/sshreader/commits/182570b)
+ * Removed ServerJob.cmdStatus and renamed ServerJob.cmdResults to ServerJob.results [182570b](https://bitbucket.org/isaiah1112/sshreader/commits/182570b)
+ * Renamed ServerJob.ssh\_con to ServerJob.\_conn [c4fe4b5](https://bitbucket.org/isaiah1112/sshreader/commits/c4fe4b5)
 
 # Version 2.3
  * Importing \_\_future\_\_ statements for print\_function and division
