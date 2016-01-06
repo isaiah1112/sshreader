@@ -28,8 +28,8 @@ from collections import namedtuple
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
 # Using namedtuple because... why not?
-ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr'])
-ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout'])
+ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr', 'return_code'])
+ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout', 'return_code'])
 
 
 def shell_command(command, combine=False):
@@ -43,11 +43,11 @@ def shell_command(command, combine=False):
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
         stdout, stderr = pipeout.communicate()
         assert stderr is None
-        result = ShellCommandCombined(cmd=command, stdout=stdout.strip())
+        result = ShellCommandCombined(cmd=command, stdout=stdout.strip(), return_code=pipeout.returncode)
     else:
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = pipeout.communicate()
-        result = ShellCommand(cmd=command, stdout=stdout.strip(), stderr=stderr.strip())
+        result = ShellCommand(cmd=command, stdout=stdout.strip(), stderr=stderr.strip(), return_code=pipeout.returncode)
     return result
 
 
@@ -101,18 +101,18 @@ class SSH(object):
             raise paramiko.SSHException("Connection is not established")
         if combine:
             # http://stackoverflow.com/questions/3823862/paramiko-combine-stdout-and-stderr
-            tran = self.connection.get_transport()
-            chan = tran.open_session()
+            chan = self.connection.get_transport().open_session()
             chan.settimeout(timeout)
             chan.get_pty()
             stdout_file = chan.makefile()
             chan.exec_command(command)
             stdout = stdout_file.read()
             stdout_file.close()
-            result = ShellCommandCombined(cmd=command, stdout=stdout.strip())
+            result = ShellCommandCombined(cmd=command, stdout=stdout.strip(), return_code=chan.recv_exit_status())
         else:
             stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
-            result = ShellCommand(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip())
+            result = ShellCommand(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip(),
+                                  return_code=stdout.channel.recv_exit_status())
         return result
 
     def close(self):

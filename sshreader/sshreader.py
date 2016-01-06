@@ -125,11 +125,8 @@ class ServerJob(object):
     :param posthook: Optional Hook object
     :return: ServerJob Object
 
-    :property cmdResults: List of namedtuple results (cmd, stdout, stderr)
-    :property cmdStatus: List of states for each command ( None = initial state/cmd did not run, True = no stderr,
-                        False = stderr)
-    :property status: State of entire job (None = initial state/ssh failed, True = all cmd statuses is True,
-                        False = one or more cmd statuses is False)
+    :property results: List of namedtuple results (cmd, stdout, stderr, return_code)
+    :property status: Sum of return codes for entire job
     :property combine_output: Combine stdout and stderr in cmdResults (default = False)
     """
     def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, debuglevel=0, timeout=(30, 30),
@@ -138,12 +135,11 @@ class ServerJob(object):
             self.cmds = cmds
         else:
             self.cmds = [cmds]
-        self.cmdResults = []
-        self.cmdStatus = []
+        self.results = []
         self.username = username
         self.password = password
         self.key = keyfile
-        self.status = None
+        self.status = 0
         if isinstance(timeout, (tuple, list)):
             if len(timeout) != 2:
                 raise InvalidArgument('You must supply two timeouts if you pass a tuple or list')
@@ -217,13 +213,13 @@ class ServerJob(object):
                 if self.debuglevel >= 2:
                     print(str(errorMsg))
                 self.ssh_con = None
+                self.status = -1
                 if self.debuglevel >= 1:
                     print(str(self.name) + u": Unable to establish ssh connection!")
         # This is a trick statement to allow ssh and local shell scripts to be run using similar output processing code
         if self.ssh_con is not None:
             for idX, thiscmd in enumerate(self.cmds):
                 # Now running each command in turn
-                self.cmdStatus.append(None)
                 if self.debuglevel >= 3:
                     print(str(self.name) + u" running: " + str(thiscmd))
                 if self.runlocal:
@@ -236,21 +232,10 @@ class ServerJob(object):
                         result = self.ssh_con.ssh_command(thiscmd, timeout=self.cmdtimeout, combine=True)
                     else:
                         result = self.ssh_con.ssh_command(thiscmd, timeout=self.cmdtimeout)
-                self.cmdResults.append(result)
-                if self.combine_output:
-                    # We are combining stdout and stderr
-                    self.cmdStatus[idX] = True
-                else:
-                    if len(result.stderr) == 0:
-                        self.cmdStatus[idX] = True
-                    else:
-                        self.cmdStatus[idX] = False
+                self.results.append(result)
                 if self.debuglevel >= 3:
                     print(str(self.name) + u": " + str(thiscmd) + u": Finished")
-            if False in self.cmdStatus or None in self.cmdStatus:
-                self.status = False
-            else:
-                self.status = True
+                self.status += result.return_code
             # Close ssh connection if needed
             if self.runlocal is False:
                 self.ssh_con.close()
@@ -273,7 +258,7 @@ class ServerJob(object):
         print(str('-' * 20))
         print(u'ServerJob: ' + str(self.name) + u'\tStatus: ' + str(self.status))
         for idx, value in enumerate(self.cmds):
-            print(str(self.cmdResults[idx]) + u'\tStatus: ' + str(self.cmdStatus[idx]))
+            print(str(self.results[idx]) + u'\tStatus: ' + str(self.results[idx].return_code))
         return None
 
     def __str__(self):
@@ -294,20 +279,20 @@ def print_results(serverjobs):
     :param serverjobs: List of ServerJob objects
     :return: SortedJobs named tuple
     """
-    SortedJobs = namedtuple("SortedJobs", ['status_true', 'status_false', 'status_none'])
-    status_true = [x for x in serverjobs if x.status is True]
-    status_false = [x for x in serverjobs if x.status is False]
-    status_none = [x for x in serverjobs if x.status is None]
-    if len(status_true) > 0:
-        for job in status_true:
+    SortedJobs = namedtuple("SortedJobs", ['completed', 'failed', 'unknown'])
+    status_complete = [x for x in serverjobs if x.status == 0]
+    status_failed = [x for x in serverjobs if x.status > 0]
+    status_unknown = [x for x in serverjobs if x.status == -1]
+    if len(status_complete) > 0:
+        for job in status_complete:
             job.print_results()
-    if len(status_false) > 0:
-        for job in status_false:
+    if len(status_failed) > 0:
+        for job in status_failed:
             job.print_results()
-    if len(status_none) > 0:
-        for job in status_none:
+    if len(status_unknown) > 0:
+        for job in status_unknown:
             job.print_results()
-    return SortedJobs(status_true=status_true, status_false=status_false, status_none=status_none)
+    return SortedJobs(completed=status_complete, failed=status_failed, unknown=status_unknown)
 
 
 def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=False):

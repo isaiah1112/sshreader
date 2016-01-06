@@ -28,19 +28,19 @@ def print_job(*args):
     """
     thisjob = list(args).pop()
     if 'quick' in args:
-        if thisjob.status is None:
+        if thisjob.status == -1:
             print(str(thisjob.name) + u": Unable to establish ssh connection")
         else:
-            results = thisjob.cmdResults[0]
-            for line in str(results.stdout.decode()).split('\n'):
+            result = thisjob.results[0]
+            for line in str(result.stdout.decode()).split('\n'):
                 print(str(thisjob.name) + u': ' + str(line))
     else:
         print(str("-"*16) + u"\n" + str(thisjob.name) + u"\n" + str("-"*16))
-        if thisjob.status is None:
+        if thisjob.status == -1:
             print(str(thisjob.name) + u": Unable to establish ssh connection")
         else:
-            results = thisjob.cmdResults[0]
-            for line in str(results.stdout.decode()).split('\n'):
+            result = thisjob.results[0]
+            for line in str(result.stdout.decode()).split('\n'):
                 print(str(line))
     return None
 
@@ -141,8 +141,8 @@ def main():
             job_results = sshreader.sshread(jobs, pcount=0, tcount=0, progress_bar=True)
 
     if args.sort:
-        complete = [x for x in job_results if x.status is True]
-        failed = [x for x in job_results if x.status is None]
+        complete = [x for x in job_results if x.status == 0]
+        failed = [x for x in job_results if x.status != 0]
         for jobresults in (complete, failed):
             process_results(jobresults, args.quiet)
     else:

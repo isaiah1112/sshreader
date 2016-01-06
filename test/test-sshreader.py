@@ -16,6 +16,7 @@ import sshreader
 
 # Configure this info before running your tests
 ssh_data = {'fqdn': 'DEFAULT', 'username': 'DEFAULT', 'password': 'DEFAULT', 'keyfile': 'DEFAULT'}
+ssh_data = {'fqdn': '192.168.2.5', 'username': 'jesse', 'password': 'hardenkaye', 'keyfile': '~/.ssh/id_rsa'}
 if ssh_data['fqdn'] == 'DEFAULT':
     print('Please update the ssh_data dictionary before running this test')
     sys.exit(0)
@@ -30,9 +31,9 @@ class TestShellScript(unittest.TestCase):
         """
         result = sshreader.shell_command('echo "foo"')
         self.assertIsInstance(result, tuple)
-        self.assertEqual(len(result), 3, msg='tuple does not match (cmd, stdout, stderr)')
-        self.assertEqual(result[1], b'foo', msg='stdout did not match input')
-        self.assertEqual(len(result[2]), 0, msg='stderr should be empty')
+        self.assertEqual(result.return_code, 0)
+        self.assertEqual(result.stdout, b'foo')
+        self.assertEqual(len(result.stderr), 0)
         pass
 
     def test_shell_command_combined(self):
@@ -40,7 +41,7 @@ class TestShellScript(unittest.TestCase):
         """
         result = sshreader.shell_command('echo "foo"; echo "bar" 1>&2', combine=True)
         self.assertIsInstance(result, tuple)
-        self.assertEqual(len(result), 2, msg='stdout and stderr not combined')
+        self.assertEqual(result.return_code, 0)
         pass
 
     def test_shell_command_stderr(self):
@@ -48,8 +49,8 @@ class TestShellScript(unittest.TestCase):
         """
         result = sshreader.shell_command('echo "bar" 1>&2')
         self.assertIsInstance(result, tuple)
-        self.assertEqual(len(result), 3, msg='tuple does not match (cmd, stdout, stderr)')
-        self.assertEqual(result[2], b'bar', msg='stderr was not what we expected')
+        self.assertEqual(result.return_code, 0)
+        self.assertEqual(result.stderr, b'bar')
         pass
 
 
@@ -98,8 +99,8 @@ class TestSSH(unittest.TestCase):
         self.conn.connect()
         result = self.conn.ssh_command('echo foo')
         self.assertIsInstance(result, tuple)
-        self.assertEqual(len(result), 3)
-        self.assertEqual(result[1], b'foo', msg='Result was not what was expected')
+        self.assertEqual(result.return_code, 0)
+        self.assertEqual(result.stdout, b'foo')
         pass
 
     def test_command_stderr(self):
@@ -109,8 +110,8 @@ class TestSSH(unittest.TestCase):
         self.conn.connect()
         result = self.conn.ssh_command('echo bar 1>&2')
         self.assertIsInstance(result, tuple)
-        self.assertEqual(len(result), 3)
-        self.assertEqual(result[2], b'bar', msg='Result was not what was expected')
+        self.assertEqual(result.return_code, 0)
+        self.assertEqual(result.stderr, b'bar')
         pass
 
     def test_combine_output(self):
@@ -120,8 +121,8 @@ class TestSSH(unittest.TestCase):
         self.conn.connect()
         result = self.conn.ssh_command('echo foo; echo bar 1>&2;', combine=True)
         self.assertIsInstance(result, tuple)
-        self.assertEqual(len(result), 2)
-        self.assertEqual(result[1], b'foo\r\nbar')
+        self.assertEqual(result.return_code, 0)
+        self.assertEqual(result.stdout, b'foo\r\nbar')
         pass
 
 
@@ -195,7 +196,7 @@ class TestSshreader(unittest.TestCase):
         jobs = self.configure_serverjob_list(10)
         result = sshreader.sshread(jobs, tcount=0)
         for x in result:
-            self.assertTrue(x.status)
+            self.assertEqual(x.status, 0)
         pass
 
     def test_sshread_processes(self):
@@ -204,7 +205,7 @@ class TestSshreader(unittest.TestCase):
         jobs = self.configure_serverjob_list(10)
         result = sshreader.sshread(jobs, pcount=1)
         for x in result:
-            self.assertTrue(x.status)
+            self.assertEqual(x.status, 0)
         pass
 
     def test_sshread(self):
@@ -213,7 +214,7 @@ class TestSshreader(unittest.TestCase):
         jobs = self.configure_serverjob_list(21)
         result = sshreader.sshread(jobs, pcount=0, tcount=0)
         for x in result:
-            self.assertTrue(x.status)
+            self.assertEqual(x.status, 0)
         pass
 
 
