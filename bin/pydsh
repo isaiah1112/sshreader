@@ -28,7 +28,7 @@ def print_job(*args):
     """
     thisjob = list(args).pop()
     if 'quick' in args:
-        if thisjob.status == -1:
+        if thisjob.status == 255:
             print(str(thisjob.name) + u": Unable to establish ssh connection")
         else:
             result = thisjob.results[0]
@@ -36,7 +36,7 @@ def print_job(*args):
                 print(str(thisjob.name) + u': ' + str(line))
     else:
         print(str("-"*16) + u"\n" + str(thisjob.name) + u"\n" + str("-"*16))
-        if thisjob.status == -1:
+        if thisjob.status == 255:
             print(str(thisjob.name) + u": Unable to establish ssh connection")
         else:
             result = thisjob.results[0]
@@ -97,7 +97,7 @@ def main():
 
     userhome = os.path.expanduser('~')
     if args.username is None:
-        args.username = os.path.split(userhome)[-1]
+        args.username = list(os.path.split(userhome)).pop()
     else:
         if args.keyfile is None and args.password is None:
             parser.error("Please specify a key location or password when specifying a username!")

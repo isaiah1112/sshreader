@@ -127,7 +127,7 @@ class ServerJob(object):
     :return: ServerJob Object
 
     :property results: List of namedtuple results (cmd, stdout, stderr, return_code)
-    :property status: Sum of return codes for entire job (-1 = ssh did not connect)
+    :property status: Sum of return codes for entire job (255 = ssh did not connect)
     """
     def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, debuglevel=0, timeout=(30, 30),
                  runlocal=False, prehook=None, posthook=None, combine_output=False):
@@ -213,7 +213,7 @@ class ServerJob(object):
                 if self.debuglevel >= 2:
                     print(str(errorMsg))
                 self._conn = None
-                self.status = -1
+                self.status = 255
                 if self.debuglevel >= 1:
                     print(str(self.name) + u": Unable to establish ssh connection!")
         # This is a trick statement to allow ssh and local shell scripts to be run using similar output processing code
@@ -282,7 +282,7 @@ def print_results(serverjobs):
     SortedJobs = namedtuple("SortedJobs", ['completed', 'failed', 'unknown'])
     status_complete = [x for x in serverjobs if x.status == 0]
     status_failed = [x for x in serverjobs if x.status > 0]
-    status_unknown = [x for x in serverjobs if x.status == -1]
+    status_unknown = [x for x in serverjobs if x.status == 255]
     if len(status_complete) > 0:
         for job in status_complete:
             job.print_results()
