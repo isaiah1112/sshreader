@@ -31,7 +31,7 @@ from sshreader.ssh import SSH, shell_command
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
-__jobHardLimit__ = (10 ** 6)
+__jobHardLimit__ = int(10 ** 6)
 __cpuHardLimitFactor__ = 3
 
 
@@ -72,6 +72,7 @@ class Hook(object):
     :param args: List of args to pass to target
     :param kwargs: Dictionary of kwargs to pass to target
     :return: Hook
+    :raises: InvalidArgument
     """
 
     def __init__(self, target, args=None, kwargs=None):
@@ -126,7 +127,7 @@ class ServerJob(object):
     :param combine_output: Combine stdout and stderr
     :return: ServerJob Object
 
-    :property results: List of namedtuple results (cmd, stdout, stderr, return_code)
+    :property results: List of namedtuples (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
     :property status: Sum of return codes for entire job (255 = ssh did not connect)
     """
     def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, debuglevel=0, timeout=(30, 30),
@@ -177,10 +178,6 @@ class ServerJob(object):
             if keyfile is None:
                 if username is None or password is None:
                     raise paramiko.SSHException("You must enter a username and password or supply an SSH key")
-                else:
-                    self.keyauth = False
-            else:
-                self.keyauth = True
         else:
             self._conn = "localhost"
 
@@ -201,14 +198,8 @@ class ServerJob(object):
         # Establish SSH Connection if we are not working locally
         if self.runlocal is False:
             try:
-                if self.keyauth:
-                    if self.username is None:
-                        self._conn = SSH(self.name, keyfile=self.key, timeout=self.sshtimeout)
-                    else:
-                        self._conn = SSH(self.name, username=self.username, keyfile=self.key, timeout=self.sshtimeout)
-                else:
-                    self._conn = SSH(self.name, username=self.username, password=self.password,
-                                       timeout=self.sshtimeout)
+                self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
+                                 timeout=self.sshtimeout)
             except Exception as errorMsg:
                 if self.debuglevel >= 2:
                     print(str(errorMsg))
@@ -223,15 +214,9 @@ class ServerJob(object):
                 if self.debuglevel >= 3:
                     print(str(self.name) + u" running: " + str(thiscmd))
                 if self.runlocal:
-                    if self.combine_output:
-                        result = shell_command(thiscmd, combine=True)
-                    else:
-                        result = shell_command(thiscmd)
+                    result = shell_command(thiscmd, combine=self.combine_output)
                 else:
-                    if self.combine_output:
-                        result = self._conn.ssh_command(thiscmd, timeout=self.cmdtimeout, combine=True)
-                    else:
-                        result = self._conn.ssh_command(thiscmd, timeout=self.cmdtimeout)
+                    result = self._conn.ssh_command(thiscmd, timeout=self.cmdtimeout, combine=self.combine_output)
                 self.results.append(result)
                 if self.debuglevel >= 3:
                     print(str(self.name) + u": " + str(thiscmd) + u": Finished")
@@ -304,6 +289,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
     :param tcount: Number of threads to spawn (None = off, 0 = adjusted length of ServerJobList)
     :param progress_bar: Print a progress bar
     :return: List with completed ServerJob objects (single object returned if 1 job was passed)
+    :raises: ProcessesOrThreads, ExceededJobLimit, ExceedCPULimit, TypeError,
     """
     if tcount is None and pcount is None:
         raise ProcessesOrThreads("You must specify a number for pcount or tcount!")

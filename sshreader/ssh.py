@@ -73,8 +73,11 @@ class SSH(object):
     :param timeout: SSH connection timeout in seconds (default = 30)
     :param connect: Initiate the connect (default = True)
     :return: SSH connection object
+    :raises: BadAuthenticationType
     """
     def __init__(self, fqdn, username=None, password=None, keyfile=None, port=22, timeout=30, connect=True):
+        if keyfile is None and username is None:
+            raise paramiko.BadAuthenticationType('You must specify a password or keyfile')
         self.host = fqdn
         self.username = username
         self.password = password
@@ -95,7 +98,8 @@ class SSH(object):
         :param command: The command to run
         :param timeout: Timeout for the command
         :param combine: Combine stderr and stdout
-        :return: Tuple of (command, stdout, stderr) or (command, output)
+        :return: Namedtuple of (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
+        :raises SSHException:
         """
         if self.is_alive() is False:
             raise paramiko.SSHException("Connection is not established")
@@ -117,12 +121,17 @@ class SSH(object):
 
     def close(self):
         """Closes an established ssh connection
+
+        :return: None
         """
         self.connection.close()
         return None
 
     def is_alive(self):
         """Is an SSH connection alive
+
+        :return: True or False
+        :raises: SSHException
         """
         if self.connection.get_transport() is None:
             return False
@@ -135,10 +144,13 @@ class SSH(object):
     def reconnect(self):
         """Alias to connect
         """
-        self.connect()
+        return self.connect()
 
     def connect(self):
         """Opens an SSH Connection
+
+        :return: True
+        :raises SSHException"
         """
         logging.basicConfig()  # http://stackoverflow.com/questions/26659772/
         if self.is_alive():
