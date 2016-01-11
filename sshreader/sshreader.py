@@ -368,7 +368,9 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         if tcount is not None:
             if tcount == 0:
                 tcount = totaljobs // pcount
-                if tcount <= 1:
+                if tcount < 2:
+                    # Basically, unless we have enough jobs to spawn more than 1 thread per process we only
+                    # need the sub process.
                     tcount = None
 
         task_queue = multiprocessing.Queue(maxsize=totaljobs)
