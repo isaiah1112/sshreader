@@ -238,6 +238,7 @@ class ServerJob(object):
 
     def print_results(self):
         """ Prints the status of the ServerJob and details of each cmd in the job
+
         :return: None
         """
         print(str('-' * 20))
