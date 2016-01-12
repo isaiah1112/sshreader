@@ -21,7 +21,7 @@ Do not show a progress bar before the output and only show items with output
 
 .. code-block:: bash
 
-    pydsh -w myhost[1-100].example.com -q 'uname -r'
+    pydsh -u myuser -p mypass -w myhost[1-100].example.com -q 'uname -r'
 
 Print output from jobs as soon as they complete (output can be piped to dshbak)
 
@@ -33,7 +33,7 @@ Finally, sort the output by commands that finished and commands that didn't
 
 .. code-block:: bash
 
-    pydsh -w myhost[1-100].example.com -s 'uname -r'
+    pydsh -u myuser -k ~/.ssh/id_dsa -w myhost[1-100].example.com -s 'uname -r'
 
 .. [1] Pydsh supports `hostlist expressions`_ to make listing hosts easier.
 

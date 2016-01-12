@@ -28,6 +28,7 @@ Extras
    :maxdepth: 1
 
    pydsh
+   faq
 
 Compatibility
 -------------
