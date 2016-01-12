@@ -6,7 +6,7 @@ FAQ
 Find answers to the frequently answered questions here.
 
 Why are my print statements funky?
-----------------------------------
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Often times with multiprocessing print statements come out funky because multiple processes are writing to :code:`sys.stdout`.
 One of the ways you can deal with this is by implementing a `multiprocessing.Lock()`_.  An example of how to use the
@@ -30,6 +30,30 @@ lock in a pre or post hook is shown below:
             print(str(thisjob.name))
         return None
 
+Where did my output go?
+~~~~~~~~~~~~~~~~~~~~~~~
+Say you have a script (that uses sshreader) similar to the following:
+
+.. code-block:: bash
+
+    ./myscript.py | wc
+
+but you keep getting 0 from the output of :code:`wc`. This is due to the `stdout buffer`_ in your terminal.  To overcome this
+"feature" either run your script as follows:
+
+.. code-block:: bash
+
+    python -u myscript.py | wc
+
+or change the your shebang at the top of your python script
+
+.. code-block:: bash
+
+    #!/usr/bin/env python -u
+
+Of course, you can also do as the link above says and force :code:`sys.stdout.flush()` but I am not a fan of that
+particular method.
+
 Indices and tables
 ------------------
 
@@ -43,3 +67,4 @@ Indices and tables
 .. _pdsh: https://computing.llnl.gov/linux/pdsh.html
 .. _hostlist expressions: https://www.nsc.liu.se/~kent/python-hostlist/
 .. _multiprocessing.Lock(): https://docs.python.org/2/library/multiprocessing.html#synchronization-between-processes
+.. _stdout buffer: https://www.turnkeylinux.org/blog/unix-buffering
