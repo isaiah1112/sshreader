@@ -32,7 +32,7 @@ lock in a pre or post hook is shown below:
 
 Where did my output go?
 ~~~~~~~~~~~~~~~~~~~~~~~
-Say you have a script (that uses sshreader) similar to the following:
+Say you have a script that you are piping the output from to another unix command. Something similar to the following:
 
 .. code-block:: bash
 
@@ -45,7 +45,7 @@ but you keep getting 0 from the output of :code:`wc`. This is due to the `stdout
 
     python -u myscript.py | wc
 
-or change the your shebang at the top of your python script
+or change the shebang at the top of your python script to:
 
 .. code-block:: bash
 
