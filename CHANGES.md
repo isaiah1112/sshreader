@@ -18,6 +18,7 @@
  * ServerJob.status now is a sum of return codes from each cmd in the job (a status of 255 means ssh did not connect). [182570b](https://bitbucket.org/isaiah1112/sshreader/commits/182570b)
  * Removed ServerJob.cmdStatus and renamed ServerJob.cmdResults to ServerJob.results [182570b](https://bitbucket.org/isaiah1112/sshreader/commits/182570b)
  * Renamed ServerJob.ssh\_con to ServerJob.\_conn [c4fe4b5](https://bitbucket.org/isaiah1112/sshreader/commits/c4fe4b5)
+ * Added FAQ to docs for including helpful hints. [f7139c6](https://bitbucket.org/isaiah1112/sshreader/commits/f7139c6f798002d4b743e1a52d5644a446587da6)
 
 # Version 2.3
  * Importing \_\_future\_\_ statements for print\_function and division
