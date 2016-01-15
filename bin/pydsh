@@ -15,8 +15,8 @@ __author__ = 'Jesse Almanrode'
 __version__ = '1.0'
 __examples__ = """EXAMPLES:
     %(prog)s -k ~/.ssh/id_rsa -w host1,host2,host3 "uname -r"
-    %(prog)s -u root -k /root/.ssh/id_rsa -w host1,host2,host3 "uname -r"
-    %(prog)s -u root -p Password123 -w host1,host2,host3 "uname -r"
+    %(prog)s -u root -k /root/.ssh/id_rsa -w host[1,3] "uname -r"
+    %(prog)s -u root -p Password123 -w host[1-3] "uname -r"
 """
 debug = False
 _print_lock_ = Lock()
