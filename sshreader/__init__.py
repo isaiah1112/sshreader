@@ -8,46 +8,62 @@ commands are sent in.
 
 The SSH Module can also be used to create and call ssh connections without multiple processes/threads.
 
-SSHreader can also run multi-processed/threaded shell commands on localhost and a serverJobList can contain both
+Sshreader can also run multi-processed/threaded shell commands on localhost and a serverJobList can contain both
 serverJobs running on localhost as well as serverJobs running over ssh.
 
-Threads vs. sub-Processes vs. (sub-Processes and Threads)
----------------------------------------------------------
+Threads vs. Processes vs. (Processes and Threads)
+-------------------------------------------------
 
-When using **pcount** and **tcount** in conjunction, tcount will equal the total number of threads each process is
-allowed to spawn.  If the total jobs per process is less than tcount then the number of threads per process will equal
-the number of jobs assigned to that process.  Thus, to find the total threads used across all processes use:
+To use multi-threading to parallelize jobs either set **tcount** to 0 or to the number of threads you wish to spawn.
+If the number of jobs is less than the number of threads you requested sshreader will adjust accordingly.  If **tcount**
+is set to 0 then the number of threads spawned will equal the number of jobs passed to the :code:`sshreader.sshread()`
+method.
 
-    (pcount * tcount) = total_threads
+To use multi-processing to parallelize jobs either set **pcount** to 0 or to the number of processes you wish to spawn.
+If the number of jobs is less than the number of processes you requested sshreader will adjust accordingly.  If
+**pcount** is set to 0 then the number of processes spawned will equal *cpusoftlimit*.  If **pcount**
+is set to -1 then the number of processes spawned will equal the *cpuhardlimit*.
 
-When using pcount, sshreader attempts to ensure that jobs are split evenly between the number of requested
-sub-processes.
+When using **pcount** and **tcount** in conjunction, **tcount** will equal the total number of threads each process is
+allowed to spawn.  Sshreader will automatically adjust the number of processes and number of threads in order to make
+the execution of the jobs as efficient as possible.  These adjustments are done only in a reduction manor.  Thus, if the
+number of jobs passed to :code:`sshreader.sshread()` method is less than the number of processes or threads requested
+sshreader will adjust those numbers down automatically. Generally though, the total number of thread spawned when using
+:code:`sshreader.sshread(pcount=0, tcount=0)` will equal:
 
-Limitations
------------
+.. code:: Python
 
-**ServerJob**:
+    total_processes = cpusoftlimit
+    total_threads = (total_processes * tcount)
 
-The sshread method currently limits you to processing 1 million ServerJobs at a time [1]_ ,
-per \_\_jobHardLimit__ global.
+Limits
+------
 
+**jobHardLimit**:
+
+Sshreader currently limits you to processing :code:`1,000,000` server jobs set via the \_\_jobHardLimit\_\_ global.
 
 **cpusoftlimit**:
 
 The cpusoftlimit for a box is defined as:
 
-    (cpu_count - 1)
+.. code:: Python
+
+    cpusoftlimit = (cpu_count() - 1)
 
 This means that sshreader will spawn a sub-process for all but one cpu on a given box.
 
 **cpuhardlimit**:
 
-The cpuhardlimit is the maximum number of sub-processes that sshreader will spawn on a given box defined as:
+The cpuhardlimit is the maximum number of sub-processes that sshreader will spawn on a given box (when **pcount** is
+set to -1) is defined as:
 
-    (cpuhardlimit * \_\_cpuHardLimitFactor__).
+.. code:: Python
+
+    cpuhardlimit = (cpusoftlimit * __cpuHardLimitFactor__)
 
 This is so that you don't make a box unusable and was arrived at per my own testing.  Currently,
-\_\_cpuHardLimitFactor__ is set to 3 [1]_ .
+\_\_cpuHardLimitFactor\_\_ is set to 3 [1]_ .
 
 .. [1] These numbers may increase in the future.
 """
