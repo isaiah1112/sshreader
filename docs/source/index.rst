@@ -43,7 +43,7 @@ sshreader will adjust those numbers down automatically. Generally though, the to
 .. code:: Python
 
     total_processes = cpusoftlimit
-    total_threads = (total_processes * tcount)
+    total_threads = (total_processes / jobs)
 
 Limits
 ------
