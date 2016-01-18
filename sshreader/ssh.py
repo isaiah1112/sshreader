@@ -77,7 +77,7 @@ class SSH(object):
     """
     def __init__(self, fqdn, username=None, password=None, keyfile=None, port=22, timeout=30, connect=True):
         if keyfile is None and username is None:
-            raise paramiko.BadAuthenticationType('You must specify a password or keyfile')
+            raise paramiko.SSHException('You must specify a password or keyfile')
         self.host = fqdn
         self.username = username
         self.password = password
@@ -164,7 +164,7 @@ class SSH(object):
                                         timeout=self.timeout, look_for_keys=False)
         else:  # Username and password combo
             if self.username is None or self.password is None:
-                raise paramiko.SSHException("You must enter a username and password or supply an SSH key")
+                raise paramiko.SSHException("You must provide a username and password or supply an SSH key")
             else:
                 self.connection.connect(self.host, port=self.port, username=self.username,
                                         password=self.password, timeout=self.timeout, look_for_keys=False)
