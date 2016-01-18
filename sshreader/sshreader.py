@@ -293,7 +293,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
     :raises: ProcessesOrThreads, ExceededJobLimit, ExceedCPULimit, TypeError,
     """
     if tcount is None and pcount is None:
-        raise ProcessesOrThreads("You must specify a number for pcount or tcount!")
+        raise ProcessesOrThreads('Specify an integer for pcount or tcount')
     if isinstance(serverjobs, list):
         islist = True
     else:
@@ -301,19 +301,17 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         serverjobs = [serverjobs]
     totaljobs = len(serverjobs)
 
-    # Per testing, don't allow more than 1 million jobs
+    # Per testing, don't allow more than __jobHardLimit__ jobs
     if totaljobs > __jobHardLimit__:
-        print(u"The jobHardLimit for sshreader is: " + str(__jobHardLimit__))
-        print(u"You are looking to process: " + str(totaljobs))
-        raise ExceededJobLimit("Reached or exceeded jobHardLimit")
+        raise ExceededJobLimit(str(totaljobs) + ' > ' + str(__jobHardLimit__))
 
     try:
         if int(debuglevel) <= 3:
             debuglevel = debuglevel
         else:
-            raise TypeError("Debug level must be either 0, 1, 2, or 3")
+            raise TypeError('Debug level must be either 0, 1, 2, or 3')
     except:
-        raise TypeError("Debug level must be an integer equal to 0, 1, 2, or 3")
+        raise TypeError('Debug level must be either 0, 1, 2, or 3')
 
     if debuglevel > 0 and progress_bar:
         progress_bar = False
@@ -362,9 +360,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
             pcount = totaljobs
 
         if pcount > cpuhardlimit:
-            print(u"The cpuHardLimit for your system is: " + str(cpuhardlimit))
-            print(u"You asked for: " + str(pcount))
-            raise ExceededCPULimit("Reached or exceeded cpuHardLimit")
+            raise ExceededCPULimit(str(pcount) + ' > ' + str(cpuhardlimit))
 
         if tcount is not None:
             if tcount == 0:

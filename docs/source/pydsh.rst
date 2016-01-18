@@ -3,33 +3,33 @@
 pydsh
 =====
 
-Pydsh is a "Pythonish" implementation of `pdsh`_ that uses sshreader as the engine for parallelizing ssh tasks.  It
-also attempts to format the output from commands for you in a easy to read mannor.  Below are some examples of how it
+Pydsh is a Python-based replication of `pdsh`_ that uses sshreader as the engine for parallelizing ssh tasks.  It
+also attempts to format the output from commands for you in a easy to read manner.  Below are some examples of how it
 can be used.
 
 Examples
 --------
 
-Simplest form of pydsh [1]_.  Run a command, include a progress bar, and show the output of the commands
+Simplest form of pydsh [1]_.  Run a command, include a progress bar, and show the output of the commands:
 
 .. code-block:: bash
 
     pydsh -w myhost[1-100].example.com 'uname -r'
 
 
-Do not show a progress bar before the output and only show items with output
+Do not show a progress bar before the output and only show items with output:
 
 .. code-block:: bash
 
     pydsh -u myuser -p mypass -w myhost[1-100].example.com -q 'uname -r'
 
-Print output from jobs as soon as they complete (output can be piped to dshbak)
+Print output from jobs as soon as they complete (output can be piped to dshbak):
 
 .. code-block:: bash
 
     pydsh -w myhost[1-100].example.com -Q 'uname -r' | dshbak -c
 
-Finally, sort the output by commands that finished and commands that didn't
+Finally, sort the output by commands that finished and commands that didn't:
 
 .. code-block:: bash
 

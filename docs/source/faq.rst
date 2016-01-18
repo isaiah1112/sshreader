@@ -8,9 +8,9 @@ Find answers to the frequently answered questions here.
 Why are my print statements funky?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Often times with multiprocessing print statements come out funky because multiple processes are writing to :code:`sys.stdout`.
-One of the ways you can deal with this is by implementing a `multiprocessing.Lock()`_.  An example of how to use the
-lock in a pre or post hook is shown below:
+Often times with multiprocessing print statements come out funky because multiple processes are writing to
+:code:`sys.stdout` at the same time.  One of the ways you can deal with this is by implementing a
+ `multiprocessing.Lock()`_.  An example of how to use the lock in a pre or post hook is shown below:
 
 .. code-block:: python
 
@@ -32,14 +32,15 @@ lock in a pre or post hook is shown below:
 
 Where did my output go?
 ~~~~~~~~~~~~~~~~~~~~~~~
-Say you have a script that you are piping the output from to another unix command. Something similar to the following:
+Say you have a script (that uses sshreader or otherwise) that you are piping the output from to another unix command.
+Something similar to the following:
 
 .. code-block:: bash
 
     ./myscript.py | wc
 
-but you keep getting 0 from the output of :code:`wc`. This is due to the `stdout buffer`_ in your terminal.  To overcome this
-"feature" either run your script as follows:
+but you keep getting 0 from the output of :code:`wc`. This is due to the `stdout buffer`_ in your terminal.
+To overcome this "feature" either run your script as follows:
 
 .. code-block:: bash
 
