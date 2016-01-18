@@ -4,7 +4,7 @@ ssh Module
 ==========
 
 .. automodule:: sshreader.ssh
-   :members:
+   :members: shell_command, SSH
    :private-members:
 
 

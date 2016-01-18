@@ -15,27 +15,24 @@
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import print_function, division
-import sys
+from __future__ import absolute_import, print_function, division
+import os
 import paramiko
-from os import getpid
-from multiprocessing import Process, cpu_count
-from multiprocessing import Queue as processQueue
-from threading import Thread
-from Queue import Queue as threadQueue
+import multiprocessing
+import queue
+import time
+import threading
+import warnings
+from builtins import range  # Replaces xrange in Python2
+from collections import namedtuple
+from progressbar import ProgressBar
 from types import FunctionType
-from ssh import SSH, do_shell_script
+from sshreader.ssh import SSH, shell_command
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
-separator = "---------"
-tqueue = None
-tcounter = 0
-pqueue = None
-finqueue = None
-__jobHardLimit__ = (10 ** 6)
+__jobHardLimit__ = int(10 ** 6)
 __cpuHardLimitFactor__ = 3
-__previouspercentage__ = -1
 
 
 class InvalidHook(Exception):
@@ -68,77 +65,86 @@ class InvalidArgument(Exception):
     pass
 
 
-def _validate_hook_(hook):
-    """ Private method to take a pre or post hook and validate it
+class Hook(object):
+    """ Custom class for pre and post hooks
 
-    - **parameters** and **return types**::
-
-        :param hook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
-        :return: Dictionary
+    :param target: Function to call when using the hook
+    :param args: List of args to pass to target
+    :param kwargs: Dictionary of kwargs to pass to target
+    :return: Hook
+    :raises: InvalidArgument
     """
-    if type(hook) is not dict:
-        raise InvalidHook(str(hook) + " is not of type dict")
-    hookkeys = hook.keys()
-    if 'func' in hookkeys:
-        if type(hook['func']) is not FunctionType:
-            raise TypeError("'func' is not type FunctionType")
-    if 'args' in hookkeys:
-        if type(hook['args']) is list:
-            pass
-        elif type(hook['args']) is tuple:
-            hook['args'] = list(hook['args'])
+
+    def __init__(self, target, args=None, kwargs=None):
+        if isinstance(target, FunctionType):
+            self.target = target
         else:
-            hook['args'] = [hook['args']]
-    else:
-        hook['args'] = []
-    if 'kwargs' in hookkeys:
-        if type(hook['kwargs']) is not dict:
-            raise TypeError("'kwargs' is not type dict")
-    else:
-        hook['kwargs'] = {}
-    return hook
+            raise InvalidArgument('target should be of type: <function>')
+        if args is None:
+            self.args = list()
+        else:
+            if isinstance(args, list):
+                self.args = args
+            else:
+                raise InvalidArgument('args should be of type: <list>')
+        if kwargs is None:
+            self.kwargs = dict()
+        else:
+            if isinstance(kwargs, dict):
+                self.kwargs = kwargs
+            else:
+                raise InvalidArgument('kwargs should be of type: <dict>')
+        self.result = None
+
+    def run(self, *args, **kwargs):
+        """ Run the Hook.
+
+        :param args: Override args
+        :param kwargs: Override kwargs
+        :return: Result from target function
+        """
+        if len(args) == 0:
+            args = self.args
+        if len(kwargs) == 0:
+            kwargs = self.kwargs
+        self.result = self.target(*args, **kwargs)
+        return self.result
 
 
 class ServerJob(object):
     """ Custom class for holding all the info needed to run ssh commands or shell commands in sub-processes or threads
 
-    - **parameters** and **return types**::
+    :param fqdn: Fully qualified domain name or IP address
+    :param cmds: List of commands to run (in the order you want them run)
+    :param username: Username for SSH
+    :param password: Password for SSH
+    :param keyfile: Path to ssh key (can be used instead of password)
+    :param debuglevel: 0 = off, 1 = some, 2 = more, 3 = all
+    :param timeout: Tuple of timeouts (sshtimeout, cmdtimeout), if not specified both default to 30 seconds
+    :param runlocal: Run job on localhost (skips ssh to localhost)
+    :param prehook: Optional Hook object
+    :param posthook: Optional Hook object
+    :param combine_output: Combine stdout and stderr
+    :return: ServerJob Object
 
-        :param fqdn: Fully qualified domain name or IP address
-        :param cmds: List of commands to run (in the order you want them run)
-        :param username: Username for SSH
-        :param password: Password for SSH
-        :param keyfile: Path to ssh key (can be used instead of password)
-        :param debuglevel: 0 = off, 1 = some, 2 = more, 3 = all
-        :param timeout: Tuple of timeouts (sshtimeout, cmdtimeout), if not specified both default to 30 seconds
-        :param runlocal: Run job on localhost (skips ssh to localhost)
-        :param prehook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
-        :param posthook: Dictionary of {'func':<function>, 'args':[<args>], 'kwargs':{<dictionary>}}
-        :return: serverJob Object
-
-    - **properties**::
-        :property cmdResults: List of results of each command in tuple form (cmd, stdout, stderr)
-        :propery cmdStatus: List of states for each command ( None = initial state/cmd did not run, True = no stderr,
-                            False = stderr)
-        :property status: State of entire job (None = initial state/ssh failed, True = all cmd statuses is True,
-                            False = one or more cmd statuses is False)
-        :property prehook_return: Returned values from prehook method
-        :property posthook_return: Returned values from posthook method
-        :property combine_output: Combine stdout and stderr in cmdResults (default = False)
+    :property results: List of namedtuples (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
+    :property status: Sum of return codes for entire job (255 = ssh did not connect)
     """
     def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, debuglevel=0, timeout=(30, 30),
-                 runlocal=False, prehook=None, posthook=None):
-        if type(cmds) in (list, tuple):
-            self.cmds = cmds
-        else:
-            self.cmds = [cmds]
-        self.cmdResults = []
-        self.cmdStatus = []
+                 runlocal=False, prehook=None, posthook=None, combine_output=False):
+        self.name = fqdn
+        self.results = []
         self.username = username
         self.password = password
         self.key = keyfile
-        self.status = None
-        if type(timeout) in (tuple, list):
+        self.status = 0
+        self.combine_output = combine_output
+        self.runlocal = runlocal
+        if isinstance(cmds, (list, tuple)):
+            self.cmds = cmds
+        else:
+            self.cmds = [cmds]
+        if isinstance(timeout, (tuple, list)):
             if len(timeout) != 2:
                 raise InvalidArgument('You must supply two timeouts if you pass a tuple or list')
             self.sshtimeout = timeout[0]
@@ -146,132 +152,99 @@ class ServerJob(object):
         else:
             self.sshtimeout = timeout
             self.cmdtimeout = timeout
-        self.runlocal = runlocal
-        self.name = fqdn
-        self.prehook_return = None
         if prehook is not None:
-            self.prehook = _validate_hook_(prehook)
+            if isinstance(prehook, Hook):
+                self.prehook = prehook
+            else:
+                raise InvalidArgument('prehook should be of type: <Hook>')
         else:
-            self.prehook = None
-        self.posthook_return = None
+            self.prehook = prehook
         if posthook is not None:
-            self.posthook = _validate_hook_(posthook)
+            if isinstance(posthook, Hook):
+                self.posthook = posthook
+            else:
+                raise InvalidArgument('prehook should be of type: <Hook>')
         else:
-            self.posthook = None
-        self.combine_output = False
+            self.posthook = posthook
         try:
             if int(debuglevel) <= 3:
                 self.debuglevel = debuglevel
             else:
                 raise TypeError("Debug level must be an integer between 0 and 3")
-        except Exception:
+        except TypeError:
             raise TypeError("Debug level must be an integer between 0 and 3")
         if runlocal is False:
-            self.ssh_con = None
+            self._conn = None
             if keyfile is None:
                 if username is None or password is None:
                     raise paramiko.SSHException("You must enter a username and password or supply an SSH key")
-                else:
-                    self.keyauth = False
-            else:
-                self.keyauth = True
         else:
-            self.ssh_con = "localhost"
+            self._conn = "localhost"
 
     def run(self):
-        """Run a serverJob. SSH to server, run cmds, return result
+        """Run a ServerJob. SSH to server, run cmds, return result
 
-        - **parameters** and **return types**::
-
-            :return: serverJob.status
+        :return: ServerJob.status
         """
         if self.debuglevel >= 1:
-            print("Running serverJob: " + self.name)
+            print(u"Running ServerJob: " + str(self.name))
         # Run prehook if it is defined
         if self.prehook is not None:
             if self.debuglevel >= 2:
-                print("Running prehook")
-            self.prehook['args'].append(self)
-            self.prehook_return = self.prehook['func'](*self.prehook['args'], **self.prehook['kwargs'])
-            self.prehook['args'].remove(self)
+                print(u"Running prehook")
+            self.prehook.args.append(self)
+            self.prehook.run()
+            self.prehook.args.remove(self)
         # Establish SSH Connection if we are not working locally
         if self.runlocal is False:
             try:
-                if self.keyauth:
-                    if self.username is None:
-                        self.ssh_con = SSH(self.name, keyfile=self.key, timeout=self.sshtimeout)
-                    else:
-                        self.ssh_con = SSH(self.name, username=self.username, keyfile=self.key, timeout=self.sshtimeout)
-                else:
-                    self.ssh_con = SSH(self.name, username=self.username, password=self.password,
-                                       timeout=self.sshtimeout)
-            except Exception, errorMsg:
+                self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
+                                 timeout=self.sshtimeout)
+            except Exception as errorMsg:
                 if self.debuglevel >= 2:
-                    print(errorMsg)
-                self.ssh_con = None
+                    print(str(errorMsg))
+                self._conn = None
+                self.status = 255
                 if self.debuglevel >= 1:
-                    print(self.name + ": Unable to establish ssh connection!")
+                    print(str(self.name) + u": Unable to establish ssh connection!")
         # This is a trick statement to allow ssh and local shell scripts to be run using similar output processing code
-        if self.ssh_con is not None:
+        if self._conn is not None:
             for idX, thiscmd in enumerate(self.cmds):
                 # Now running each command in turn
-                self.cmdStatus.append(None)
                 if self.debuglevel >= 3:
-                    print(self.name + " running: " + thiscmd)
+                    print(str(self.name) + u" running: " + str(thiscmd))
                 if self.runlocal:
-                    if self.combine_output:
-                        result = do_shell_script(thiscmd, combine=True)
-                    else:
-                        result = do_shell_script(thiscmd)
+                    result = shell_command(thiscmd, combine=self.combine_output)
                 else:
-                    if self.combine_output:
-                        result = self.ssh_con.ssh_command(thiscmd, timeout=self.cmdtimeout, combine=True)
-                    else:
-                        result = self.ssh_con.ssh_command(thiscmd, timeout=self.cmdtimeout)
-                self.cmdResults.append(result)
-                if self.combine_output:
-                    # We are combining stdout and stderr
-                    self.cmdStatus[idX] = True
-                else:
-                    if len(result[2]) == 0:
-                        # No stderr output
-                        self.cmdStatus[idX] = True
-                    else:
-                        # Something was output to stdError
-                        self.cmdStatus[idX] = False
+                    result = self._conn.ssh_command(thiscmd, timeout=self.cmdtimeout, combine=self.combine_output)
+                self.results.append(result)
                 if self.debuglevel >= 3:
-                    print(self.name + ": " + thiscmd + ": Finished")
-            if False in self.cmdStatus or None in self.cmdStatus:
-                self.status = False
-            else:
-                self.status = True
+                    print(str(self.name) + u": " + str(thiscmd) + u": Finished")
+                self.status += result.return_code
             # Close ssh connection if needed
             if self.runlocal is False:
-                self.ssh_con.close()
-            self.ssh_con = None
+                self._conn.close()
+            self._conn = None
             # Run post hook before we are done with this job
         if self.posthook is not None:
             if self.debuglevel >= 2:
-                print("Running posthook")
-            self.posthook['args'].append(self)
-            self.posthook_return = self.posthook['func'](*self.posthook['args'], **self.posthook['kwargs'])
-            self.posthook['args'].remove(self)
+                print(u"Running posthook")
+            self.posthook.args.append(self)
+            self.posthook.run()
+            self.posthook.args.remove(self)
         if self.debuglevel >= 1:
-            print("Finished running serverJob: " + self.name)
+            print(u"Finished running ServerJob: " + str(self.name))
         return self.status
 
-    def print_results(self, printname=False):
-        """Prints the command run and its output
+    def print_results(self):
+        """ Prints the status of the ServerJob and details of each cmd in the job
 
-        - **parameters** and **return types**::
-
-            :param printname: Print the serverJob name
-            :return: None
+        :return: None
         """
-        if printname:
-            print("serverJob: " + self.name + "\n" + (separator*3))
+        print(str('-' * 20))
+        print(u'ServerJob: ' + str(self.name) + u'\tStatus: ' + str(self.status))
         for idx, value in enumerate(self.cmds):
-            print(value + ":\n" + ";".join(self.cmdResults[idx]) + "\n" + separator)
+            print(str(self.results[idx]) + u'\tStatus: ' + str(self.results[idx].return_code))
         return None
 
     def __str__(self):
@@ -286,164 +259,97 @@ class ServerJob(object):
         return self.__dict__.keys()
 
 
-def progress_bar(progress, total, longbar=False):
-    """Prints a syled progress bar
-
-    - **parameters** and **return types**::
-
-        :param progress: Current item number being processed
-        :param total: Total number of items being processed
-        :param longbar: Use a longer style progress bar
-        :return: None
-    """
-    # TODO - Move to Click library
-    global __previouspercentage__
-    percent_float = float(progress) / float(total)
-    percent = int(percent_float * 100)
-    if __previouspercentage__ != percent:
-        if longbar:
-            hashes = "#" * percent
-        else:
-            hashes = "=" * int(percent/2)
-            if percent % 2 != 0:
-                hashes += "-"
-        template = "[%s] %s%%" % (hashes, str(percent))
-        if percent < 100:
-            sys.stdout.write('\r' + template)
-            sys.stdout.flush()
-            __previouspercentage__ = percent
-        else:
-            __previouspercentage__ = -1
-            print('\r' + template)
-    return None
-
-
 def print_results(serverjobs):
-    """Print the output of all serverJobs in as serverJobList by status
+    """Print the output of all ServerJobs in as ServerJobList by job status
 
-    - **parameters** and **return types**::
-
-        :param serverjobs: A list of sshreaded serverJob objects
-        :return: None
+    :param serverjobs: List of ServerJob objects
+    :return: SortedJobs named tuple
     """
-    nonestatus = [x for x in serverjobs if x.status is None]
-    completejobs = [x for x in serverjobs if x.status is True]
-    errorjobs = [x for x in serverjobs if x.status is False]
-    if len(completejobs) > 0:
-        print("\nSUCCESSFUL SERVERJOBS\n")
-        for x in completejobs:
-            x.print_results(True)
-    if len(errorjobs) > 0:
-        print("\nERRORED SERVERJOBS\n")
-        for x in errorjobs:
-            x.print_results(True)
-    if len(nonestatus) > 0:
-        print("\nINCOMPLETE SERVERJOBS\n")
-        for x in nonestatus:
-            x.print_results(True)
-    return None
+    SortedJobs = namedtuple("SortedJobs", ['completed', 'failed', 'unknown'])
+    status_complete = [x for x in serverjobs if x.status == 0]
+    status_failed = [x for x in serverjobs if x.status > 0]
+    status_unknown = [x for x in serverjobs if x.status == 255]
+    if len(status_complete) > 0:
+        for job in status_complete:
+            job.print_results()
+    if len(status_failed) > 0:
+        for job in status_failed:
+            job.print_results()
+    if len(status_unknown) > 0:
+        for job in status_unknown:
+            job.print_results()
+    return SortedJobs(completed=status_complete, failed=status_failed, unknown=status_unknown)
 
 
-def tprint(message, stderr=False):
-    """Attempt at a thread-safe print variation
+def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=False):
+    """Takes a list of ServerJob objects and puts them into threads/sub-processes and runs them
 
-    - **parameters** and **return types**::
-
-        :param message: Message to output to stdout
-        :param stderr: Message should go to stderr
-        :return: None
-    """
-    # TODO - Can the print function be used here?
-    if message.endswith('\n') is False:
-        message += '\n'
-    if stderr:
-        sys.stderr.write(message)
-        sys.stderr.flush()
-    else:
-        sys.stdout.write(message)
-        sys.stdout.flush()
-    return None
-
-
-def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=False, prehook=None, posthook=None):
-    """Takes a list of serverJob objects and puts them into threads/sub-processes and runs them
-
-    - **parameters** and **return types**::
-
-        :param serverjobs: List of serverJob objects (A list of 1 job is acceptable)
-        :param debuglevel: Debug level of all serverJobs (0 = off, 1 = some, 2 = more, 3 = all)
-        :param pcount: Number of sub-processes to spawn (None = off, 0 = cpuSoftLimit, -1 = cpuHardLimit)
-        :param tcount: Number of threads to spawn (None = off, 0 = adjusted length of serverJobList)
-        :param progressbar: Print a progress bar
-        :param prehook: Prehook for all serverJobs
-        :param posthook: Posthook for all serverJobs
-        :return: serverJobLst with completed serverJob objects (single object returned if single job passed)
+    :param serverjobs: List of ServerJob objects (A list of 1 job is acceptable)
+    :param debuglevel: Debug level for threads/processes (0 = off, 1 = some, 2 = more, 3 = all)
+    :param pcount: Number of sub-processes to spawn (None = off, 0 = cpuSoftLimit, -1 = cpuHardLimit)
+    :param tcount: Number of threads to spawn (None = off, 0 = adjusted length of ServerJobList)
+    :param progress_bar: Print a progress bar
+    :return: List with completed ServerJob objects (single object returned if 1 job was passed)
+    :raises: ProcessesOrThreads, ExceededJobLimit, ExceedCPULimit, TypeError,
     """
     if tcount is None and pcount is None:
-        raise ProcessesOrThreads("You must specify a number for pcount or tcount!")
-    if type(serverjobs) is not list:
+        raise ProcessesOrThreads('Specify an integer for pcount or tcount')
+    if isinstance(serverjobs, list):
+        islist = True
+    else:
         islist = False
         serverjobs = [serverjobs]
-    else:
-        islist = True
     totaljobs = len(serverjobs)
 
-    # Per testing, don't allow more than 1 million jobs
+    # Per testing, don't allow more than __jobHardLimit__ jobs
     if totaljobs > __jobHardLimit__:
-        print("The jobHardLimit for sshreader is: " + str(__jobHardLimit__))
-        print("You are looking to process: " + str(totaljobs))
-        raise ExceededJobLimit("Reached or exceeded jobHardLimit")
+        raise ExceededJobLimit(str(totaljobs) + ' > ' + str(__jobHardLimit__))
 
-    # Figure out what globals we will need to apply to each serverJob object
-    # before it is processed
     try:
         if int(debuglevel) <= 3:
             debuglevel = debuglevel
         else:
-            raise TypeError("Debug level must be either 0, 1, 2, or 3")
+            raise TypeError('Debug level must be either 0, 1, 2, or 3')
     except:
-        raise TypeError("Debug level must be an integer equal to 0, 1, 2, or 3")
-    progressbar = progressbar
-    if prehook is not None:
-        prehook = _validate_hook_(prehook)
-    if posthook is not None:
-        posthook = _validate_hook_(posthook)
+        raise TypeError('Debug level must be either 0, 1, 2, or 3')
+
+    if debuglevel > 0 and progress_bar:
+        progress_bar = False
+        warnings.warn('You should not use progress_bar and debuglevel together. Silencing progress_bar.')
+
+    item_counter = multiprocessing.Value('L', 0)
+    if progress_bar:
+        bar = ProgressBar(max_value=totaljobs)
+    else:
+        bar = None
 
     if pcount is None:
-        global tqueue, tcounter
-        # Ensure the thread job counter is reset to 0
-        tcounter = 0
-        tqueue = threadQueue()
+        task_queue = queue.Queue(maxsize=totaljobs)
+        result_queue = queue.Queue(maxsize=totaljobs)
         # Fill up the Queue
-        for thisJob in serverjobs:
-            tqueue.put(thisJob)
+        for job in serverjobs:
+            task_queue.put(job)
         # Limit the number of threads to spawn
         if tcount == 0 or tcount > totaljobs:
             tcount = totaljobs
 
-        # Start parent threads
-        for pThread in xrange(tcount):
-            if debuglevel >= 1:
-                print("Spawning parent thread " + str(pThread))
-            t = Thread(target=__tworker__, args=(debuglevel, prehook, posthook, progressbar, totaljobs))
-            t.daemon = True
-            t.start()
-
-        # Wait for the queue to empty
-        tqueue.join()
-
-        if len(serverjobs) > 1 or islist:
-            return serverjobs
-        else:
-            return serverjobs[0]
+        if debuglevel >= 1:
+            print(u"Spawning " + str(tcount) + u" threads")
+        # Start a thread pool
+        for thread in range(tcount):
+            if debuglevel >= 2:
+                print(u"Spawning: Thread-" + str(thread))
+            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter))
+            thread.daemon = True
+            thread.start()
     else:
-        global pqueue, finqueue
-        pqueue = processQueue()
-        finqueue = processQueue()
-        # Load all but the current cpu on a box.
-        cpusoftlimit = cpu_count() - 1
+        # Limit the number of sub processes we spawn
+        cpusoftlimit = multiprocessing.cpu_count() - 1
         # Imposing a hard limit for number of sub-processes so you don't make the system unusable
-        cpuhardlimit = (cpusoftlimit * __cpuHardLimitFactor__)
+        cpuhardlimit = cpusoftlimit * __cpuHardLimitFactor__
+        # Found this while digging around the multiprocessing API.  This might help some of the pickling errors when
+        # working with ssh
+        multiprocessing.allow_connection_pickling()
 
         # Adjust number of sub-processes to spawn.
         if pcount == 0:
@@ -454,156 +360,89 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progressbar=Fals
             pcount = totaljobs
 
         if pcount > cpuhardlimit:
-            print("The cpuHardLimit for your system is: " + str(cpuhardlimit))
-            print("You asked for: " + str(pcount))
-            raise ExceededCPULimit("Reached or exceeded cpuHardLimit")
+            raise ExceededCPULimit(str(pcount) + ' > ' + str(cpuhardlimit))
 
-        # Add each serverJob object to the queue
-        if tcount is None:
-            for thisJob in serverjobs:
-                pqueue.put(thisJob)
-            subqueue = None
-        else:
-            # Set the number of threads for each sub-process to use
-            # This could end up being smaller than what is set here
-            # due to the number of items in the sub queues we are
-            # about to set up.
-            if tcount == 0 or tcount > totaljobs:
-                tcount = totaljobs
-            # Build a "sub queue" for each process to use
-            subqueue = []
-            subqueueitems = int(totaljobs / pcount)
-            # Balance the totaljobs into subQueues for each sub-process
-            while subqueueitems * pcount < totaljobs:
-                subqueueitems += 1
-            for x in xrange(0, totaljobs, subqueueitems):
-                subqueue.append(serverjobs[x: x + subqueueitems])
-            # If the balanced sub queue requires fewer processes, make it so
-            if len(subqueue) < pcount:
-                pcount = len(subqueue)
+        if tcount is not None:
+            if tcount == 0:
+                tcount = totaljobs // pcount
+                if tcount < 2:
+                    # Basically, unless we have enough jobs to spawn more than 1 thread per process we only
+                    # need the sub process.
+                    tcount = None
 
-        # Start Parent processes for processing the Queue
-        plist = []
-        if debuglevel >= 2:
-            print("Spawning " + str(pcount) + " sub-processes")
-        for pID in xrange(pcount):
-            if subqueue is None:
-                p = Process(target=__pworker__, args=(debuglevel, prehook, posthook))
-            else:
-                p = Process(target=__sprocess__, args=(debuglevel, prehook, posthook, tcount, subqueue[pID]))
-            plist.append(p)
-            p.start()
+        task_queue = multiprocessing.Queue(maxsize=totaljobs)
+        result_queue = multiprocessing.Queue(maxsize=totaljobs)
 
-        # Get the results from the Queue
-        returnlist = []
-        returnlen = len(returnlist)
-        while returnlen < totaljobs:
-            if progressbar:
-                progress_bar(returnlen, totaljobs)
-            # I think there is a bug with the following line that randomly causes pickle errors.
-            # Not sure how to fix it.
-            returnlist.append(finqueue.get())
-            returnlen = len(returnlist)
-        # This ensures that we print a final 100% progress bar
-        if progressbar:
-            progress_bar(returnlen, totaljobs)
+        # Add each ServerJob object to the queue
+        for job in serverjobs:
+            task_queue.put(job)
 
-        # Ensure all processes are closed
-        for p in plist:
-            p.join()
+        if debuglevel >= 1:
+            print(u"Spawning " + str(pcount) + u" sub-processes")
+        for pid in range(pcount):
+            pid = multiprocessing.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter),
+                                          kwargs={'thread_count': tcount, 'debuglevel': debuglevel})
+            pid.daemon = True
+            pid.start()
 
-        # If we were passed a list then we will return a list
-        if len(returnlist) > 1 or islist:
-            return returnlist
-        else:  # If an object, return an object
-            return returnlist[0]
+    # Non blocking way to wait for threads/processes
+    while result_queue.full() is False:
+        if progress_bar:
+            bar.update(item_counter.value)
+        time.sleep(1)
+    if progress_bar:
+        bar.finish()
+
+    completed_jobs = list()
+    while result_queue.empty() is False:
+        completed_jobs.append(result_queue.get())
+    # If we were passed a list then we will return a list
+    if len(completed_jobs) > 1 or islist:
+        return completed_jobs
+    else:  # If an object, return an object
+        return completed_jobs[0]
 
 
-def __pworker__(debuglevel, prehook, posthook):
-    """This is a private method that is used by sshread to limit the number of processes sshreader spawns.
+def _sub_process_(task_queue, result_queue, item_counter, thread_count=None, debuglevel=0):
+    """ Private method for managing multi-processing and spawning thread pools.
 
-    DO NOT USE THIS METHOD! Use the sshread method instead!
+    DO NOT USE THIS METHOD!
     """
-    global pqueue, finqueue
-    pid = getpid()
-    if debuglevel >= 1:
-        print("Starting process: " + str(pid))
-    while pqueue.empty() is False:
-        thisjob = pqueue.get()
-        thisjob.prehook = prehook
-        thisjob.posthook = posthook
-        thisjob.debuglevel = debuglevel
-        thisjob.run()
-        finqueue.put(thisjob)
-    if debuglevel >= 1:
-        print("Exiting process: " + str(pid))
-    finqueue.close()
-    return True
-
-
-def __tworker__(debuglevel, prehook, posthook, progressbar, totaljobs):
-    """This is a private method used to limit the number of threads that sshreader spawns.
-
-    DO NOT USE THIS METHOD! Use the sshread method instead!
-    """
-    global tqueue, tcounter
-    while True:
-        thisjob = tqueue.get()
-        thisjob.prehook = prehook
-        thisjob.posthook = posthook
-        thisjob.debuglevel = debuglevel
-        cthread = Thread(target=thisjob.run)
-        cthread.start()
-        cthread.join()
-        if progressbar:
-            tcounter += 1
-            progress_bar(tcounter, totaljobs)
-        tqueue.task_done()
-
-
-def __sprocess__(debuglevel, prehook, posthook, tcount, subqueue):
-    """This is a private method used to have the multiprocessing and multithreading functionality combined.
-
-    DO NOT USE THIS METHOD! Use the sshread method instead!
-    """
-    global finqueue, tqueue
-    pid = getpid()
-    if debuglevel >= 1:
-        print("Starting process: " + str(pid))
-    tqueue = threadQueue()
-    for thisJob in subqueue:
-        thisJob.prehook = prehook
-        thisJob.posthook = posthook
-        thisJob.debuglevel = debuglevel
-        tqueue.put(thisJob)
-    if tcount > len(subqueue):
-        # Override the number of threads if it is greater than what we actually need
-        tcount = len(subqueue)
+    pid = os.getpid()
     if debuglevel >= 2:
-        print("Process " + str(pid) + " starting " + str(tcount) + " threads")
-    for x in xrange(tcount):
-        t = Thread(target=__sthread__)
-        t.daemon = True
-        t.start()
-    tqueue.join()
-    if debuglevel >= 1:
-        print("Exiting process: " + str(pid))
-    finqueue.close()
-    return True
+        print(u"Starting process: " + str(pid))
+    if thread_count is None:
+        while task_queue.empty() is False:
+            job = task_queue.get()
+            job.run()
+            result_queue.put(job)
+            with item_counter.get_lock():
+                item_counter.value += 1
+    else:
+        if debuglevel >= 1:
+            print(u"Process: " + str(pid) + u" spawning: " + str(thread_count) + u" threads")
+        for thread in range(thread_count):
+            if debuglevel >= 2:
+                print(u"Process: " + str(pid) + u" spawning: Thread-" + str(thread))
+            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter))
+            thread.daemon = True
+            thread.start()
+        while threading.active_count() > 1:
+            time.sleep(1)
+    if debuglevel >= 2:
+        print(u"Exiting process: " + str(pid))
+    return None
 
 
-def __sthread__():
-    """This is a private method used to have the multiprocessing and multithreading functionality combined.
+def _sub_thread_(task_queue, result_queue, item_counter):
+    """ Private method for managing multi-processing and spawning thread pools.
 
-    DO NOT USE THIS METHOD! Use the sshread method instead!
+    DO NOT USE THIS METHOD!
     """
-    global tqueue, finqueue
-    while tqueue.empty() is False:
-        thisjob = tqueue.get()
-        try:
-            thisjob.run()
-        except Exception as errMsg:
-            print(errMsg)
-        finqueue.put(thisjob)
-        tqueue.task_done()
-    return True
+    while task_queue.empty() is False:
+        job = task_queue.get()
+        job.run()
+        result_queue.put(job)
+        with item_counter.get_lock():
+            item_counter.value += 1
+    return None

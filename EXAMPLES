@@ -16,12 +16,11 @@ for host in hosts:
 # sshread the list of ServerJobs as quickly as possible!
 # setting pcount and tcount to 0 will let sshreader figure out the number of processes and threads to spawn for best
 # results.
-results = sshreader.sshread(serverjobs, pcount=0, tcount=0, progressbar=True)
+results = sshreader.sshread(serverjobs, pcount=0, tcount=0, progress_bar=True)
 
 # Output the results from each job
 for result in results:
     result.print_results()
-
 
 # You can also use sshreader to work with ssh connections without threading/multiprocessing
 host = 'host1.example.com'
@@ -31,5 +30,5 @@ s.close()
 
 # Or you can run shell commands on the localhost
 
-print(sshreader.do_shell_script('uname -a'))
+print(sshreader.shell_command('uname -a'))
 

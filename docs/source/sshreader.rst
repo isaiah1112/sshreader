@@ -5,7 +5,7 @@ sshreader Module
 
 
 .. automodule:: sshreader.sshreader
-   :members:
+   :members: ServerJob, Hook, sshread, print_results
    :private-members:
 
 
