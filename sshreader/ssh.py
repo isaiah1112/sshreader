@@ -92,6 +92,14 @@ class SSH(object):
         if connect:
             self.connect()
 
+    def __enter__(self):
+        if self.is_alive() is False:
+            self.connect()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+
     def ssh_command(self, command, timeout=30, combine=False):
         """Run a command over an ssh connection
 
