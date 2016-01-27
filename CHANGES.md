@@ -1,5 +1,9 @@
 # Changelog
 
+# Version 3.0.1
+ * Fixed typo in ssh docstring [328bb5c](https://bitbucket.org/isaiah1112/sshreader/commits/328bb5c86e6313d452e20406665f5a3e5507425c)
+ * SSH class can now be used with Python 'with' statement [f54ac3d](https://bitbucket.org/isaiah1112/sshreader/commits/f54ac3d5fd342cbcfae2315f1be7043fe40d65a1)
+
 # Version 3.0
  * Now works with Python2.7 and Python3.5!
  * Added pydsh script (installs in /usr/local/bin) (Python implemenation of pdsh that uses sshreader) [1cbf65a](https://bitbucket.org/isaiah1112/sshreader/commits/1cbf65a)
