@@ -3,16 +3,16 @@
 """A "pythonish" implementation of pdsh using sshreader!"""
 from __future__ import print_function
 import argparse
-import sys
+import getpass
 import os
 import sshreader
+import sys
 from hostlist import expand_hostlist
-from getpass import getpass
 from multiprocessing import Lock
 
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '1.0'
+__version__ = '1.1'
 __examples__ = """EXAMPLES:
     %(prog)s -k ~/.ssh/id_rsa -w host1,host2,host3 "uname -r"
     %(prog)s -u root -k /root/.ssh/id_rsa -w host[1,3] "uname -r"
@@ -99,24 +99,27 @@ def main():
         debug = True
         print(args)
 
-    userhome = os.path.expanduser('~')
     if args.username is None:
-        args.username = list(os.path.split(userhome)).pop()
+        if os.getlogin() == getpass.getuser():
+            args.username = getpass.getuser()
+        else:
+            raise parser.error('Unable to determine username.  Please specify one!')
+        userhome = os.path.expanduser('~')
+        if args.keyfile is None and args.password is None:
+            keyfiles = os.listdir(userhome + "/.ssh")
+            if "id_dsa" in keyfiles:
+                args.keyfile = userhome + "/.ssh/id_dsa"
+            elif "id_rsa" in keyfiles:
+                args.keyfile = userhome + "/.ssh/id_rsa"
+            else:
+                parser.error("Unable to find an ssh key. Please specify one or use the password flag!")
     else:
         if args.keyfile is None and args.password is None:
             parser.error("Please specify a key location or password when specifying a username!")
-        if args.password is not None and len(args.password) == 0:
-            while args.password == "":
-                args.password = getpass(args.username + "'s Password: ")
-
-    if args.keyfile is None and args.password is None:
-        keyfiles = os.listdir(userhome + "/.ssh")
-        if "id_dsa" in keyfiles:
-            args.keyfile = userhome + "/.ssh/id_dsa"
-        elif "id_rsa" in keyfiles:
-            args.keyfile = userhome + "/.ssh/id_rsa"
-        else:
-            parser.error("Unable to find default ssh key. Please specify one or use the password flag!")
+        if args.password == '':
+            args.password = None
+            while args.password is None:
+                args.password = getpass.getpass(args.username + "'s Password: ")
 
     hostlist = expand_hostlist(args.hostlist)
 

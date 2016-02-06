@@ -10,7 +10,7 @@ can be used.
 Examples
 --------
 
-Simplest form of pydsh [1]_.  Run a command, include a progress bar, and show the output of the commands:
+Simplest form of pydsh [1]_.  Run a command, include a progress bar, and show the output of the commands by host:
 
 .. code-block:: bash
 
