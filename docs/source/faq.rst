@@ -32,6 +32,7 @@ Often times with multiprocessing print statements come out funky because multipl
 
 Where did my output go?
 ~~~~~~~~~~~~~~~~~~~~~~~
+
 Say you have a script (that uses sshreader or otherwise) that you are piping the output from to another unix command.
 Something similar to the following:
 
@@ -54,6 +55,25 @@ or change the shebang at the top of your python script to:
 
 Of course, you can also do as the link above says and force :code:`sys.stdout.flush()` but I am not a fan of that
 particular method.
+
+Byte-String vs. Unicode-String
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In Python 2, strings are actually able to handle both byte-strings and unicode strings and in Python 3 all strings are
+now unicode-strings.  This can cause issues when working with both and using a module like sshreader (because output from
+Paramiko and the subprocess module are byte-strings).  However, there are a few things you can do to make this far easier.
+
+Ensure all literal strings are unicode and convert all byte strings to unicode!
+
+.. code-block:: python
+
+    from __future__ import unicode_literals
+    import sshreader
+
+    # sshreader can automatically decode bytestrings for you (for stdout and stderr)
+    # This works for both the shell_command and ssh_command methods
+    uname_cmd = sshreader.shell_command('uname -a', decodebytes=True)
+    uname_cmd.stdout.split(',')
 
 Indices and tables
 ------------------
