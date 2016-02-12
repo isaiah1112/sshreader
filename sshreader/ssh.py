@@ -18,12 +18,12 @@ shell_command function for running local shell scripts!
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
+import logging
 import os
 import paramiko
-import logging
 import warnings
-from subprocess import Popen, PIPE, STDOUT
 from collections import namedtuple
+from subprocess import Popen, PIPE, STDOUT
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
@@ -32,22 +32,32 @@ ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr', 'return_co
 ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout', 'return_code'])
 
 
-def shell_command(command, combine=False):
+def shell_command(command, combine=False, decodebytes=False):
     """Run a command in the shell on localhost and return the output
 
     :param command: String containing the shell script to run
-    :param combine: Direct stderr to stdout (combine output)
+    :param combine: Direct stderr to stdout (default = False)
+    :param decodebytes: Decode bytes objects to unicode strings (default = False)
     :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
     """
     if combine:
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
         stdout, stderr = pipeout.communicate()
         assert stderr is None
-        result = ShellCommandCombined(cmd=command, stdout=stdout.strip(), return_code=pipeout.returncode)
+        if decodebytes:
+            result = ShellCommandCombined(cmd=command, stdout=stdout.decode().strip(),
+                                          return_code=pipeout.returncode)
+        else:
+            result = ShellCommandCombined(cmd=command, stdout=stdout.strip(), return_code=pipeout.returncode)
     else:
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = pipeout.communicate()
-        result = ShellCommand(cmd=command, stdout=stdout.strip(), stderr=stderr.strip(), return_code=pipeout.returncode)
+        if decodebytes:
+            result = ShellCommand(cmd=command, stdout=stdout.decode().strip(),
+                                  stderr=stderr.decode().strip(), return_code=pipeout.returncode)
+        else:
+            result = ShellCommand(cmd=command, stdout=stdout.strip(), stderr=stderr.strip(),
+                                  return_code=pipeout.returncode)
     return result
 
 
@@ -100,12 +110,13 @@ class SSH(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def ssh_command(self, command, timeout=30, combine=False):
+    def ssh_command(self, command, timeout=30, combine=False, decodebytes=False):
         """Run a command over an ssh connection
 
         :param command: The command to run
         :param timeout: Timeout for the command
         :param combine: Combine stderr and stdout
+        :param decodebytes: Decode bytes objects to unicode strings (default = False)
         :return: Namedtuple of (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
         :raises: SSHException
         """
@@ -120,11 +131,20 @@ class SSH(object):
             chan.exec_command(command)
             stdout = stdout_file.read()
             stdout_file.close()
-            result = ShellCommandCombined(cmd=command, stdout=stdout.strip(), return_code=chan.recv_exit_status())
+            if decodebytes:
+                result = ShellCommandCombined(cmd=command, stdout=stdout.decode().strip(),
+                                              return_code=chan.recv_exit_status())
+            else:
+                result = ShellCommandCombined(cmd=command, stdout=stdout.strip(), return_code=chan.recv_exit_status())
         else:
             stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
-            result = ShellCommand(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip(),
-                                  return_code=stdout.channel.recv_exit_status())
+            if decodebytes:
+                result = ShellCommand(cmd=command, stdout=stdout.read().decode().strip(),
+                                      stderr=stderr.read().decode().strip(),
+                                      return_code=stdout.channel.recv_exit_status())
+            else:
+                result = ShellCommand(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip(),
+                                      return_code=stdout.channel.recv_exit_status())
         return result
 
     def close(self):

@@ -3,7 +3,7 @@
 """ Unittests for sshreader Python Package
 """
 from __future__ import print_function
-from builtins import range
+from builtins import range, str
 import os
 import sys
 import unittest
@@ -50,6 +50,13 @@ class TestShellScript(unittest.TestCase):
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
         self.assertEqual(result.stderr, b'bar')
+        pass
+
+    def test_decode_bytes(self):
+        """ Test to ensure that result is a unicode string type
+        """
+        result = sshreader.shell_command('uname -a', decodebytes=True)
+        self.assertIsInstance(result.stdout, str)
         pass
 
 
