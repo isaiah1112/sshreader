@@ -1,7 +1,7 @@
 #!/usr/bin/env python -u
 # coding=utf-8
 """A "pythonish" implementation of pdsh using sshreader!"""
-from __future__ import print_function
+from __future__ import print_function, unicode_literals
 import argparse
 import getpass
 import os
@@ -33,15 +33,15 @@ def print_job(*args):
     if 'quick' in args:
         with _print_lock_:
             if thisjob.status == 255:
-                print(str(thisjob.name) + u": Unable to establish ssh connection")
+                print(str(thisjob.name) + ': Unable to establish ssh connection')
             else:
                 result = thisjob.results[0]
                 for line in str(result.stdout.decode()).split('\n'):
-                    print(str(thisjob.name) + u': ' + str(line))
+                    print(str(thisjob.name) + ': ' + str(line))
     else:
-        print(str("-"*16) + u"\n" + str(thisjob.name) + u"\n" + str("-"*16))
+        print(str('-' * 16) + '\n' + str(thisjob.name) + '\n' + str('-' * 16))
         if thisjob.status == 255:
-            print(str(thisjob.name) + u": Unable to establish ssh connection")
+            print(str(thisjob.name) + ': Unable to establish ssh connection')
         else:
             result = thisjob.results[0]
             for line in str(result.stdout.decode()).split('\n'):
