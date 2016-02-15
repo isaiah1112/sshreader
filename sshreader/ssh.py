@@ -178,7 +178,7 @@ class SSH(object):
         """Opens an SSH Connection
 
         :return: True
-        :raises SSHException"
+        :raises: SSHException"
         """
         logging.basicConfig()  # http://stackoverflow.com/questions/26659772/
         if self.is_alive():

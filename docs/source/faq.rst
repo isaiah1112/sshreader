@@ -10,7 +10,7 @@ Why are my print statements funky?
 
 Often times with multiprocessing print statements come out funky because multiple processes are writing to
 :code:`sys.stdout` at the same time.  One of the ways you can deal with this is by implementing a
- `multiprocessing.Lock()`_.  An example of how to use the lock in a pre or post hook is shown below:
+`multiprocessing.Lock()`_.  An example of how to use the lock in a pre or post hook is shown below:
 
 .. code-block:: python
 
