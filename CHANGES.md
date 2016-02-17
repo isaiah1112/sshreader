@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 3.1
+ * Using os and getpass modules in conjunction when determining username. [1199c86](https://bitbucket.org/isaiah1112/sshreader/commits/1199c8616cf6a3441dcc77fd2828971617fe4128)
+ * Added decodebytes flag to ssh_command and shell_command for decoding byte-strings to unicode-strings. This can help with compatibility when using Python 3. [86a7ed0](https://bitbucket.org/isaiah1112/sshreader/commits/86a7ed01d9c069fea02b409d3892557d5fb2a23b)
+ * Using all unicode_literals because, well, because I said so! [7c247e9](https://bitbucket.org/isaiah1112/sshreader/commits/7c247e9938eb9340bf9b1afc4975304a4b6d9832)
+ * Added unicode strings FAQ. [3d76108](https://bitbucket.org/isaiah1112/sshreader/commits/3d761080b447203e8cbe544ea27c8c804c866bc3)
+ * Added timeout flag to pydsh cli so it can be overriden for long running commands. [2999e5c](https://bitbucket.org/isaiah1112/sshreader/commits/2999e5c836eb1d33af4577c9fc9f9b45a9631be5)
+
 # Version 3.0.1
  * Fixed typo in ssh docstring [328bb5c](https://bitbucket.org/isaiah1112/sshreader/commits/328bb5c86e6313d452e20406665f5a3e5507425c)
  * SSH class can now be used with Python 'with' statement [f54ac3d](https://bitbucket.org/isaiah1112/sshreader/commits/f54ac3d5fd342cbcfae2315f1be7043fe40d65a1)
