@@ -67,7 +67,7 @@ Ensure all literal strings are unicode and convert all byte strings to unicode!
 
 .. code-block:: python
 
-    from __future__ import unicode_literals
+    from __future__ import unicode_literals  # Depending on your script this may not be needed
     import sshreader
 
     # sshreader can automatically decode bytestrings for you (for stdout and stderr)
