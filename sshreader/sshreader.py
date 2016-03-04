@@ -33,6 +33,7 @@ __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
 __jobHardLimit__ = int(10 ** 6)
 __cpuHardLimitFactor__ = 3
+_printlock_ = multiprocessing.Lock()
 
 
 class InvalidHook(Exception):
@@ -279,6 +280,19 @@ def print_results(serverjobs):
         for job in status_unknown:
             job.print_results()
     return SortedJobs(completed=status_complete, failed=status_failed, unknown=status_unknown)
+
+
+def echo(*args, **kwargs):
+    """ Wrapper for print that implements a multiprocessing.Lock object
+
+    :param args: Passthrough to print function
+    :param kwargs: Passthrough to print function
+    :return: None
+    """
+    global _printlock_
+    with _printlock_:
+        print(*args, **kwargs)
+    return None
 
 
 def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=False):

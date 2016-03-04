@@ -20,7 +20,7 @@ from pkg_resources import get_distribution, DistributionNotFound
 
 # For backwards compatibility
 from sshreader.ssh import SSH, shell_command, do_shell_script
-from sshreader.sshreader import ServerJob, Hook, sshread, print_results
+from sshreader.sshreader import ServerJob, Hook, sshread, print_results, echo
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 try:
