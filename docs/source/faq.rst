@@ -30,6 +30,11 @@ Often times with multiprocessing print statements come out funky because multipl
             print(str(thisjob.name))
         return None
 
+.. note::
+
+    After sshreader v3.2 you can also use the new :code:`sshreader.echo` method to automatically implement a
+    :code:`multiprocessing.Lock` on the fly.
+
 Where did my output go?
 ~~~~~~~~~~~~~~~~~~~~~~~
 
