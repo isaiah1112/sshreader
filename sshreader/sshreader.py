@@ -33,6 +33,7 @@ __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
 __jobHardLimit__ = int(10 ** 6)
 __cpuHardLimitFactor__ = 3
+__threadlimit__ = 500
 _printlock_ = multiprocessing.Lock()
 
 
@@ -306,6 +307,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
     :return: List with completed ServerJob objects (single object returned if 1 job was passed)
     :raises: ProcessesOrThreads, ExceededJobLimit, ExceedCPULimit, TypeError,
     """
+    global __jobHardLimit__, __cpuHardLimitFactor__, __threadlimit__
     if tcount is None and pcount is None:
         raise ProcessesOrThreads('Specify an integer for pcount or tcount')
     if isinstance(serverjobs, list):
@@ -383,6 +385,9 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
                     # Basically, unless we have enough jobs to spawn more than 1 thread per process we only
                     # need the sub process.
                     tcount = None
+                elif tcount > __threadlimit__:
+                    # Ensure you don't accidentally create too many streams per process
+                    tcount == __threadlimit__
 
         task_queue = multiprocessing.Queue(maxsize=totaljobs)
         result_queue = multiprocessing.Queue(maxsize=totaljobs)
