@@ -348,6 +348,8 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         # Limit the number of threads to spawn
         if tcount == 0 or tcount > totaljobs:
             tcount = totaljobs
+            if tcount > __threadlimit__:
+                tcount = __threadlimit__
 
         if debuglevel >= 1:
             print(u"Spawning " + str(tcount) + u" threads")
