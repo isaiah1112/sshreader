@@ -387,7 +387,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
                     tcount = None
                 elif tcount > __threadlimit__:
                     # Ensure you don't accidentally create too many streams per process
-                    tcount == __threadlimit__
+                    tcount = __threadlimit__
 
         task_queue = multiprocessing.Queue(maxsize=totaljobs)
         result_queue = multiprocessing.Queue(maxsize=totaljobs)
