@@ -349,6 +349,8 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         if tcount == 0:
             tcount = totaljobs
             if tcount > __threadlimit__:
+                # Ensure you don't accidentally create too many threads for a single process
+                warnings.warn('Auto thread limit reached. Limiting to ' + str(__threadlimit__) + ' threads.')
                 tcount = __threadlimit__
         elif tcount > totaljobs:
             tcount = totaljobs
@@ -390,7 +392,8 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
                     # need the sub process.
                     tcount = None
                 elif tcount > __threadlimit__:
-                    # Ensure you don't accidentally create too many streams per process
+                    # Ensure you don't accidentally create too many threads per process
+                    warnings.warn('Auto thread limit reached. Limiting to ' + str(__threadlimit__) + ' threads.')
                     tcount = __threadlimit__
 
         task_queue = multiprocessing.Queue(maxsize=totaljobs)
