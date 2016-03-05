@@ -243,7 +243,7 @@ class ServerJob(object):
 
         :return: None
         """
-        print(str('-' * 20))
+        print(str('-' * 16))
         print(u'ServerJob: ' + str(self.name) + u'\tStatus: ' + str(self.status))
         for idx, value in enumerate(self.cmds):
             print(str(self.results[idx]) + u'\tStatus: ' + str(self.results[idx].return_code))
