@@ -82,8 +82,16 @@ This is so that you don't make a box unusable and was arrived at per my own test
 
 .. [1] These numbers may increase in the future.
 
-Modules
--------
+Topics
+------
+
+.. toctree::
+   :maxdepth: 1
+
+   getting_started
+
+API Documentation
+-----------------
 
 .. toctree::
    :maxdepth: 1
