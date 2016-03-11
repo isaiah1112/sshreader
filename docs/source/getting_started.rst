@@ -76,7 +76,7 @@ Creating a Hook is as is as simple as:
         # You will need to ensure you accept at least one arg since
         # the ServerJob will be passed to your hook
         print('Entering hook')
-        print(job.fqdn)
+        print(job.name)
         print('Leaving hook')
 
 
