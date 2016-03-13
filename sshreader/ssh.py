@@ -23,6 +23,7 @@ import os
 import paramiko
 import warnings
 from collections import namedtuple
+from getpass import getuser
 from subprocess import Popen, PIPE, STDOUT
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
@@ -30,6 +31,28 @@ __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 # Using namedtuple because... why not?
 ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr', 'return_code'])
 ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout', 'return_code'])
+EnvVars = namedtuple('EnvVars', ['username', 'rsa_key', 'dsa_key'])
+
+
+def envvars():
+    """ Attempt to determine the current username and location of any ssh keys.  If any value is unable to be determined
+    it is returned as 'None'.
+
+    :return: NamedTuple of (username, rsa_key, dsa_key)
+    """
+    user = None
+    rsa_key = None
+    dsa_key = None
+    if os.getlogin() == getuser():
+        user = getuser()
+    userhome = os.path.expanduser('~')
+    if os.path.exists(userhome + "/.ssh"):
+        keyfiles = os.listdir(userhome + "/.ssh")
+        if "id_rsa" in keyfiles:
+            rsa_key = userhome + "/.ssh/id_rsa"
+        if "id_dsa" in keyfiles:
+            dsa_key = userhome + "/.ssh/id_dsa"
+    return EnvVars(user, rsa_key, dsa_key)
 
 
 def shell_command(command, combine=False, decodebytes=False):
@@ -178,7 +201,7 @@ class SSH(object):
         """Opens an SSH Connection
 
         :return: True
-        :raises: SSHException"
+        :raises: SSHException
         """
         logging.basicConfig()  # http://stackoverflow.com/questions/26659772/
         if self.is_alive():
