@@ -1,5 +1,14 @@
 # Changelog
 
+## Version 3.2
+ * Added echo method that implements a multiprocessing.Lock object for print. [7216411](https://bitbucket.org/isaiah1112/sshreader/commits/72164116e2422b44e6704342f0bf3da855a9a054)
+ * Implementing a thread limit when using pcount and tcount in conjuction when tcount == 0.  This limits each process to automatically launching 500 each. [ac0c413](https://bitbucket.org/isaiah1112/sshreader/commits/ac0c413e5c8dfc19327e846f3ad26cb766a7cb0b)
+ * Limiting threads to 500 when tcount=0 and pcount=None. [c5ef02c](https://bitbucket.org/isaiah1112/sshreader/commits/c5ef02c427adcfa2e43bbd40fbabaaf4d57efa7f)
+ * Restructuring methodology for implementing thread limit when only using threads. [156c9a0](https://bitbucket.org/isaiah1112/sshreader/commits/156c9a0f694816783cd1dd3f1904b9c3d7cbad4f)
+ * Added warnings for exceeding threadlimit [808a5d4](https://bitbucket.org/isaiah1112/sshreader/commits/808a5d4558d84e0aa06a491d03da5ed6f20b27cd)
+ * Adding documentation for getting started. [5ab175f](https://bitbucket.org/isaiah1112/sshreader/commits/5ab175f48df35dd9f60c3f5425de97431a82c50c)
+ * Added envvars method which attempts to gather username and ssh_key info from OS. [6911582](https://bitbucket.org/isaiah1112/sshreader/commits/69115829d3d118c5b36ed9325d50e6f1eb66aa6e)
+
 ## Version 3.1
  * Using os and getpass modules in conjunction when determining username. [1199c86](https://bitbucket.org/isaiah1112/sshreader/commits/1199c8616cf6a3441dcc77fd2828971617fe4128)
  * Added decodebytes flag to ssh_command and shell_command for decoding byte-strings to unicode-strings. This can help with compatibility when using Python 3. [86a7ed0](https://bitbucket.org/isaiah1112/sshreader/commits/86a7ed01d9c069fea02b409d3892557d5fb2a23b)
