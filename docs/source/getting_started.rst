@@ -99,6 +99,17 @@ a method for doing that as well via the :code:`shell_command` method.
     r = shell_command('uname -a')
     print(r)
 
+Discovering Environment Variables
+---------------------------------
+Sshreader includes a method that attempts to determine the currently logged in username and any ssh keys located in
+:code:`~/.ssh/`, including rsa and dsa keys.  You can see what sshreader can discover by calling the :code:`sshreader.ssh.envvars()`
+method.
+
+.. code-block:: python
+
+    from sshreader.ssh import envvars
+    print(envvars())  # Returns a NamedTuple of info sshreader was able to gather from the OS
+
 Indices and tables
 ------------------
 
