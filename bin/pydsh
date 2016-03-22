@@ -8,18 +8,15 @@ import os
 import sshreader
 import sys
 from hostlist import expand_hostlist
-from multiprocessing import Lock
-
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '1.1'
+__version__ = '1.1.1'
 __examples__ = """EXAMPLES:
     %(prog)s -k ~/.ssh/id_rsa -w host1,host2,host3 "uname -r"
     %(prog)s -u root -k /root/.ssh/id_rsa -w host[1,3] "uname -r"
     %(prog)s -u root -p Password123 -w host[1-3] "uname -r"
 """
 debug = False
-_print_lock_ = Lock()
 
 
 def print_job(*args):
@@ -28,16 +25,14 @@ def print_job(*args):
     :param args: Tuple of ( 'quick', <ServerJob> )
     :return: None
     """
-    global _print_lock_
     thisjob = list(args).pop()
     if 'quick' in args:
-        with _print_lock_:
-            if thisjob.status == 255:
-                print(str(thisjob.name) + ': Unable to establish ssh connection')
-            else:
-                result = thisjob.results[0]
-                for line in str(result.stdout.decode()).split('\n'):
-                    print(str(thisjob.name) + ': ' + str(line))
+        if thisjob.status == 255:
+            sshreader.echo(str(thisjob.name) + ': Unable to establish ssh connection')
+        else:
+            result = thisjob.results[0]
+            for line in str(result.stdout.decode()).split('\n'):
+                sshreader.echo(str(thisjob.name) + ': ' + str(line))
     else:
         print(str('-' * 16) + '\n' + str(thisjob.name) + '\n' + str('-' * 16))
         if thisjob.status == 255:

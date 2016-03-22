@@ -33,6 +33,8 @@ __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
 __jobHardLimit__ = int(10 ** 6)
 __cpuHardLimitFactor__ = 3
+__threadlimit__ = 500
+_printlock_ = multiprocessing.Lock()
 
 
 class InvalidHook(Exception):
@@ -241,7 +243,7 @@ class ServerJob(object):
 
         :return: None
         """
-        print(str('-' * 20))
+        print(str('-' * 16))
         print(u'ServerJob: ' + str(self.name) + u'\tStatus: ' + str(self.status))
         for idx, value in enumerate(self.cmds):
             print(str(self.results[idx]) + u'\tStatus: ' + str(self.results[idx].return_code))
@@ -281,6 +283,19 @@ def print_results(serverjobs):
     return SortedJobs(completed=status_complete, failed=status_failed, unknown=status_unknown)
 
 
+def echo(*args, **kwargs):
+    """ Wrapper for print that implements a multiprocessing.Lock object
+
+    :param args: Passthrough to print function
+    :param kwargs: Passthrough to print function
+    :return: None
+    """
+    global _printlock_
+    with _printlock_:
+        print(*args, **kwargs)
+    return None
+
+
 def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=False):
     """Takes a list of ServerJob objects and puts them into threads/sub-processes and runs them
 
@@ -292,6 +307,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
     :return: List with completed ServerJob objects (single object returned if 1 job was passed)
     :raises: ProcessesOrThreads, ExceededJobLimit, ExceedCPULimit, TypeError,
     """
+    global __jobHardLimit__, __cpuHardLimitFactor__, __threadlimit__
     if tcount is None and pcount is None:
         raise ProcessesOrThreads('Specify an integer for pcount or tcount')
     if isinstance(serverjobs, list):
@@ -330,7 +346,13 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         for job in serverjobs:
             task_queue.put(job)
         # Limit the number of threads to spawn
-        if tcount == 0 or tcount > totaljobs:
+        if tcount == 0:
+            tcount = totaljobs
+            if tcount > __threadlimit__:
+                # Ensure you don't accidentally create too many threads for a single process
+                warnings.warn('Auto thread limit reached. Limiting to ' + str(__threadlimit__) + ' threads.')
+                tcount = __threadlimit__
+        elif tcount > totaljobs:
             tcount = totaljobs
 
         if debuglevel >= 1:
@@ -369,6 +391,10 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
                     # Basically, unless we have enough jobs to spawn more than 1 thread per process we only
                     # need the sub process.
                     tcount = None
+                elif tcount > __threadlimit__:
+                    # Ensure you don't accidentally create too many threads per process
+                    warnings.warn('Auto thread limit reached. Limiting to ' + str(__threadlimit__) + ' threads.')
+                    tcount = __threadlimit__
 
         task_queue = multiprocessing.Queue(maxsize=totaljobs)
         result_queue = multiprocessing.Queue(maxsize=totaljobs)

@@ -26,7 +26,7 @@ Threads vs. Processes vs. (Processes and Threads)
 To use multi-threading to parallelize jobs either set **tcount** to 0 or to the number of threads you wish to spawn.
 If the number of jobs is less than the number of threads you requested sshreader will adjust accordingly.  If **tcount**
 is set to 0 then the number of threads spawned will equal the number of jobs passed to the :code:`sshreader.sshread()`
-method.
+method (without going over the *threadlimit* global).
 
 To use multi-processing to parallelize jobs either set **pcount** to 0 or to the number of processes you wish to spawn.
 If the number of jobs is less than the number of processes you requested sshreader will adjust accordingly.  If
@@ -52,6 +52,12 @@ Limits
 
 Sshreader currently limits you to processing :code:`1,000,000` server jobs set via the \_\_jobHardLimit\_\_ global.
 
+**threadlimit**:
+
+Ssshreader will limit the number of threads each process can spawn to :code:`500` threads per the \_\_threadlimit\_\_ global.
+This number will only take effect when tcount is set to 0.  If you manually specify tcount you can still launch as many
+threads as you like.
+
 **cpusoftlimit**:
 
 The cpusoftlimit for a box is defined as:
@@ -76,8 +82,16 @@ This is so that you don't make a box unusable and was arrived at per my own test
 
 .. [1] These numbers may increase in the future.
 
-Modules
--------
+Topics
+------
+
+.. toctree::
+   :maxdepth: 1
+
+   getting_started
+
+API Documentation
+-----------------
 
 .. toctree::
    :maxdepth: 1

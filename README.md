@@ -39,7 +39,7 @@ tracker](https://bitbucket.org/isaiah1112/sshreader/issues?status=new&status=ope
 towards.
 
 Code contributions are encouraged: please feel free to [fork the
-project](https://bitbucket.org/isaiah1112/sshreader) and submit pull requests.
+project](https://bitbucket.org/isaiah1112/sshreader) and submit pull requests to the develop branch.
 
 ## Extras
 
