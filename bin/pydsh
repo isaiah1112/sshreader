@@ -10,7 +10,7 @@ import sys
 from hostlist import expand_hostlist
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '1.1.1'
+__version__ = '1.2'
 __examples__ = """EXAMPLES:
     %(prog)s -k ~/.ssh/id_rsa -w host1,host2,host3 "uname -r"
     %(prog)s -u root -k /root/.ssh/id_rsa -w host[1,3] "uname -r"
@@ -74,12 +74,14 @@ def main():
                         help="Username to ssh as (default is current user)")
     parser.add_argument('-T', '--timeout', type=int, default=30, metavar='INT', dest='timeout',
                         help='Timeout for ssh commands in seconds (default = 30)')
+
     requiredargs = parser.add_argument_group("required arguments")
     requiredargs.add_argument("-w", "--hostlist", type=str, metavar="EXPR", required=True, help="hostlist expression")
     authtype = parser.add_mutually_exclusive_group()
     authtype.add_argument("-k", "--keyfile", type=str, metavar="PATH", help="Provide an ssh key to use")
     authtype.add_argument("-p", "--password", type=str, metavar="PWD",  nargs='?',  action='store', const='',
                           help="Password to use")
+
     outputoptions = parser.add_argument_group("output styles")
     outputstyle = outputoptions.add_mutually_exclusive_group()
     outputstyle.add_argument("-q", "--quiet", default=False, action="store_true",
@@ -88,8 +90,11 @@ def main():
                              help="Output results as they return (can be piped to dshbak)")
     outputoptions.add_argument("-s", "--sort", default=False, action="store_true",
                                help="Sort the output of command statuses (Ignored if -Q or --quick is used!)")
+
     options = parser.add_argument_group("debug options")
     options.add_argument("-d", "--debug", default=False, action="store_true", help="Turn on debug mode")
+    options.add_argument('--redline', default=False, action='store_true',
+                         help='Make the CPUs hurt to complete the tasks as fast as possible')
 
     args = parser.parse_args()
     if args.debug:
@@ -137,13 +142,22 @@ def main():
         jobs.append(job)
 
     if args.quiet:
-        job_results = sshreader.sshread(jobs, pcount=0, tcount=0)
+        if args.redline:
+            job_results = sshreader.sshread(jobs, pcount=-1, tcount=0)
+        else:
+            job_results = sshreader.sshread(jobs, pcount=0, tcount=0)
     else:
         if args.quick:
-            sshreader.sshread(jobs, pcount=0, tcount=0)
+            if args.redline:
+                sshreader.sshread(jobs, pcount=-1, tcount=0)
+            else:
+                sshreader.sshread(jobs, pcount=0, tcount=0)
             return 0
         else:
-            job_results = sshreader.sshread(jobs, pcount=0, tcount=0, progress_bar=True)
+            if args.redline:
+                job_results = sshreader.sshread(jobs, pcount=-1, tcount=0, progress_bar=True)
+            else:
+                job_results = sshreader.sshread(jobs, pcount=0, tcount=0, progress_bar=True)
 
     if args.sort:
         complete = [x for x in job_results if x.status == 0]
