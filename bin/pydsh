@@ -19,21 +19,28 @@ Examples:
 debug = False
 
 
-def print_job(*args):
-    """Output the results of the job in a given format (also used as the posthook for sshreader)
+def dshbak(thisjob):
+    """Hook to print <ServerJob> object output that can be piped to dshbak
 
-    :param args: Tuple of ( 'dshbak', <ServerJob> )
+    :param thisjob: <ServerJob> object
     :return: None
     """
-    thisjob = list(args).pop()
-    if len(args) == 2 and args[0]:
-        if thisjob.status == 255:
-            sshreader.echo(str(thisjob.name) + ': Unable to establish ssh connection')
-        else:
-            result = thisjob.results[0]
-            for line in str(result.stdout.decode()).split('\n'):
-                sshreader.echo(str(thisjob.name) + ': ' + str(line))
+    if thisjob.status == 255:
+        sshreader.echo(str(thisjob.name) + ': Unable to establish ssh connection')
     else:
+        result = thisjob.results[0]
+        for line in str(result.stdout.decode()).split('\n'):
+            sshreader.echo(str(thisjob.name) + ': ' + str(line))
+    return None
+
+
+def printjobs(jobresults):
+    """Output the results of the jobs if the have results
+
+    :param jobresults: List of <ServerJob> objects
+    :return: None
+    """
+    for thisjob in jobresults:
         print(str('-' * 16) + '\n' + str(thisjob.name) + '\n' + str('-' * 16))
         if thisjob.status == 255:
             print(str(thisjob.name) + ': Unable to establish ssh connection')
@@ -41,22 +48,6 @@ def print_job(*args):
             result = thisjob.results[0]
             for line in str(result.stdout.decode()).split('\n'):
                 print(str(line))
-    return None
-
-
-def process_results(jobresults, quiet):
-    """Output the results of the jobs if the have results
-
-    :param jobresults: List of <ServerJob> objects
-    :param quiet: Only output jobs with stdout or stderr
-    :return: None
-    """
-    for job in jobresults:
-        if quiet:
-            if len(job.results[0].stdout) > 0:
-                print_job(job)
-        else:
-            print_job(job)
     return None
 
 
@@ -82,6 +73,8 @@ def cli(**kwargs):
         print(kwargs)
 
     sshenv = sshreader.envvars()
+    if debug:
+        print(sshenv)
     if kwargs['username'] is None:
         if sshenv.username is None:
             raise click.ClickException('Unable to determine ssh username. Please provide one.')
@@ -108,7 +101,7 @@ def cli(**kwargs):
     if debug:
         print("Processing " + str(len(hostlist)) + " hosts!")
 
-    post = sshreader.Hook(target=print_job, args=[kwargs['dshbak']])
+    post = sshreader.Hook(target=dshbak)
     jobs = []
     for host in hostlist:
         if kwargs['keyfile'] is not None:
@@ -127,13 +120,13 @@ def cli(**kwargs):
         else:
             job_results = sshreader.sshread(jobs, pcount=0, tcount=0)
         if kwargs['dshbak'] is False:
-            process_results(job_results, kwargs['quiet'])
+            printjobs(job_results)
     else:
         if kwargs['redline']:
             job_results = sshreader.sshread(jobs, pcount=-1, tcount=0, progress_bar=True)
         else:
             job_results = sshreader.sshread(jobs, pcount=0, tcount=0, progress_bar=True)
-        process_results(job_results, kwargs['quiet'])
+        printjobs(job_results)
     return 0
 
 if __name__ == "__main__":
