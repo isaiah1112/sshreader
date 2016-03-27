@@ -135,6 +135,11 @@ def cli(**kwargs):
             job.posthook = post
         jobs.append(job)
 
+    if debug:
+        if kwargs['redline']:
+            print('Using up to: ' + str(sshreader.sshreader.cpuhardlimit()) + ' sub-processes')
+        else:
+            print('Using up to: ' + str(sshreader.sshreader.cpusoftlimit()) + ' sub-processes')
     if kwargs['quiet'] or kwargs['dshbak']:
         if kwargs['redline']:
             job_results = sshreader.sshread(jobs, pcount=-1, tcount=0)
