@@ -67,9 +67,8 @@ def process_results(jobresults, quiet):
 @click.option('--prompt', '-p', is_flag=True, help='Prompt for ssh password')
 @click.option('--password', '-P', help='Supply ssh password')
 @click.option('--timeout', '-T', default=30, help='Timeout for ssh commands')
-@click.option('--quiet', '-q', is_flag=True, help='Disable progress bar and output of zero length')
+@click.option('--quiet', '-q', is_flag=True, help='Disable progress bar')
 @click.option('--dshbak', '-D', is_flag=True, help='Allow output to be piped to dshbak')
-@click.option('--sort', '-s', is_flag=True, help='Sort output based on command status')
 @click.option('--debug', '-d', is_flag=True, help='Enable debug output')
 @click.option('--redline', is_flag=True, help='Run as many sub-processes as possible')
 @click.argument('cmd', nargs=1, required=True)
@@ -121,30 +120,18 @@ def cli(**kwargs):
             job.posthook = post
         jobs.append(job)
 
-    if kwargs['quiet']:
+    if kwargs['quiet'] or kwargs['dshbak']:
         if kwargs['redline']:
             job_results = sshreader.sshread(jobs, pcount=-1, tcount=0)
         else:
             job_results = sshreader.sshread(jobs, pcount=0, tcount=0)
+        if kwargs['dshbak'] is False:
+            process_results(job_results, kwargs['quiet'])
     else:
-        if kwargs['dshbak']:
-            if kwargs['redline']:
-                sshreader.sshread(jobs, pcount=-1, tcount=0)
-            else:
-                sshreader.sshread(jobs, pcount=0, tcount=0)
-            return 0
+        if kwargs['redline']:
+            job_results = sshreader.sshread(jobs, pcount=-1, tcount=0, progress_bar=True)
         else:
-            if kwargs['redline']:
-                job_results = sshreader.sshread(jobs, pcount=-1, tcount=0, progress_bar=True)
-            else:
-                job_results = sshreader.sshread(jobs, pcount=0, tcount=0, progress_bar=True)
-
-    if kwargs['sort']:
-        complete = [x for x in job_results if x.status == 0]
-        failed = [x for x in job_results if x.status != 0]
-        for jobresults in (complete, failed):
-            process_results(jobresults, kwargs['quiet'])
-    else:
+            job_results = sshreader.sshread(jobs, pcount=0, tcount=0, progress_bar=True)
         process_results(job_results, kwargs['quiet'])
     return 0
 
