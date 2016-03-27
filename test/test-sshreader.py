@@ -223,6 +223,13 @@ class TestSshreader(unittest.TestCase):
             self.assertEqual(x.status, 0)
         pass
 
+    def test_cpulimits(self):
+        """ Ensure the cpulimit methods
+        """
+        self.assertIsInstance(sshreader.sshreader.cpusoftlimit(), int)
+        self.assertIsInstance(sshreader.sshreader.cpuhardlimit(), int)
+        pass
+
 
 if __name__ == '__main__':
     with warnings.catch_warnings(record=True):
