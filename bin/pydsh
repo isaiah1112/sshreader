@@ -9,7 +9,7 @@ import sys
 from hostlist import expand_hostlist
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '1.2'
+__version__ = '1.3'
 __examples__ = """\b
 Examples:
     pydsh -k ~/.ssh/id_rsa -w host1,host2,host3 "uname -r"
