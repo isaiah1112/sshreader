@@ -283,6 +283,23 @@ def print_results(serverjobs):
     return SortedJobs(completed=status_complete, failed=status_failed, unknown=status_unknown)
 
 
+def cpusoftlimit():
+    """ Return the default number of sub-processes your system is allowed to spawn
+
+    :return: cpu_count() - 1
+    """
+    return multiprocessing.cpu_count() - 1
+
+
+def cpuhardlimit():
+    """ Return the maximum number of sub-processes your system is allowed to spawn
+
+    :return: (cpu_count() - 1) * __cpuHardLimitFactor__
+    """
+    global __cpuHardLimitFactor__
+    return cpusoftlimit() * __cpuHardLimitFactor__
+
+
 def echo(*args, **kwargs):
     """ Wrapper for print that implements a multiprocessing.Lock object
 
@@ -307,7 +324,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
     :return: List with completed ServerJob objects (single object returned if 1 job was passed)
     :raises: ProcessesOrThreads, ExceededJobLimit, ExceedCPULimit, TypeError,
     """
-    global __jobHardLimit__, __cpuHardLimitFactor__, __threadlimit__
+    global __jobHardLimit__, __threadlimit__
     if tcount is None and pcount is None:
         raise ProcessesOrThreads('Specify an integer for pcount or tcount')
     if isinstance(serverjobs, list):
@@ -365,19 +382,15 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
             thread.daemon = True
             thread.start()
     else:
-        # Limit the number of sub processes we spawn
-        cpusoftlimit = multiprocessing.cpu_count() - 1
-        # Imposing a hard limit for number of sub-processes so you don't make the system unusable
-        cpuhardlimit = cpusoftlimit * __cpuHardLimitFactor__
-        # Found this while digging around the multiprocessing API.  This might help some of the pickling errors when
-        # working with ssh
+        # Found this while digging around the multiprocessing API.
+        # This might help some of the pickling errors when working with ssh
         multiprocessing.allow_connection_pickling()
 
         # Adjust number of sub-processes to spawn.
         if pcount == 0:
-            pcount = cpusoftlimit
+            pcount = cpusoftlimit()
         elif pcount < 0:
-            pcount = cpuhardlimit
+            pcount = cpuhardlimit()
         if pcount >= totaljobs:
             pcount = totaljobs
 
