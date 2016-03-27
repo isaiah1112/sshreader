@@ -238,7 +238,7 @@ class ServerJob(object):
             print(u"Finished running ServerJob: " + str(self.name))
         return self.status
 
-    def print_results(self):
+    def print(self):
         """ Prints the status of the ServerJob and details of each cmd in the job
 
         :return: None
