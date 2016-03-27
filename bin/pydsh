@@ -75,27 +75,44 @@ def cli(**kwargs):
     sshenv = sshreader.envvars()
     if debug:
         print(sshenv)
+
     if kwargs['username'] is None:
         if sshenv.username is None:
-            raise click.ClickException('Unable to determine ssh username. Please provide one.')
+            raise click.ClickException('Unable to determine ssh username. Please provide one using --username')
         else:
             kwargs['username'] = sshenv.username
+
+    # By default, we prefer ssh keys
     if kwargs['keyfile'] is None:
         if sshenv.rsa_key is None and sshenv.dsa_key is None:
-            if kwargs['password'] is None:
+            if kwargs['password'] is None and kwargs['prompt'] is False:
                 raise click.ClickException('Unable to find ssh key to use and password not supplied.')
         else:
             if sshenv.rsa_key is not None:
                 kwargs['keyfile'] = sshenv.rsa_key
             else:
                 kwargs['keyfile'] = sshenv.dsa_key
+    else:
+        # If you specify an SSH key then we ignore any password or prompt flags you might have entered
+        kwargs['password'] = None
+        kwargs['prompt'] = False
+
+    # If you specify a password or prompt for one it overrides the ssh key
     if kwargs['password'] is None:
         if kwargs['prompt'] is False:
             if kwargs['keyfile'] is None:
                 raise click.ClickException('Unable to find ssh key to use and password not supplied or prompt enabled.')
         else:
+            kwargs['keyfile'] = None
             while kwargs['password'] is None:
                 kwargs['password'] = click.prompt(kwargs['username'] + "'s Password", hide_input=True)
+    else:
+        # You provided a password, ignore the SSH key
+        kwargs['keyfile'] = None
+
+    if debug:
+        print(kwargs)
+
     hostlist = expand_hostlist(kwargs['hostlist'])
 
     if debug:
@@ -105,9 +122,13 @@ def cli(**kwargs):
     jobs = []
     for host in hostlist:
         if kwargs['keyfile'] is not None:
+            if debug:
+                print('Using keyfile: ' + kwargs['keyfile'])
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
                                       timeout=kwargs['timeout'], combine_output=True)
         else:
+            if debug:
+                print('Using password: ' + kwargs['password'])
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
                                       timeout=kwargs['timeout'], combine_output=True)
         if kwargs['dshbak']:
