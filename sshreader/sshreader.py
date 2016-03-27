@@ -264,9 +264,14 @@ class ServerJob(object):
 def print_results(serverjobs):
     """Print the output of all ServerJobs in as ServerJobList by job status
 
+    .. warning::
+
+        This call will be deprecated in v4.0
+
     :param serverjobs: List of ServerJob objects
     :return: SortedJobs named tuple
     """
+    warnings.warn('The <print_results> method will be deprecated in v4.0')
     SortedJobs = namedtuple("SortedJobs", ['completed', 'failed', 'unknown'])
     status_complete = [x for x in serverjobs if x.status == 0]
     status_failed = [x for x in serverjobs if x.status > 0]

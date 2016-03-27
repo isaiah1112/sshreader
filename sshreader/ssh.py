@@ -85,7 +85,11 @@ def shell_command(command, combine=False, decodebytes=False):
 
 
 def do_shell_script(command, combine=False):
-    """ Alias to shell_command.  Use that one!  This call will go away in sshreader v4.0
+    """ Alias to shell_command.
+
+    .. warning::
+
+        This call will be deprecated in v4.0
 
     :param command: String containing the shell script to run
     :param combine: Combine stderr and stdout in output
