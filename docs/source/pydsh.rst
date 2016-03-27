@@ -7,6 +7,11 @@ Pydsh is a Python-based replication of `pdsh`_ that uses sshreader as the engine
 also attempts to format the output from commands for you in a easy to read manner.  Below are some examples of how it
 can be used.
 
+.. note::
+
+    With version 1.3 of pydsh I have moved away from uisng argparse in favor of the `Click`_ module.  Some of the cli
+    flags might have changed.
+
 Examples
 --------
 
@@ -16,24 +21,17 @@ Simplest form of pydsh [1]_.  Run a command, include a progress bar, and show th
 
     pydsh -w myhost[1-100].example.com 'uname -r'
 
-
-Do not show a progress bar before the output and only show items with output:
+Do not show a progress bar before the output:
 
 .. code-block:: bash
 
-    pydsh -u myuser -p mypass -w myhost[1-100].example.com -q 'uname -r'
+    pydsh -u myuser -P mypass -w myhost[1-100].example.com -q 'uname -r'
 
 Print output from jobs as soon as they complete (output can be piped to dshbak):
 
 .. code-block:: bash
 
-    pydsh -w myhost[1-100].example.com -Q 'uname -r' | dshbak -c
-
-Finally, sort the output by commands that finished and commands that didn't:
-
-.. code-block:: bash
-
-    pydsh -u myuser -k ~/.ssh/id_dsa -w myhost[1-100].example.com -s 'uname -r'
+    pydsh -w myhost[1-100].example.com --dshbak 'uname -r' | dshbak -c
 
 .. [1] Pydsh supports `hostlist expressions`_ to make listing hosts easier.
 
@@ -49,3 +47,4 @@ Indices and tables
 .. _JA Computing: http://www.jacomputing.net
 .. _pdsh: https://computing.llnl.gov/linux/pdsh.html
 .. _hostlist expressions: https://www.nsc.liu.se/~kent/python-hostlist/
+.. _Click: http://click.pocoo.org/6/
