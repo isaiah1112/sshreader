@@ -399,7 +399,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         if pcount >= totaljobs:
             pcount = totaljobs
 
-        if pcount > cpuhardlimit:
+        if pcount > cpuhardlimit():
             raise ExceededCPULimit(str(pcount) + ' > ' + str(cpuhardlimit))
 
         if tcount is not None:
