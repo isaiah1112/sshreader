@@ -41,12 +41,12 @@ def printjobs(jobresults):
     :return: None
     """
     for thisjob in jobresults:
-        print(str('-' * 16) + '\n' + str(thisjob.name) + '\n' + str('-' * 16))
+        click.echo(str('-' * 16) + '\n' + str(thisjob.name) + '\n' + str('-' * 16))
         if thisjob.status == 255:
-            print(str(thisjob.name) + ': Unable to establish ssh connection')
+            click.echo(str(thisjob.name) + ': Unable to establish ssh connection')
         else:
             result = thisjob.results[0]
-            print(result.stdout.decode())
+            click.echo(result.stdout.decode())
     return None
 
 
