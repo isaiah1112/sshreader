@@ -46,8 +46,7 @@ def printjobs(jobresults):
             print(str(thisjob.name) + ': Unable to establish ssh connection')
         else:
             result = thisjob.results[0]
-            for line in str(result.stdout.decode()).split('\n'):
-                print(str(line))
+            print(result.stdout.decode())
     return None
 
 
