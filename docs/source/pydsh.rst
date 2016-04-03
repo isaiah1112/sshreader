@@ -25,15 +25,26 @@ Do not show a progress bar before the output:
 
 .. code-block:: bash
 
-    pydsh -u myuser -P mypass -w myhost[1-100].example.com -q 'uname -r'
+    pydsh -q -w myhost[1-100].example.com -q 'uname -r'
 
 Print output from jobs as soon as they complete (output can be piped to dshbak):
 
 .. code-block:: bash
 
-    pydsh -w myhost[1-100].example.com --dshbak 'uname -r' | dshbak -c
+    pydsh -D -w myhost[1-100].example.com 'uname -r' | dshbak -c
 
-.. [1] Pydsh supports `hostlist expressions`_ to make listing hosts easier.
+Override ssh with a username/password combo:
+
+.. code-block:: bash
+
+    pydsh -u myuser -P Password1234 -w myhost[1-100].example.com 'uname -r'
+
+Override ssh with a username/password combo (but prompt for the password):
+
+.. code-block:: bash
+
+    pydsh -u myuser -p -w myhost[1-100].example.com 'uname -r'
+
 
 Indices and tables
 ------------------
@@ -48,3 +59,4 @@ Indices and tables
 .. _pdsh: https://computing.llnl.gov/linux/pdsh.html
 .. _hostlist expressions: https://www.nsc.liu.se/~kent/python-hostlist/
 .. _Click: http://click.pocoo.org/6/
+.. [1] Pydsh supports `hostlist expressions`_ to make listing hosts easier.

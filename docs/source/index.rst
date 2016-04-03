@@ -80,8 +80,6 @@ set to -1) is defined as:
 This is so that you don't make a box unusable and was arrived at per my own testing.  Currently,
 \_\_cpuHardLimitFactor\_\_ is set to 3 [1]_ .
 
-.. [1] These numbers may increase in the future.
-
 Topics
 ------
 
@@ -118,3 +116,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+.. [1] These numbers may increase in the future.
