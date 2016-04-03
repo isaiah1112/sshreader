@@ -57,7 +57,7 @@ def printjobs(jobresults):
 @click.option('--keyfile', '-k', type=click.Path(exists=True, dir_okay=False, readable=True), help='Override ssh key')
 @click.option('--prompt', '-p', is_flag=True, help='Prompt for ssh password')
 @click.option('--password', '-P', help='Supply ssh password')
-@click.option('--timeout', '-T', default=30, help='Timeout for ssh commands')
+@click.option('--timeout', '-T', default=300, help='Timeout for ssh commands')
 @click.option('--quiet', '-q', is_flag=True, help='Disable progress bar')
 @click.option('--dshbak', '-D', is_flag=True, help='Allow output to be piped to dshbak')
 @click.option('--debug', '-d', is_flag=True, help='Enable debug output')
