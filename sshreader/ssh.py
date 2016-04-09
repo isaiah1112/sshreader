@@ -59,8 +59,8 @@ def shell_command(command, combine=False, decodebytes=False):
     """Run a command in the shell on localhost and return the output
 
     :param command: String containing the shell script to run
-    :param combine: Direct stderr to stdout (default = False)
-    :param decodebytes: Decode bytes objects to unicode strings (default = False)
+    :param combine: Direct stderr to stdout
+    :param decodebytes: Decode bytes objects to unicode strings
     :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
     """
     if combine:
@@ -106,9 +106,9 @@ class SSH(object):
     :param username: SSH username
     :param password: SSH password
     :param keyfile: SSH keyfile (can be used instead of password)
-    :param port: SSH port (default = 22)
-    :param timeout: SSH connection timeout in seconds (default = 30)
-    :param connect: Initiate the connect (default = True)
+    :param port: SSH port
+    :param timeout: SSH connection timeout in seconds
+    :param connect: Initiate the connect
     :return: SSH connection object
     :raises: SSHException
     """
