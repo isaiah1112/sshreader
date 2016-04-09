@@ -137,13 +137,13 @@ class SSH(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
-    def ssh_command(self, command, timeout=30, combine=False, decodebytes=False):
+    def ssh_command(self, command, timeout=30, combine=False, decodebytes=True):
         """Run a command over an ssh connection
 
         :param command: The command to run
         :param timeout: Timeout for the command
         :param combine: Combine stderr and stdout
-        :param decodebytes: Decode bytes objects to unicode strings (default = False)
+        :param decodebytes: Decode bytes objects to unicode strings
         :return: Namedtuple of (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
         :raises: SSHException
         """
