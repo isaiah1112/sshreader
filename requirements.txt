@@ -1,6 +1,6 @@
 alabaster==0.7.7
 Babel==2.2.0
-click==6.4
+click==6.6
 docutils==0.12
 ecdsa==0.13
 future==0.15.2

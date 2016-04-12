@@ -18,7 +18,7 @@ setup(name='sshreader',
                         'future==0.15.2',
                         'progressbar2==3.6.2',
                         'python-hostlist==1.14',
-                        'click==6.4'
+                        'click==6.6'
                         ],
       platforms=['Linux', 'Mac OS X'],
       classifiers=[
