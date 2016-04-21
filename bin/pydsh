@@ -29,7 +29,7 @@ def dshbak(thisjob):
         sshreader.echo(str(thisjob.name) + ': Unable to establish ssh connection')
     else:
         result = thisjob.results[0]
-        for line in str(result.stdout.decode()).split('\n'):
+        for line in result.stdout.split('\n'):
             sshreader.echo(str(thisjob.name) + ': ' + str(line))
     return None
 
@@ -46,7 +46,7 @@ def printjobs(jobresults):
             click.echo(str(thisjob.name) + ': Unable to establish ssh connection')
         else:
             result = thisjob.results[0]
-            click.echo(result.stdout.decode())
+            click.echo(result.stdout)
     return None
 
 
