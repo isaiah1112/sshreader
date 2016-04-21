@@ -55,7 +55,7 @@ def envvars():
     return EnvVars(user, rsa_key, dsa_key)
 
 
-def shell_command(command, combine=False, decodebytes=False):
+def shell_command(command, combine=False, decodebytes=True):
     """Run a command in the shell on localhost and return the output
 
     :param command: String containing the shell script to run

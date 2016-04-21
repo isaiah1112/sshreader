@@ -31,7 +31,7 @@ class TestShellScript(unittest.TestCase):
         result = sshreader.shell_command('echo "foo"')
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stdout, b'foo')
+        self.assertEqual(result.stdout, 'foo')
         self.assertEqual(len(result.stderr), 0)
         pass
 
@@ -49,7 +49,7 @@ class TestShellScript(unittest.TestCase):
         result = sshreader.shell_command('echo "bar" 1>&2')
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stderr, b'bar')
+        self.assertEqual(result.stderr, 'bar')
         pass
 
     def test_decode_bytes(self):
