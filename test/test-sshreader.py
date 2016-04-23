@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-""" Unittests for sshreader Python Package
+""" Integration and Unit tests for sshreader Python Package
 """
 from __future__ import print_function
 from builtins import range, str
@@ -31,7 +31,7 @@ class TestShellScript(unittest.TestCase):
         result = sshreader.shell_command('echo "foo"')
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stdout, b'foo')
+        self.assertEqual(result.stdout, 'foo')
         self.assertEqual(len(result.stderr), 0)
         pass
 
@@ -49,7 +49,7 @@ class TestShellScript(unittest.TestCase):
         result = sshreader.shell_command('echo "bar" 1>&2')
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stderr, b'bar')
+        self.assertEqual(result.stderr, 'bar')
         pass
 
     def test_decode_bytes(self):
@@ -106,7 +106,7 @@ class TestSSH(unittest.TestCase):
         result = self.conn.ssh_command('echo foo')
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stdout, b'foo')
+        self.assertEqual(result.stdout, 'foo')
         pass
 
     def test_command_stderr(self):
@@ -117,7 +117,7 @@ class TestSSH(unittest.TestCase):
         result = self.conn.ssh_command('echo bar 1>&2')
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stderr, b'bar')
+        self.assertEqual(result.stderr, 'bar')
         pass
 
     def test_combine_output(self):
@@ -128,7 +128,7 @@ class TestSSH(unittest.TestCase):
         result = self.conn.ssh_command('echo foo; echo bar 1>&2;', combine=True)
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stdout, b'foo\r\nbar')
+        self.assertEqual(result.stdout, 'foo\r\nbar')
         pass
 
 
@@ -221,6 +221,13 @@ class TestSshreader(unittest.TestCase):
         result = sshreader.sshread(jobs, pcount=0, tcount=0)
         for x in result:
             self.assertEqual(x.status, 0)
+        pass
+
+    def test_cpulimits(self):
+        """ Ensure the cpulimit methods
+        """
+        self.assertIsInstance(sshreader.sshreader.cpusoftlimit(), int)
+        self.assertIsInstance(sshreader.sshreader.cpuhardlimit(), int)
         pass
 
 

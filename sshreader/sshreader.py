@@ -122,7 +122,7 @@ class ServerJob(object):
     :param password: Password for SSH
     :param keyfile: Path to ssh key (can be used instead of password)
     :param debuglevel: 0 = off, 1 = some, 2 = more, 3 = all
-    :param timeout: Tuple of timeouts (sshtimeout, cmdtimeout), if not specified both default to 30 seconds
+    :param timeout: Tuple of timeouts in seconds (sshtimeout, cmdtimeout)
     :param runlocal: Run job on localhost (skips ssh to localhost)
     :param prehook: Optional Hook object
     :param posthook: Optional Hook object
@@ -238,7 +238,7 @@ class ServerJob(object):
             print(u"Finished running ServerJob: " + str(self.name))
         return self.status
 
-    def print_results(self):
+    def print(self):
         """ Prints the status of the ServerJob and details of each cmd in the job
 
         :return: None
@@ -264,9 +264,14 @@ class ServerJob(object):
 def print_results(serverjobs):
     """Print the output of all ServerJobs in as ServerJobList by job status
 
+    .. warning::
+
+        This call will be deprecated in v4.0
+
     :param serverjobs: List of ServerJob objects
     :return: SortedJobs named tuple
     """
+    warnings.warn('The <print_results> method will be deprecated in v4.0')
     SortedJobs = namedtuple("SortedJobs", ['completed', 'failed', 'unknown'])
     status_complete = [x for x in serverjobs if x.status == 0]
     status_failed = [x for x in serverjobs if x.status > 0]
@@ -281,6 +286,23 @@ def print_results(serverjobs):
         for job in status_unknown:
             job.print_results()
     return SortedJobs(completed=status_complete, failed=status_failed, unknown=status_unknown)
+
+
+def cpusoftlimit():
+    """ Return the default number of sub-processes your system is allowed to spawn
+
+    :return: cpu_count() - 1
+    """
+    return multiprocessing.cpu_count() - 1
+
+
+def cpuhardlimit():
+    """ Return the maximum number of sub-processes your system is allowed to spawn
+
+    :return: (cpu_count() - 1) * __cpuHardLimitFactor__
+    """
+    global __cpuHardLimitFactor__
+    return cpusoftlimit() * __cpuHardLimitFactor__
 
 
 def echo(*args, **kwargs):
@@ -307,7 +329,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
     :return: List with completed ServerJob objects (single object returned if 1 job was passed)
     :raises: ProcessesOrThreads, ExceededJobLimit, ExceedCPULimit, TypeError,
     """
-    global __jobHardLimit__, __cpuHardLimitFactor__, __threadlimit__
+    global __jobHardLimit__, __threadlimit__
     if tcount is None and pcount is None:
         raise ProcessesOrThreads('Specify an integer for pcount or tcount')
     if isinstance(serverjobs, list):
@@ -365,23 +387,19 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
             thread.daemon = True
             thread.start()
     else:
-        # Limit the number of sub processes we spawn
-        cpusoftlimit = multiprocessing.cpu_count() - 1
-        # Imposing a hard limit for number of sub-processes so you don't make the system unusable
-        cpuhardlimit = cpusoftlimit * __cpuHardLimitFactor__
-        # Found this while digging around the multiprocessing API.  This might help some of the pickling errors when
-        # working with ssh
+        # Found this while digging around the multiprocessing API.
+        # This might help some of the pickling errors when working with ssh
         multiprocessing.allow_connection_pickling()
 
         # Adjust number of sub-processes to spawn.
         if pcount == 0:
-            pcount = cpusoftlimit
+            pcount = cpusoftlimit()
         elif pcount < 0:
-            pcount = cpuhardlimit
+            pcount = cpuhardlimit()
         if pcount >= totaljobs:
             pcount = totaljobs
 
-        if pcount > cpuhardlimit:
+        if pcount > cpuhardlimit():
             raise ExceededCPULimit(str(pcount) + ' > ' + str(cpuhardlimit))
 
         if tcount is not None:

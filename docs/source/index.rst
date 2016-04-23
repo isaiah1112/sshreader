@@ -30,8 +30,8 @@ method (without going over the *threadlimit* global).
 
 To use multi-processing to parallelize jobs either set **pcount** to 0 or to the number of processes you wish to spawn.
 If the number of jobs is less than the number of processes you requested sshreader will adjust accordingly.  If
-**pcount** is set to 0 then the number of processes spawned will equal *cpusoftlimit*.  If **pcount**
-is set to -1 then the number of processes spawned will equal the *cpuhardlimit*.
+**pcount** is set to 0 then the number of processes spawned will equal :code:`cpusoftlimit()`.  If **pcount**
+is set to -1 then the number of processes spawned will equal the :code:`cpuhardlimit()`.
 
 When using **pcount** and **tcount** in conjunction, **tcount** will equal the total number of threads each process is
 allowed to spawn.  Sshreader will automatically adjust the number of processes and number of threads in order to make
@@ -42,7 +42,7 @@ sshreader will adjust those numbers down automatically. Generally though, the to
 
 .. code:: Python
 
-    total_processes = cpusoftlimit
+    total_processes = sshreader.cpusoftlimit()
     total_threads = (total_processes / jobs)
 
 Limits
@@ -80,8 +80,6 @@ set to -1) is defined as:
 This is so that you don't make a box unusable and was arrived at per my own testing.  Currently,
 \_\_cpuHardLimitFactor\_\_ is set to 3 [1]_ .
 
-.. [1] These numbers may increase in the future.
-
 Topics
 ------
 
@@ -118,3 +116,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+.. [1] These numbers may increase in the future.

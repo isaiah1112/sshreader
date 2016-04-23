@@ -1,5 +1,23 @@
 # Changelog
 
+## Version 3.3
+ * Added --redline option to run sshreader at hardCPULimit [b9f4530](https://bitbucket.org/isaiah1112/sshreader/commits/b9f45307582a1169693c2824120c00c70b162bb9)
+ * Rewrote pydsh to use Click library for argument parsing.  Some flags have changed! [80d8e2c](https://bitbucket.org/isaiah1112/sshreader/commits/80d8e2c55dd405320cf24a261458d8be88dfbecb)
+ * Removing sort option and cleaning up logic. [dbdfe90](https://bitbucket.org/isaiah1112/sshreader/commits/dbdfe904f586553c927075ac941ac1f966a1cf79)
+ * Added examples to help epilog [bd4a3c0](https://bitbucket.org/isaiah1112/sshreader/commits/bd4a3c0337f96dd3fb4eab94fa0247a6863b5057)
+ * Rewrote printjobs and dshbak hooks [9ad72dc](https://bitbucket.org/isaiah1112/sshreader/commits/9ad72dcb9482f75c5c158b881c733c8bcd55a21a)
+ * Updated keyfile and password preference logic. [f10098a](https://bitbucket.org/isaiah1112/sshreader/commits/f10098a0a6a3641e8885695707e0880b37c26b04)
+ * Added cpusoftlimit and cpuhardlimit methods that return number of sub-processes your system is allowed to spawn. [4145a89](https://bitbucket.org/isaiah1112/sshreader/commits/4145a89d48b5570186683effbccc88af93a1df8b)
+ * Bumping pydsh version to 1.3 [6ba7de7](https://bitbucket.org/isaiah1112/sshreader/commits/6ba7de74b285135fb52664925a1788e905c5dc0f)
+ * Testing cpusoftlimit and cpuhardlimit methods. [b701489](https://bitbucket.org/isaiah1112/sshreader/commits/b701489b6eb24ac74529c1d0ada1bfe29f423ccb)
+ * Debug output can let you know how many sub-processes your system might use while running pydsh. [54374ce](https://bitbucket.org/isaiah1112/sshreader/commits/54374cea94943d6bb8d925b0efc72c5948dac821)
+ * Updating print_results method to print [1028856](https://bitbucket.org/isaiah1112/sshreader/commits/10288564451a283b9530a96d47e195134a9682f8)
+ * Updated deprecation messages. [007ece6](https://bitbucket.org/isaiah1112/sshreader/commits/007ece610406a7f2caee6091987649fe949978f9)
+ * Not looping over lines in default output. [49a347c](https://bitbucket.org/isaiah1112/sshreader/commits/49a347c8c165ea4d004678e346cb6ea5430fa227)
+ * Moving print statements to click wrapper [d0e9e7a](https://bitbucket.org/isaiah1112/sshreader/commits/d0e9e7abde49e85f69416943c11d29a809ea933f)
+ * Changing timeout for SSH commands to default at 300 seconds [5a649b6](https://bitbucket.org/isaiah1112/sshreader/commits/5a649b6292e0b29c31ed9fab37bee7941eb2e9e7)
+ * Changed decode bytes option to True by default [13a2b2a](https://bitbucket.org/isaiah1112/sshreader/commits/13a2b2a08ffaba11dc41aed3c754c816df7a6306)
+
 ## Version 3.2
  * Added echo method that implements a multiprocessing.Lock object for print. [7216411](https://bitbucket.org/isaiah1112/sshreader/commits/72164116e2422b44e6704342f0bf3da855a9a054)
  * Implementing a thread limit when using pcount and tcount in conjuction when tcount == 0.  This limits each process to automatically launching 500 each. [ac0c413](https://bitbucket.org/isaiah1112/sshreader/commits/ac0c413e5c8dfc19327e846f3ad26cb766a7cb0b)
