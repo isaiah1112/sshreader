@@ -7,10 +7,10 @@ Pydsh is a Python-based replication of `pdsh`_ that uses sshreader as the engine
 also attempts to format the output from commands for you in a easy to read manner.  Below are some examples of how it
 can be used.
 
-.. note::
+.. warning::
 
     With version 1.3 of pydsh I have moved away from uisng argparse in favor of the `Click`_ module.  Some of the cli
-    flags might have changed.
+    flags have changed.
 
 Examples
 --------
