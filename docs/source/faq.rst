@@ -70,6 +70,11 @@ Paramiko and the subprocess module are byte-strings).  However, there are a few 
 
 Ensure all literal strings are unicode and convert all byte strings to unicode!
 
+.. note::
+
+    As of version 3.3 the default behavior for sshreader is to automatically decode byte strings to unicode strings.  If
+    you would like it do NOT decode byte strings then use this flag, setting it to :code:`False`.
+
 .. code-block:: python
 
     import sshreader
