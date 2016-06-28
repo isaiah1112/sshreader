@@ -136,6 +136,30 @@ class SSH(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
+        
+    def sftp_put(self, srcfile, dstfile):
+        """ Use the SFTP subsystem of OpenSSH to copy a local file to a remote host
+
+        :param srcfile: Path to the local file
+        :param dstfile: Path to the remote file
+        :return: Result of paramiko.SFTPClient.put()
+        """
+        sftp = paramiko.SFTPClient.from_transport(self.connection.get_transport())
+        result = sftp.put(os.path.expanduser(srcfile), os.path.expanduser(dstfile), confirm=True)
+        sftp.close()
+        return result
+
+    def sftp_get(self, srcfile, dstfile):
+        """ Use the SFTP subsystem of OpenSSH to copy a remote file to the localhost
+
+        :param srcfile: Path to the remote file
+        :param dstfile: Path to the local file
+        :return: Result of paramiko.SFTPClient.get()
+        """
+        sftp = paramiko.SFTPClient.from_transport(self.connection.get_transport())
+        result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
+        sftp.close()
+        return result
 
     def ssh_command(self, command, timeout=30, combine=False, decodebytes=True):
         """Run a command over an ssh connection
