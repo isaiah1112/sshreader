@@ -43,7 +43,7 @@ def printjobs(jobresults):
     for thisjob in jobresults:
         click.echo(str('-' * 16) + '\n' + str(thisjob.name) + '\n' + str('-' * 16))
         if thisjob.status == 255:
-            click.echo(str(thisjob.name) + ': Unable to establish ssh connection')
+            click.echo('Unable to establish ssh connection')
         else:
             result = thisjob.results[0]
             click.echo(result.stdout)
