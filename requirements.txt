@@ -23,4 +23,3 @@ six==1.10.0
 snowballstemmer==1.2.1
 Sphinx==1.4.4
 sphinx-rtd-theme==0.1.9
--e git+https://isaiah1112@bitbucket.org/isaiah1112/sshreader.git@2ede38b2b79808dae77b421ae212047892f2d3ad#egg=sshreader
