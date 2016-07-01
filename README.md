@@ -40,10 +40,10 @@ The documentation for sshreader can be found at [JA Computing](http://pydoc.jaco
 
 If you have installed the requirements for sshreader you can build its Sphinx Documentation simply by:
 
-> cd docs
+> cd docs;
 > make html
 
-Then simply open *docs/build/html/index.html* in your browser. 
+Then simply open **docs/build/html/index.html** in your browser.
 
 ## Contributing
 
