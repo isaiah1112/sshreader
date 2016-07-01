@@ -250,6 +250,6 @@ class SSH(object):
         return True
 
     # Privatizing some of the functions so SSH can be subclassed
-    __is_aliave = is_alive
+    __is_alive = is_alive
     __connect = connect
     __close = close
