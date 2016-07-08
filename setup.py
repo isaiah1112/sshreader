@@ -16,7 +16,7 @@ setup(name='sshreader',
       license='GNU Lesser General Public License v3 or later (LGPLv3+)',
       install_requires=['paramiko==2.0.1',
                         'future==0.15.2',
-                        'progressbar2==3.9.3',
+                        'progressbar2==3.9.4',
                         'python-hostlist==1.16',
                         'click==6.6'
                         ],
