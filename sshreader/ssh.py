@@ -127,15 +127,39 @@ class SSH(object):
         self.connection = paramiko.SSHClient()
         self.connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         if connect:
-            self.connect()
+            self.__connect()
 
     def __enter__(self):
-        if self.is_alive() is False:
-            self.connect()
+        if self.__is_alive() is False:
+            self.__connect()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
+        self.__close()
+        
+    def sftp_put(self, srcfile, dstfile):
+        """ Use the SFTP subsystem of OpenSSH to copy a local file to a remote host
+
+        :param srcfile: Path to the local file
+        :param dstfile: Path to the remote file
+        :return: Result of paramiko.SFTPClient.put()
+        """
+        sftp = paramiko.SFTPClient.from_transport(self.connection.get_transport())
+        result = sftp.put(os.path.expanduser(srcfile), os.path.expanduser(dstfile), confirm=True)
+        sftp.close()
+        return result
+
+    def sftp_get(self, srcfile, dstfile):
+        """ Use the SFTP subsystem of OpenSSH to copy a remote file to the localhost
+
+        :param srcfile: Path to the remote file
+        :param dstfile: Path to the local file
+        :return: Result of paramiko.SFTPClient.get()
+        """
+        sftp = paramiko.SFTPClient.from_transport(self.connection.get_transport())
+        result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
+        sftp.close()
+        return result
 
     def ssh_command(self, command, timeout=30, combine=False, decodebytes=True):
         """Run a command over an ssh connection
@@ -147,7 +171,7 @@ class SSH(object):
         :return: Namedtuple of (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
         :raises: SSHException
         """
-        if self.is_alive() is False:
+        if self.__is_alive() is False:
             raise paramiko.SSHException("Connection is not established")
         if combine:
             # http://stackoverflow.com/questions/3823862/paramiko-combine-stdout-and-stderr
@@ -199,7 +223,7 @@ class SSH(object):
     def reconnect(self):
         """Alias to connect
         """
-        return self.connect()
+        return self.__connect()
 
     def connect(self):
         """Opens an SSH Connection
@@ -208,7 +232,7 @@ class SSH(object):
         :raises: SSHException
         """
         logging.basicConfig()  # http://stackoverflow.com/questions/26659772/
-        if self.is_alive():
+        if self.__is_alive():
             raise paramiko.SSHException("Connection is already established")
         if self.keyfile is not None:
             if self.username is not None:  # Key file with a custom username!
@@ -224,3 +248,8 @@ class SSH(object):
                 self.connection.connect(self.host, port=self.port, username=self.username,
                                         password=self.password, timeout=self.timeout, look_for_keys=False)
         return True
+
+    # Privatizing some of the functions so SSH can be subclassed
+    __is_alive = is_alive
+    __connect = connect
+    __close = close

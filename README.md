@@ -24,9 +24,26 @@ or
 
 This will ensure that all the requirements are met.
 
+### Development Installation
+
+If you are wanting to work on development of sshreader perform the following:
+
+> pip install -U -r requirements.txt
+
+To ensure all development requirements are met. This will allow you to build the Sphinx Documentation for sshreader!
+
 ## Documentation
 
 The documentation for sshreader can be found at [JA Computing](http://pydoc.jacomputing.net/sshreader/)
+
+### Building Docs
+
+If you have installed the requirements for sshreader you can build its Sphinx Documentation simply by:
+
+> cd docs;
+> make html
+
+Then simply open **docs/build/html/index.html** in your browser.
 
 ## Contributing
 
@@ -45,10 +62,10 @@ project](https://bitbucket.org/isaiah1112/sshreader) and submit pull requests to
 
 Included with sshreader is a binary called **pydsh** (generally installed in /usr/local/bin/).  This works very similar to
 [pdsh](https://computing.llnl.gov/linux/pdsh.html) but uses sshreader at its core to perform ssh commands in parallel
-and return the results.  The output of *pydsh -Q* can also be piped through the **dshbak** tool that comes with pdsh.
+and return the results.  The output of *pydsh -D* can also be piped through the **dshbak** tool that comes with pdsh.
 
-Pydsh at current uses [hostlist expressions](https://www.nsc.liu.se/~kent/python-hostlist/) to get its list of hosts
-to process.  At some point I will look into adding gendersdb query capability as well.
+Pydsh uses [hostlist expressions](https://www.nsc.liu.se/~kent/python-hostlist/) to get its list of hosts
+to process.
 
 
 [GNU Lesser General Public License v3.0]: http://choosealicense.com/licenses/lgpl-3.0/ "LGPL v3"

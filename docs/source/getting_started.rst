@@ -110,6 +110,28 @@ method.
     from sshreader.ssh import envvars
     print(envvars())  # Returns a NamedTuple of info sshreader was able to gather from the OS
 
+Copying Files
+-------------
+
+Version 3.4 of sshreader introduced the :code:`sftp_put()` and :code:`sfpt_get()` methods into SSH objects.  These
+methods attempt to make it easier to use Paramiko's SFTP protocol to copy files to and from a remote server.  The cool thing
+about having them inside the SSH class is that you can use one object to both SFTP files and run SSH commands on a remote server.
+
+.. code-block:: python
+
+    from sshreader.ssh import SSH
+    with SSH('myhost.example.com', username='jdoe', password='jdoe1') as s:
+        # Copy a script file from our host to the remote host and run it.
+        s.sftp_put('~/secret_script.sh', '/tmp/secret_script.sh')
+        s.ssh_command('/tmp/secret_script.sh')
+        # Now, get the output of the script and remove all traces of it
+        s.sftp_get('/tmp/secret_output.txt', '~/secret_output.txt')
+        s.ssh_command('rm /tmp/secret_output.txt', 'rm /tmp/secret_output.sh')
+
+.. warning::
+
+    Support for SFTP is new to sshreader and isn't a primary feature.  Support for this feature will be limited.
+
 Indices and tables
 ------------------
 

@@ -25,7 +25,7 @@ Do not show a progress bar before the output:
 
 .. code-block:: bash
 
-    pydsh -q -w myhost[1-100].example.com -q 'uname -r'
+    pydsh -q -w myhost[1-100].example.com 'uname -r'
 
 Print output from jobs as soon as they complete (output can be piped to dshbak):
 
@@ -44,6 +44,12 @@ Override ssh with a username/password combo (but prompt for the password):
 .. code-block:: bash
 
     pydsh -u myuser -p -w myhost[1-100].example.com 'uname -r'
+
+Run pydsh faster (gets you closer straight C speed):
+
+.. code-block:: bash
+
+    pydsh --redline -w myhost[1-100].example.com 'uname -r'
 
 
 Indices and tables

@@ -9,7 +9,7 @@ import sys
 from hostlist import expand_hostlist
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '1.3'
+__version__ = '1.3.1'
 __examples__ = """\b
 Examples:
     pydsh -k ~/.ssh/id_rsa -w host1,host2,host3 "uname -r"
@@ -43,7 +43,7 @@ def printjobs(jobresults):
     for thisjob in jobresults:
         click.echo(str('-' * 16) + '\n' + str(thisjob.name) + '\n' + str('-' * 16))
         if thisjob.status == 255:
-            click.echo(str(thisjob.name) + ': Unable to establish ssh connection')
+            click.echo('Unable to establish ssh connection')
         else:
             result = thisjob.results[0]
             click.echo(result.stdout)
@@ -68,12 +68,8 @@ def cli(**kwargs):
     """
     global debug
     debug = kwargs['debug']
-    if debug:
-        print(kwargs)
 
     sshenv = sshreader.envvars()
-    if debug:
-        print(sshenv)
 
     if kwargs['username'] is None:
         if sshenv.username is None:
@@ -109,25 +105,22 @@ def cli(**kwargs):
         # You provided a password, ignore the SSH key
         kwargs['keyfile'] = None
 
-    if debug:
-        print(kwargs)
-
     hostlist = expand_hostlist(kwargs['hostlist'])
 
     if debug:
         print("Processing " + str(len(hostlist)) + " hosts!")
 
     post = sshreader.Hook(target=dshbak)
-    jobs = []
+    jobs = list()
     for host in hostlist:
         if kwargs['keyfile'] is not None:
             if debug:
-                print('Using keyfile: ' + kwargs['keyfile'])
+                print('\thost: ' + host + ' username: ' + kwargs['username'] + ' keyfile: ' + kwargs['keyfile'])
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
                                       timeout=kwargs['timeout'], combine_output=True)
         else:
             if debug:
-                print('Using password: ' + kwargs['password'])
+                print('\thost: ' + host + ' username: ' + kwargs['username'] + ' password: ' + kwargs['password'])
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
                                       timeout=kwargs['timeout'], combine_output=True)
         if kwargs['dshbak']:
