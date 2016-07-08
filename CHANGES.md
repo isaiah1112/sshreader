@@ -1,4 +1,20 @@
 # Changelog
+## Version 3.4
+ * Updated FAQ for byte string vs unicode string to include new default behavior for sshreader. [009258e](https://bitbucket.org/isaiah1112/sshreader/commits/009258e7b375e2f8068e2e108777bc5de4851e02)
+ * Beginning to add sftp commands to SSH class for extended abilities within sshreader. [2ede38b](https://bitbucket.org/isaiah1112/sshreader/commits/2ede38b2b79808dae77b421ae212047892f2d3ad)
+ * Updated requirements for sshreader. [fabc179](https://bitbucket.org/isaiah1112/sshreader/commits/fabc17983e033359ce735caddc51a9b59fa5bb5a)
+ * Updated documentation version. [1d541dc](https://bitbucket.org/isaiah1112/sshreader/commits/1d541dc7d0d3491a5a6d5278f720674783b716b8)
+ * Removing extra debug statements [9375187](https://bitbucket.org/isaiah1112/sshreader/commits/93751876e2caf4fb718acac4bdcb269b2949d8cc)
+ * Removing hostname from 'Unable to establish connection' message. [10a9591](https://bitbucket.org/isaiah1112/sshreader/commits/10a9591a234eafcf34c4fd3659ebb82d996b503e)
+ * Removing sshreader from requirements file. [7a43f6d](https://bitbucket.org/isaiah1112/sshreader/commits/7a43f6dc5bb6388b7af169ddb95f2086da5ef7d8)
+ * Protecting class methods within SSH (so it can be subclassed if needed) [680c0df](https://bitbucket.org/isaiah1112/sshreader/commits/680c0df606ecaabce6692526d9c7979205adedd0)
+ * Updated README file [2c11c62](https://bitbucket.org/isaiah1112/sshreader/commits/2c11c62cdfc3d5b6290258160224135ab1a0e059)
+ * You typo 1 thing and it all falls apart! smh [2b2b860](https://bitbucket.org/isaiah1112/sshreader/commits/2b2b860b4d9d06b42e8270a88ca864a98bb536bf)
+ * Go bold or go home! [982bf7e](https://bitbucket.org/isaiah1112/sshreader/commits/982bf7e53c6ae029b0d60b8b2d6f4ddba1311395)
+ * Updated package version. [ba29bce](https://bitbucket.org/isaiah1112/sshreader/commits/ba29bce4411473f1217da782259e5f7e52163375)
+ * Updated docs. [e04c9ee](https://bitbucket.org/isaiah1112/sshreader/commits/e04c9eee53ed1cc26b28fccc26bdcc916763836f)
+ * Updated Requirements. [6874fc5](https://bitbucket.org/isaiah1112/sshreader/commits/6874fc5cd1b35300e9b415b87197e869fa3ddd52)
+ * dirty hack, have a better idea ? [66b8902](https://bitbucket.org/isaiah1112/sshreader/commits/66b89021fcaf1094f047f556954cb20150d71157)
 
 ## Version 3.3
  * Added --redline option to run sshreader at hardCPULimit [b9f4530](https://bitbucket.org/isaiah1112/sshreader/commits/b9f45307582a1169693c2824120c00c70b162bb9)
