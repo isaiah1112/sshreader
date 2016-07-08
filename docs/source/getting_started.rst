@@ -113,7 +113,7 @@ method.
 Copying Files
 -------------
 
-Version 3.4 of sshreader introduced the :code:`SSH.sftp_put()` and :code:`SSH.sfpt_get()` methods into SSH objects.  These
+Version 3.4 of sshreader introduced the :code:`sftp_put()` and :code:`sfpt_get()` methods into SSH objects.  These
 methods attempt to make it easier to use Paramiko's SFTP protocol to copy files to and from a remote server.  The cool thing
 about having them inside the SSH class is that you can use one object to both SFTP files and run SSH commands on a remote server.
 
@@ -128,7 +128,7 @@ about having them inside the SSH class is that you can use one object to both SF
         s.sftp_get('/tmp/secret_output.txt', '~/secret_output.txt')
         s.ssh_command('rm /tmp/secret_output.txt', 'rm /tmp/secret_output.sh')
 
- .. note::
+.. warning::
 
     Support for SFTP is new to sshreader and isn't a primary feature.  Support for this feature will be limited.
 
