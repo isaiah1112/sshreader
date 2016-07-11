@@ -26,7 +26,7 @@ Contratulations!  You are now ready to begin working with sshreader!
 Working With SSH Objects
 ------------------------
 
-To start working with ssh connections (without multiprocessing or threading) right away.  Simply import the SSH class
+To start working with ssh connections (without multiprocessing or threading) right away simply import the SSH class
 and setup a connection!
 
 .. code-block:: python
@@ -86,7 +86,7 @@ Creating a Hook is as is as simple as:
     job1 = ServerJob('myhost.example.com',['uname -a', 'hostname', 'whoami'] username='jdoe', password='jdoe1',
                      prehook=myhook)
     # Now, run the job
-    sshread(job1)
+    sshread(job1, tcount=1)
 
 Running Shell Commands
 ----------------------
