@@ -1,7 +1,9 @@
 # Changelog
 
-## Version 3.4.1
- * Added validate_expr callback for click to expand hostlist expressions. [8f2e37b](https://bitbucket.org/isaiah1112/sshreader/commit/8f2e37b89b9d9483f30b19a0d75d3c55b77bb819)
+## Version 3.4.2
+ * Not documenting private members. [0d91962](https://bitbucket.org/isaiah1112/sshreader/commits/0d9196243e4c665b191ec45b034649b0c7633c39)
+ * Updated examples in Getting Started [7ac82bb](https://bitbucket.org/isaiah1112/sshreader/commits/7ac82bbc2849765d72803cd59d7247b486d3df70)
+ * Added validate_expr callback for click to expand hostlist expressions. [8f2e37b](https://bitbucket.org/isaiah1112/sshreader/commits/8f2e37b89b9d9483f30b19a0d75d3c55b77bb819)
 
 ## Version 3.4
  * Updated FAQ for byte string vs unicode string to include new default behavior for sshreader. [009258e](https://bitbucket.org/isaiah1112/sshreader/commits/009258e7b375e2f8068e2e108777bc5de4851e02)
