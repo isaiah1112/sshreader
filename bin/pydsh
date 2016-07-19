@@ -9,7 +9,7 @@ import sys
 from hostlist import expand_hostlist
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '1.3.1'
+__version__ = '1.3.2'
 __examples__ = """\b
 Examples:
     pydsh -k ~/.ssh/id_rsa -w host1,host2,host3 "uname -r"
@@ -48,11 +48,26 @@ def printjobs(jobresults):
             result = thisjob.results[0]
             click.echo(result.stdout)
     return None
+    
+def validate_expr(ctx, param, value):
+    """ Callback for click to expand hostlist expressions or error
+    
+    :param ctx: Click context
+    :param param: Parameter Name
+    :param value: Hostlist expression to expand
+    :return: List of expanded hosts
+    """
+    try:
+    	value = expand_hostlist(value)
+    	return value
+    except Exception:
+    	raise click.BadOptionUsage('Invalid hoslist expression')
 
 
 @click.command(epilog=__examples__)
 @click.version_option(version=__version__)
-@click.option('--hostlist', '-w', metavar='EXPR', required=True, help='Hostlist expression')
+@click.option('--hostlist', '-w', metavar='EXPR', required=True, callback=validate_expr,
+              help='Hostlist expression')
 @click.option('--username', '-u', help='Override ssh username')
 @click.option('--keyfile', '-k', type=click.Path(exists=True, dir_okay=False, readable=True), help='Override ssh key')
 @click.option('--prompt', '-p', is_flag=True, help='Prompt for ssh password')
@@ -105,14 +120,12 @@ def cli(**kwargs):
         # You provided a password, ignore the SSH key
         kwargs['keyfile'] = None
 
-    hostlist = expand_hostlist(kwargs['hostlist'])
-
     if debug:
-        print("Processing " + str(len(hostlist)) + " hosts!")
+        print("Processing " + str(len(kwargs['hostlist'])) + " hosts!")
 
     post = sshreader.Hook(target=dshbak)
     jobs = list()
-    for host in hostlist:
+    for host in kwargs['hostlist']:
         if kwargs['keyfile'] is not None:
             if debug:
                 print('\thost: ' + host + ' username: ' + kwargs['username'] + ' keyfile: ' + kwargs['keyfile'])

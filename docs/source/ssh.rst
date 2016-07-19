@@ -5,7 +5,6 @@ ssh API
 
 .. automodule:: sshreader.ssh
    :members: shell_command, SSH, envvars
-   :private-members:
 
 
 Indices and tables
