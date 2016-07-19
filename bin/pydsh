@@ -48,7 +48,8 @@ def printjobs(jobresults):
             result = thisjob.results[0]
             click.echo(result.stdout)
     return None
-    
+
+
 def validate_expr(ctx, param, value):
     """ Callback for click to expand hostlist expressions or error
     
@@ -58,10 +59,9 @@ def validate_expr(ctx, param, value):
     :return: List of expanded hosts
     """
     try:
-    	value = expand_hostlist(value)
-    	return value
+        return expand_hostlist(value)
     except Exception:
-    	raise click.BadOptionUsage('Invalid hoslist expression')
+        raise click.BadOptionUsage('Invalid hoslist expression')
 
 
 @click.command(epilog=__examples__)
