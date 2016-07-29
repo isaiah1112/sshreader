@@ -169,7 +169,7 @@ class ServerJob(object):
         else:
             self.posthook = posthook
         try:
-            if int(debuglevel) <= 3:
+            if int(debuglevel) in range(0, 3):
                 self.debuglevel = debuglevel
             else:
                 raise TypeError("Debug level must be an integer between 0 and 3")
@@ -203,24 +203,25 @@ class ServerJob(object):
                 self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
                                  timeout=self.sshtimeout)
             except Exception as errorMsg:
-                if self.debuglevel >= 2:
+                if self.debuglevel == 1:
+                    print(str(self.name) + u": Unable to establish ssh connection!")
+                elif self.debuglevel >= 2:
                     print(str(errorMsg))
                 self._conn = None
                 self.status = 255
-                if self.debuglevel >= 1:
-                    print(str(self.name) + u": Unable to establish ssh connection!")
+                self.results.append(str(errorMsg))
         # This is a trick statement to allow ssh and local shell scripts to be run using similar output processing code
         if self._conn is not None:
             for idX, thiscmd in enumerate(self.cmds):
                 # Now running each command in turn
-                if self.debuglevel >= 3:
+                if self.debuglevel == 3:
                     print(str(self.name) + u" running: " + str(thiscmd))
                 if self.runlocal:
                     result = shell_command(thiscmd, combine=self.combine_output)
                 else:
                     result = self._conn.ssh_command(thiscmd, timeout=self.cmdtimeout, combine=self.combine_output)
                 self.results.append(result)
-                if self.debuglevel >= 3:
+                if self.debuglevel == 3:
                     print(str(self.name) + u": " + str(thiscmd) + u": Finished")
                 self.status += result.return_code
             # Close ssh connection if needed
@@ -344,7 +345,7 @@ def sshread(serverjobs, debuglevel=0, pcount=None, tcount=None, progress_bar=Fal
         raise ExceededJobLimit(str(totaljobs) + ' > ' + str(__jobHardLimit__))
 
     try:
-        if int(debuglevel) <= 3:
+        if int(debuglevel) in range(0, 3):
             debuglevel = debuglevel
         else:
             raise TypeError('Debug level must be either 0, 1, 2, or 3')
