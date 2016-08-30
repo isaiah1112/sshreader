@@ -1,5 +1,10 @@
 # Changelog
 
+## Version v3.4.3
+ * Fixing mixed tabs. [086d94f](https://bitbucket.org/isaiah1112/sshreader/commits/086d94fb64bebc44d3aa1bbb72d8daedc571353d)
+ * Refactoring debuglevels and making ssh connection errors more apparent per Issue #9 [7f2e79b](https://bitbucket.org/isaiah1112/sshreader/commits/7f2e79be15e4491164401086f903196a66610375)
+ * Updating requirements! [c694370](https://bitbucket.org/isaiah1112/sshreader/commits/c694370d722b9f0b59ed06779d9d084f7e20c17c)
+
 ## Version 3.4.2
  * Not documenting private members. [0d91962](https://bitbucket.org/isaiah1112/sshreader/commits/0d9196243e4c665b191ec45b034649b0c7633c39)
  * Updated examples in Getting Started [7ac82bb](https://bitbucket.org/isaiah1112/sshreader/commits/7ac82bbc2849765d72803cd59d7247b486d3df70)
