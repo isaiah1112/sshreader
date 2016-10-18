@@ -58,8 +58,18 @@ or change the shebang at the top of your python script to:
 
     #!/usr/bin/env python -u
 
-Of course, you can also do as the link above says and force :code:`sys.stdout.flush()` but I am not a fan of that
-particular method.
+or by adding the following to your code directly after a print statement:
+
+.. code-block:: python
+
+    # Print something to stdout and immediately flush (unbuffered output)
+    print('Unbuffered output')
+    sys.stdout.flush()  # In Python 3.3 and above you can alternatively pass flush=True to the print statement
+
+.. note::
+
+    As of sshreader v3.4.4 the :code:`sshreader.echo` method issues a :code:`sys.stdout.flush()` after
+    calling the standard Python print function, giving you easy access to unbuffered output.
 
 Byte-String vs. Unicode-String
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
