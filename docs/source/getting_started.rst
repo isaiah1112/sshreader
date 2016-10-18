@@ -33,7 +33,7 @@ and setup a connection!
 
     from sshreader import SSH
     with SSH('myhost.example.com', username='jdoe', password='jdoe1') as s:
-        uname = s.ssh_commaned('uname -a')
+        uname = s.ssh_command('uname -a')
         print(uname)  # Show the results of the command, including stdin, stdout, and stderr
 
 .. note::
