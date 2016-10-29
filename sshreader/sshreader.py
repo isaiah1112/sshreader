@@ -34,7 +34,7 @@ __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
 __jobHardLimit__ = int(10 ** 6)
 __cpuHardLimitFactor__ = 3
-__threadlimit__ = 500
+__threadlimit__ = 100
 _printlock_ = multiprocessing.Lock()
 
 
