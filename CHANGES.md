@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 3.4.5
+ * Changing default thread limit to 100 rather than 500 [211531d](https://bitbucket.org/isaiah1112/sshreader/commits/211531d3ea31a575b0477230a7e1738a2353fb67)
+ * Fixing bug with ServerJob.print() method [084b377](https://bitbucket.org/isaiah1112/sshreader/commits/084b37727ce9a3c38030ed62cbcd4ee413f81fbc)
+
 ## Version 3.4.4
  * Updated echo method to flush stdout after every print.  This will allow for better access to unbuffered output. Issue #10 [604e6e7](https://bitbucket.org/isaiah1112/sshreader/commits/604e6e76273c9efe53d642eadd8301e6cbe993b2)
 

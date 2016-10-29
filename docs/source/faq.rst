@@ -3,8 +3,6 @@
 FAQ
 ===
 
-Find answers to the frequently answered questions here.
-
 Why are my print statements funky?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -74,16 +72,10 @@ or by adding the following to your code directly after a print statement:
 Byte-String vs. Unicode-String
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-In Python 2, strings are actually able to handle both byte-strings and unicode strings and in Python 3 all strings are
-now unicode-strings.  This can cause issues when working with both and using a module like sshreader (because output from
-Paramiko and the subprocess module are byte-strings).  However, there are a few things you can do to make this far easier.
-
-Ensure all literal strings are unicode and convert all byte strings to unicode!
-
-.. note::
-
-    As of version 3.3 the default behavior for sshreader is to automatically decode byte strings to unicode strings.  If
-    you would like it do NOT decode byte strings then use this flag, setting it to :code:`False`.
+In Python 2, strings are actually able to handle both byte-strings and unicode strings where in Python 3 all strings are
+only unicode strings.  This can cause issues when working with both and using a module like sshreader (because output from
+Paramiko and the subprocess module are byte-strings).  However, there is hope because sshreader includes a kwarg that can
+enable automatic decoding of byte-strings to unicode strings.
 
 .. code-block:: python
 
@@ -93,6 +85,11 @@ Ensure all literal strings are unicode and convert all byte strings to unicode!
     # This works for both the shell_command and ssh_command methods
     uname_cmd = sshreader.shell_command('uname -a', decodebytes=True)
     uname_cmd.stdout.split(',')
+
+.. note::
+
+    As of version 3.3 the default behavior for sshreader is to automatically decode byte strings to unicode strings.  If
+    you would like it do NOT decode byte strings then use this flag, setting it to :code:`False`.
 
 Indices and tables
 ------------------

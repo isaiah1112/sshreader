@@ -54,7 +54,7 @@ Sshreader currently limits you to processing :code:`1,000,000` server jobs set v
 
 **threadlimit**:
 
-Ssshreader will limit the number of threads each process can spawn to :code:`500` threads per the \_\_threadlimit\_\_ global.
+Ssshreader will limit the number of threads each process can spawn to :code:`100` threads per the \_\_threadlimit\_\_ global.
 This number will only take effect when tcount is set to 0.  If you manually specify tcount you can still launch as many
 threads as you like.
 
