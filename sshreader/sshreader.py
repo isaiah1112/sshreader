@@ -248,7 +248,7 @@ class ServerJob(object):
         print(str('-' * 16))
         print(u'ServerJob: ' + str(self.name) + u'\tStatus: ' + str(self.status))
         for idx, value in enumerate(self.cmds):
-            print(str(self.results[idx]) + u'\tStatus: ' + str(self.results[idx].return_code))
+            print(str(self.results[idx]))
         return None
 
     def __str__(self):
