@@ -130,7 +130,7 @@ about having them inside the SSH class is that you can use one object to both SF
 
 .. warning::
 
-    Support for SFTP is new to sshreader and isn't a primary feature.  Support for this feature will be limited.
+    SFTP methods are new to sshreader and isn't a primary feature.  Support for this feature will be limited.
 
 Indices and tables
 ------------------

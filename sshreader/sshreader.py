@@ -34,7 +34,7 @@ __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
 __jobHardLimit__ = int(10 ** 6)
 __cpuHardLimitFactor__ = 3
-__threadlimit__ = 500
+__threadlimit__ = 100
 _printlock_ = multiprocessing.Lock()
 
 
@@ -248,7 +248,7 @@ class ServerJob(object):
         print(str('-' * 16))
         print(u'ServerJob: ' + str(self.name) + u'\tStatus: ' + str(self.status))
         for idx, value in enumerate(self.cmds):
-            print(str(self.results[idx]) + u'\tStatus: ' + str(self.results[idx].return_code))
+            print(str(self.results[idx]))
         return None
 
     def __str__(self):
