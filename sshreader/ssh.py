@@ -188,7 +188,7 @@ class SSH(object):
             else:
                 result = ShellCommandCombined(cmd=command, stdout=stdout.strip(), return_code=chan.recv_exit_status())
         else:
-            stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
+            stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout, get_pty=True)
             if decodebytes:
                 result = ShellCommand(cmd=command, stdout=stdout.read().decode().strip(),
                                       stderr=stderr.read().decode().strip(),
