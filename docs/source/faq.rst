@@ -91,6 +91,27 @@ enable automatic decoding of byte-strings to unicode strings.
     As of version 3.3 the default behavior for sshreader is to automatically decode byte strings to unicode strings.  If
     you would like it do NOT decode byte strings then use this flag, setting it to :code:`False`.
 
+Pseduo Terminals
+~~~~~~~~~~~~~~~~
+
+Sometimes when using SSH you will see an error like the following:
+
+.. code-block:: python
+
+    import sshreader
+    with sshreader.SSH('cox-duke-xcoder-2008', username='jalman001c', keyfile='~/.ssh/id_rsa') as s:
+        s.ssh_command('sudo touch /')
+    >> ShellCommand(cmd='sudo touch /', stdout='', stderr='sudo: sorry, you must have a tty to run sudo', return_code=1)
+
+This is due to not having a terminal definition in your SSH connection.  Normally the method for fixing this type of error
+is to disable :code:`!requiretty` in your :code:`/etc/sudoers` file.  However, a better way to do this is to request a
+pseudo terminal when creating your ssh connection.
+
+.. note::
+
+    As of version 3.4.6 the default behavior for the :code:`sshreader.SSH` class is to request pseudo terminals for every
+    connection.  Because of this functionality you do not need to modify your :code:`/etc/sudoers` file.
+
 Indices and tables
 ------------------
 

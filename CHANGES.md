@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 3.4.6
+ * Adding pseudo terminal creation to ssh_command method. It already existed for when output is combined. [6d85e77](https://bitbucket.org/isaiah1112/sshreader/commits/6d85e772c6123f2cb65ccd447bccc1dc41e88d65)
+
 ## Version 3.4.5
  * Changing default thread limit to 100 rather than 500 [211531d](https://bitbucket.org/isaiah1112/sshreader/commits/211531d3ea31a575b0477230a7e1738a2353fb67)
  * Fixing bug with ServerJob.print() method [084b377](https://bitbucket.org/isaiah1112/sshreader/commits/084b37727ce9a3c38030ed62cbcd4ee413f81fbc)
