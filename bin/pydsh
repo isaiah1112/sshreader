@@ -9,14 +9,13 @@ import sys
 from hostlist import expand_hostlist
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '1.3.3'
+__version__ = '1.3.4'
 __examples__ = """\b
 Examples:
     pydsh -k ~/.ssh/id_rsa -w host1,host2,host3 "uname -r"
     pydsh -u root -k /root/.ssh/id_rsa -w host[1,3] "uname -r"
     pydsh -u root -P Password123 -w host[1-3] "uname -r"
 """
-debug = False
 
 
 def dshbak(thisjob):
@@ -80,9 +79,6 @@ def validate_expr(ctx, param, value):
 def cli(**kwargs):
     """  Run ssh commands in parallel across hosts
     """
-    global debug
-    debug = kwargs['debug']
-
     sshenv = sshreader.envvars()
 
     if kwargs['username'] is None:
@@ -119,19 +115,19 @@ def cli(**kwargs):
         # You provided a password, ignore the SSH key
         kwargs['keyfile'] = None
 
-    if debug:
+    if kwargs['debug']:
         print("Processing " + str(len(kwargs['hostlist'])) + " hosts!")
 
     post = sshreader.Hook(target=dshbak)
     jobs = list()
     for host in kwargs['hostlist']:
         if kwargs['keyfile'] is not None:
-            if debug:
+            if kwargs['debug']:
                 print('\thost: ' + host + ' username: ' + kwargs['username'] + ' keyfile: ' + kwargs['keyfile'])
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
                                       timeout=kwargs['timeout'], combine_output=True)
         else:
-            if debug:
+            if kwargs['debug']:
                 print('\thost: ' + host + ' username: ' + kwargs['username'] + ' password: ' + kwargs['password'])
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
                                       timeout=kwargs['timeout'], combine_output=True)
@@ -139,7 +135,7 @@ def cli(**kwargs):
             job.posthook = post
         jobs.append(job)
 
-    if debug:
+    if kwargs['debug']:
         if kwargs['redline']:
             print('Using up to: ' + str(sshreader.sshreader.cpuhardlimit()) + ' sub-processes')
         else:
