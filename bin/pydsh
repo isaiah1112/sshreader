@@ -64,7 +64,7 @@ def coalesce(jobresults):
     :return: None
     """
     job_hashes = defaultdict(list)
-    output_hashes = defaultdict(list)
+    output_hashes = dict()
     for job in jobresults:
         if job.status == 255:
             result = job.results[0]
@@ -72,7 +72,8 @@ def coalesce(jobresults):
             result = job.results[0].stdout
         md5sum = md5(result.encode()).hexdigest()
         job_hashes[md5sum].append(job.name)
-        output_hashes[md5sum].append(result)
+        if md5sum not in output_hashes.keys():
+            output_hashes[md5sum] = result
 
     for md5sum, stdout in output_hashes.items():
         click.echo(str('-' * 16) + '\n' + collect_hostlist(job_hashes[md5sum]) + '\n' + str('-' * 16))
