@@ -9,7 +9,7 @@ import sys
 from hostlist import expand_hostlist
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '1.3.4'
+__version__ = '1.3.5'
 __examples__ = """\b
 Examples:
     pydsh -k ~/.ssh/id_rsa -w host1,host2,host3 "uname -r"
@@ -28,8 +28,9 @@ def dshbak(thisjob):
         result = thisjob.results[0]
     else:
         result = thisjob.results[0].stdout
-    for line in result.split('\n'):
-        sshreader.echo(str(thisjob.name) + ': ' + str(line))
+    if len(result) != 0:
+        for line in result.split('\n'):
+            sshreader.echo(str(thisjob.name) + ': ' + str(line))
     return None
 
 
@@ -40,11 +41,13 @@ def printjobs(jobresults):
     :return: None
     """
     for thisjob in jobresults:
-        click.echo(str('-' * 16) + '\n' + str(thisjob.name) + '\n' + str('-' * 16))
         if thisjob.status == 255:
-            click.echo(thisjob.results[0])
+            result = thisjob.results[0]
         else:
-            click.echo(thisjob.results[0].stdout)
+            result = thisjob.results[0].stdout
+        if len(result) != 0:
+            click.echo(str('-' * 16) + '\n' + str(thisjob.name) + '\n' + str('-' * 16))
+            click.echo(result)
     return None
 
 
