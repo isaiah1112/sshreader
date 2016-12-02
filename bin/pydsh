@@ -3,23 +3,25 @@
 """ A Pythonic implementation of pdsh powered by sshreader
 """
 from __future__ import print_function
+from collections import defaultdict
+from hashlib import md5
+from hostlist import expand_hostlist, collect_hostlist
 import click
 import sshreader
 import sys
-from hostlist import expand_hostlist
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '1.3.5'
+__version__ = '2.0'
 __examples__ = """\b
 Examples:
-    pydsh -k ~/.ssh/id_rsa -w host1,host2,host3 "uname -r"
+    pydsh -w host1,host2,host3 "uname -r"
     pydsh -u root -k /root/.ssh/id_rsa -w host[1,3] "uname -r"
     pydsh -u root -P Password123 -w host[1-3] "uname -r"
 """
 
 
-def dshbak(thisjob):
-    """Hook to print <ServerJob> object output that can be piped to dshbak
+def output(thisjob):
+    """ Print output from jobs as they complete in a format that could be piped to dshbak
 
     :param thisjob: <ServerJob> object
     :return: None
@@ -34,8 +36,10 @@ def dshbak(thisjob):
     return None
 
 
-def printjobs(jobresults):
-    """Output the results of the jobs if the have results
+def dshbak(jobresults):
+    """ Output the results of the jobs grouped by hosts
+
+    Similar to piping output to `dshbak`
 
     :param jobresults: List of <ServerJob> objects
     :return: None
@@ -51,7 +55,32 @@ def printjobs(jobresults):
     return None
 
 
-def validate_expr(ctx, param, value):
+def coalesce(jobresults):
+    """ Output the results of jobs coalescing identical output from hosts
+
+    Similar to piping output to `dshbak -c`
+
+    :param jobresults: List of <ServerJob> objects
+    :return: None
+    """
+    job_hashes = defaultdict(list)
+    output_hashes = defaultdict(list)
+    for job in jobresults:
+        if job.status == 255:
+            result = job.results[0]
+        else:
+            result = job.results[0].stdout
+        md5sum = md5(result.encode()).hexdigest()
+        job_hashes[md5sum].append(job.name)
+        output_hashes[md5sum].append(result)
+
+    for md5sum, stdout in output_hashes.items():
+        click.echo(str('-' * 16) + '\n' + collect_hostlist(job_hashes[md5sum]) + '\n' + str('-' * 16))
+        click.echo(stdout)
+    return None
+
+
+def validate_hostlist(ctx, param, value):
     """ Callback for click to expand hostlist expressions or error
     
     :param ctx: Click context
@@ -62,20 +91,20 @@ def validate_expr(ctx, param, value):
     try:
         return expand_hostlist(value)
     except Exception:
-        raise click.BadOptionUsage('Invalid hoslist expression')
+        raise click.BadOptionUsage('Invalid hostlist expression')
 
 
 @click.command(epilog=__examples__)
 @click.version_option(version=__version__)
-@click.option('--hostlist', '-w', metavar='EXPR', required=True, callback=validate_expr,
+@click.option('--hostlist', '-w', metavar='EXPR', required=True, callback=validate_hostlist,
               help='Hostlist expression')
 @click.option('--username', '-u', help='Override ssh username')
 @click.option('--keyfile', '-k', type=click.Path(exists=True, dir_okay=False, readable=True), help='Override ssh key')
 @click.option('--prompt', '-p', is_flag=True, help='Prompt for ssh password')
 @click.option('--password', '-P', help='Supply ssh password')
 @click.option('--timeout', '-T', default=300, help='Timeout for ssh commands')
-@click.option('--quiet', '-q', is_flag=True, help='Disable progress bar')
-@click.option('--dshbak', '-D', is_flag=True, help='Allow output to be piped to dshbak')
+@click.option('--dshbak', '-D', is_flag=True, help='Group output by host')
+@click.option('--coalesce', '-C', is_flag=True, help='Coalesce similar output from hosts')
 @click.option('--debug', '-d', is_flag=True, help='Enable debug output')
 @click.option('--redline', is_flag=True, help='Run as many sub-processes as possible')
 @click.argument('cmd', nargs=1, required=True)
@@ -119,43 +148,44 @@ def cli(**kwargs):
         kwargs['keyfile'] = None
 
     if kwargs['debug']:
-        print("Processing " + str(len(kwargs['hostlist'])) + " hosts!")
+        click.echo("Processing " + str(len(kwargs['hostlist'])) + " hosts!")
 
-    post = sshreader.Hook(target=dshbak)
+    post = sshreader.Hook(target=output)
     jobs = list()
     for host in kwargs['hostlist']:
         if kwargs['keyfile'] is not None:
             if kwargs['debug']:
-                print('\thost: ' + host + ' username: ' + kwargs['username'] + ' keyfile: ' + kwargs['keyfile'])
+                click.echo('\thost: ' + host + ' username: ' + kwargs['username'] + ' keyfile: ' + kwargs['keyfile'])
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
                                       timeout=kwargs['timeout'], combine_output=True)
         else:
             if kwargs['debug']:
-                print('\thost: ' + host + ' username: ' + kwargs['username'] + ' password: ' + kwargs['password'])
+                click.echo('\thost: ' + host + ' username: ' + kwargs['username'] + ' password: ' + kwargs['password'])
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
                                       timeout=kwargs['timeout'], combine_output=True)
-        if kwargs['dshbak']:
+        if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
             job.posthook = post
         jobs.append(job)
 
     if kwargs['debug']:
         if kwargs['redline']:
-            print('Using up to: ' + str(sshreader.sshreader.cpuhardlimit()) + ' sub-processes')
+            click.echo('Using up to: ' + str(sshreader.sshreader.cpuhardlimit()) + ' sub-processes')
         else:
-            print('Using up to: ' + str(sshreader.sshreader.cpusoftlimit()) + ' sub-processes')
-    if kwargs['quiet'] or kwargs['dshbak']:
+            click.echo('Using up to: ' + str(sshreader.sshreader.cpusoftlimit()) + ' sub-processes')
+    if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
         if kwargs['redline']:
-            job_results = sshreader.sshread(jobs, pcount=-1, tcount=0)
+            sshreader.sshread(jobs, pcount=-1, tcount=0)
         else:
-            job_results = sshreader.sshread(jobs, pcount=0, tcount=0)
-        if kwargs['dshbak'] is False:
-            printjobs(job_results)
+            sshreader.sshread(jobs, pcount=0, tcount=0)
     else:
         if kwargs['redline']:
-            job_results = sshreader.sshread(jobs, pcount=-1, tcount=0, progress_bar=True)
+            jobs_finished = sshreader.sshread(jobs, pcount=-1, tcount=0, progress_bar=True)
         else:
-            job_results = sshreader.sshread(jobs, pcount=0, tcount=0, progress_bar=True)
-        printjobs(job_results)
+            jobs_finished = sshreader.sshread(jobs, pcount=0, tcount=0, progress_bar=True)
+        if kwargs['coalesce']:
+            coalesce(jobs_finished)
+        else:
+            dshbak(jobs_finished)
     return 0
 
 if __name__ == "__main__":
