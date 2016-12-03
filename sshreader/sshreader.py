@@ -213,7 +213,7 @@ class ServerJob(object):
                 self.results.append(str(errorMsg))
         # This is a trick statement to allow ssh and local shell scripts to be run using similar output processing code
         if self._conn is not None:
-            for idX, thiscmd in enumerate(self.cmds):
+            for thiscmd in self.cmds:
                 # Now running each command in turn
                 if self.debuglevel == 3:
                     print(str(self.name) + u" running: " + str(thiscmd))
@@ -247,8 +247,8 @@ class ServerJob(object):
         """
         print(str('-' * 16))
         print(u'ServerJob: ' + str(self.name) + u'\tStatus: ' + str(self.status))
-        for idx, value in enumerate(self.cmds):
-            print(str(self.results[idx]))
+        for result in self.results:
+            print(result)
         return None
 
     def __str__(self):
