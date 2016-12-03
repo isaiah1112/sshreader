@@ -76,8 +76,9 @@ def coalesce(jobresults):
             output_hashes[md5sum] = result
 
     for md5sum, stdout in output_hashes.items():
-        click.echo(str('-' * 16) + '\n' + collect_hostlist(job_hashes[md5sum]) + '\n' + str('-' * 16))
-        click.echo(stdout)
+        if len(stdout) != 0:
+            click.echo(str('-' * 16) + '\n' + collect_hostlist(job_hashes[md5sum]) + '\n' + str('-' * 16))
+            click.echo(stdout)
     return None
 
 
