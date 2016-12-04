@@ -188,7 +188,7 @@ def cli(**kwargs):
             coalesce(jobs_finished)
         else:
             dshbak(jobs_finished)
-    return 0
+    sys.exit(0)
 
 if __name__ == "__main__":
-    sys.exit(cli())
+    cli()
