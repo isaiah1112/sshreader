@@ -196,7 +196,7 @@ class ServerJob(object):
                 self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
                                  timeout=self.sshtimeout)
             except Exception as errorMsg:
-                logger.error(str(errorMsg))
+                logger.debug(str(errorMsg))
                 self._conn = None
                 self.status = 255
                 self.results.append(str(errorMsg))
