@@ -231,8 +231,7 @@ class SSH(object):
         :return: True
         :raises: SSHException
         """
-        logging.basicConfig()  # http://stackoverflow.com/questions/26659772/
-        logging.disable(logging.CRITICAL)  # Keeping paramiko from logging errors to stdout
+        paramiko.util.logging.getLogger().setLevel(logging.CRITICAL)  # Keeping paramiko from logging errors to stdout
         if self.__is_alive():
             raise paramiko.SSHException("Connection is already established")
         if self.keyfile is not None:

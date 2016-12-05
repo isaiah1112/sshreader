@@ -112,6 +112,20 @@ pseudo terminal when creating your ssh connection.
     As of version 3.4.6 the default behavior for the :code:`sshreader.SSH` class is to request pseudo terminals for every
     connection.  Because of this functionality you do not need to modify your :code:`/etc/sudoers` file.
 
+Changing Logging
+~~~~~~~~~~~~~~~~
+
+As of version 3.5 of sshreader you might have noticed that the :code:`debuglevel` option is no longer available on :code:`ServerJob`
+objects or the :code:`sshread` method.  To enable logging going forward you will want to change the level for the :code:`sshreader`
+logger.
+
+.. code-block:: python
+
+    import logging
+    logging.getLogger('sshreader').setLevel(logging.DEBUG)
+
+To learn what levels can be set, check out the `logger module's documentation.`_
+
 Indices and tables
 ------------------
 
@@ -126,3 +140,4 @@ Indices and tables
 .. _hostlist expressions: https://www.nsc.liu.se/~kent/python-hostlist/
 .. _multiprocessing.Lock(): https://docs.python.org/2/library/multiprocessing.html#synchronization-between-processes
 .. _stdout buffer: https://www.turnkeylinux.org/blog/unix-buffering
+.. _logger module's documentation.: https://docs.python.org/3/library/logging.html#levels
