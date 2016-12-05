@@ -99,7 +99,7 @@ Sometimes when using SSH you will see an error like the following:
 .. code-block:: python
 
     import sshreader
-    with sshreader.SSH('cox-duke-xcoder-2008', username='jalman001c', keyfile='~/.ssh/id_rsa') as s:
+    with sshreader.SSH('myhost.example.com', username='jdoe', keyfile='~/.ssh/id_rsa') as s:
         s.ssh_command('sudo touch /')
     >> ShellCommand(cmd='sudo touch /', stdout='', stderr='sudo: sorry, you must have a tty to run sudo', return_code=1)
 
