@@ -7,6 +7,7 @@ from collections import defaultdict
 from hashlib import md5
 from hostlist import expand_hostlist, collect_hostlist
 import click
+import logging
 import sshreader
 import sys
 # GLOBALS
@@ -150,30 +151,21 @@ def cli(**kwargs):
         kwargs['keyfile'] = None
 
     if kwargs['debug']:
-        click.echo("Processing " + str(len(kwargs['hostlist'])) + " hosts!")
+        logging.getLogger('sshreader').setLevel(logging.INFO)
 
     post = sshreader.Hook(target=output)
     jobs = list()
     for host in kwargs['hostlist']:
         if kwargs['keyfile'] is not None:
-            if kwargs['debug']:
-                click.echo('\thost: ' + host + ' username: ' + kwargs['username'] + ' keyfile: ' + kwargs['keyfile'])
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
                                       timeout=kwargs['timeout'], combine_output=True)
         else:
-            if kwargs['debug']:
-                click.echo('\thost: ' + host + ' username: ' + kwargs['username'] + ' password: ' + kwargs['password'])
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
                                       timeout=kwargs['timeout'], combine_output=True)
         if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
             job.posthook = post
         jobs.append(job)
 
-    if kwargs['debug']:
-        if kwargs['redline']:
-            click.echo('Using up to: ' + str(sshreader.sshreader.cpuhardlimit()) + ' sub-processes')
-        else:
-            click.echo('Using up to: ' + str(sshreader.sshreader.cpusoftlimit()) + ' sub-processes')
     if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
         if kwargs['redline']:
             sshreader.sshread(jobs, pcount=-1, tcount=0)
