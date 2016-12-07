@@ -15,23 +15,28 @@ can be used.
 Examples
 --------
 
-Simplest form of pydsh [1]_.  Run a command, include a progress bar, and show the output of the commands by host:
+Simplest form of pydsh [1]_.  Run a command and show the output of the commands as they complete: [2]_
 
 .. code-block:: bash
 
     pydsh -w myhost[1-100].example.com 'uname -r'
 
-Do not show a progress bar before the output:
+.. note::
+
+    When using the :code:`--dshbak` or :code:`coalesce` options, a progress bar will be shown to the user as jobs
+    are processing.
+
+Print output organized by host (similar to piping to :code:`dshbak` command):
 
 .. code-block:: bash
 
-    pydsh -q -w myhost[1-100].example.com 'uname -r'
+    pydsh -D -w myhost[1-100].example.com 'uname -r'
 
-Print output from jobs as soon as they complete (output can be piped to dshbak):
+Print output coalesced by host (similar to piping to :code:`dshbak -c` command):
 
 .. code-block:: bash
 
-    pydsh -D -w myhost[1-100].example.com 'uname -r' | dshbak -c
+    pydsh -C -w myhost[1-100].example.com 'uname -r'
 
 Override ssh with a username/password combo:
 
@@ -45,7 +50,7 @@ Override ssh with a username/password combo (but prompt for the password):
 
     pydsh -u myuser -p -w myhost[1-100].example.com 'uname -r'
 
-Run pydsh faster (gets you closer straight C speed):
+Run pydsh faster: [3]_
 
 .. code-block:: bash
 
@@ -66,3 +71,5 @@ Indices and tables
 .. _hostlist expressions: https://www.nsc.liu.se/~kent/python-hostlist/
 .. _Click: http://click.pocoo.org/6/
 .. [1] Pydsh supports `hostlist expressions`_ to make listing hosts easier.
+.. [2] Output can be piped to :code:`dshbak` command
+.. [3] You may notice your fans spin up when using the :code:`redline` option. This is normal.

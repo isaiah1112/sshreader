@@ -21,6 +21,7 @@ from pkg_resources import get_distribution, DistributionNotFound
 # For backwards compatibility
 from sshreader.ssh import SSH, shell_command, do_shell_script, envvars
 from sshreader.sshreader import ServerJob, Hook, sshread, print_results, echo, cpusoftlimit, cpuhardlimit
+import logging
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 try:
@@ -28,3 +29,6 @@ try:
 except DistributionNotFound:
     __version__ = 'UNKNOWN'
 __all__ = ['sshreader', 'ssh']
+
+logging.basicConfig()
+logging.getLogger(__name__).addHandler(logging.NullHandler())

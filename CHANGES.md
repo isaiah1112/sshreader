@@ -1,18 +1,28 @@
 # Changelog
 
+## Version 3.5
+ * Updated pydsh so that commands that do not return any output are not displayed.  Closes issue #12 [48d376c](https://bitbucket.org/isaiah1112/sshreader/commits/48d376cd019c70aa9588ba4bca609cb4cf4bb9c2)
+ * Pydsh 2.0.  Works more like pdsh but now includes ability to perform dshbak grouping and coalescing within the tool! [3277bb5](https://bitbucket.org/isaiah1112/sshreader/commits/3277bb5677760352be08fcd908c62c172a271296)
+ * Adding example script for copying ssh key to remote hosts. Created new examples directory! [86323da](https://bitbucket.org/isaiah1112/sshreader/commits/86323daa9d504803abb90f857990c6f9238c7ec3)
+ * Updated documentation to include more Getting Started examples [b9d884d](https://bitbucket.org/isaiah1112/sshreader/commits/b9d884da6fed2339160ac57a4d343f8ac737cce7)
+ * Exiting cli properly in pydsh [d8d3e08](https://bitbucket.org/isaiah1112/sshreader/commits/d8d3e0843c6caff35642f21a9e245e9540bf046f)
+ * Silencing paramiko logging to better handle pre-connection errors that occur when openSSH cannot complete handshake.  Exceptions are still passed but log entries are silenced. [3d4a893](https://bitbucket.org/isaiah1112/sshreader/commits/3d4a893be624153f1ff28ff0389b3595dcf2b7d6)
+ * Moving to Python logging module for INFO and DEBUG statements [caafc6f](https://bitbucket.org/isaiah1112/sshreader/commits/caafc6f08104f620848d98e2c4f5bc730f567222)
+ * Updated pydsh debug to enable logging level INFO [510e16b](https://bitbucket.org/isaiah1112/sshreader/commits/510e16b167e8bef888f064f3ab5439ed71756b32)
+
 ## Version 3.4.6
- * Adding pseudo terminal creation to ssh_command method. It already existed for when output is combined. [6d85e77](https://bitbucket.org/isaiah1112/sshreader/commits/6d85e772c6123f2cb65ccd447bccc1dc41e88d65)
+ * Adding pseudo terminal creation to ssh_command method. It already existed for when output is combined. Closes issue #11 [6d85e77](https://bitbucket.org/isaiah1112/sshreader/commits/6d85e772c6123f2cb65ccd447bccc1dc41e88d65)
 
 ## Version 3.4.5
  * Changing default thread limit to 100 rather than 500 [211531d](https://bitbucket.org/isaiah1112/sshreader/commits/211531d3ea31a575b0477230a7e1738a2353fb67)
  * Fixing bug with ServerJob.print() method [084b377](https://bitbucket.org/isaiah1112/sshreader/commits/084b37727ce9a3c38030ed62cbcd4ee413f81fbc)
 
 ## Version 3.4.4
- * Updated echo method to flush stdout after every print.  This will allow for better access to unbuffered output. Issue #10 [604e6e7](https://bitbucket.org/isaiah1112/sshreader/commits/604e6e76273c9efe53d642eadd8301e6cbe993b2)
+ * Updated echo method to flush stdout after every print.  This will allow for better access to unbuffered output. Closes issue #10 [604e6e7](https://bitbucket.org/isaiah1112/sshreader/commits/604e6e76273c9efe53d642eadd8301e6cbe993b2)
 
 ## Version 3.4.3
  * Fixing mixed tabs. [086d94f](https://bitbucket.org/isaiah1112/sshreader/commits/086d94fb64bebc44d3aa1bbb72d8daedc571353d)
- * Refactoring debuglevels and making ssh connection errors more apparent per Issue #9 [7f2e79b](https://bitbucket.org/isaiah1112/sshreader/commits/7f2e79be15e4491164401086f903196a66610375)
+ * Refactoring debuglevels and making ssh connection errors more apparent. Closes issue #9 [7f2e79b](https://bitbucket.org/isaiah1112/sshreader/commits/7f2e79be15e4491164401086f903196a66610375)
  * Updating requirements! [c694370](https://bitbucket.org/isaiah1112/sshreader/commits/c694370d722b9f0b59ed06779d9d084f7e20c17c)
 
 ## Version 3.4.2
