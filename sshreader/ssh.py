@@ -166,7 +166,7 @@ class SSH(object):
 
         :param command: The command to run
         :param timeout: Timeout for the command
-        :param combine: Combine stderr and stdout
+        :param combine: Combine stderr and stdout (pseudo TTY)
         :param decodebytes: Decode bytes objects to unicode strings
         :return: Namedtuple of (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
         :raises: SSHException
@@ -182,7 +182,7 @@ class SSH(object):
                 result = ShellCommandCombined(cmd=command, stdout=stdout.read().strip(),
                                               return_code=stdout.channel.recv_exit_status())
         else:
-            stdin, stdout, stderr = self.connection.exec_command('TERM=xterm;' + command, timeout=timeout)
+            stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
             if decodebytes:
                 result = ShellCommand(cmd=command, stdout=stdout.read().decode().strip(),
                                       stderr=stderr.read().decode().strip(),
