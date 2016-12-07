@@ -104,13 +104,14 @@ Sometimes when using SSH you will see an error like the following:
     >> ShellCommand(cmd='sudo touch /', stdout='', stderr='sudo: sorry, you must have a tty to run sudo', return_code=1)
 
 This is due to not having a terminal definition in your SSH connection.  Normally the method for fixing this type of error
-is to disable :code:`!requiretty` in your :code:`/etc/sudoers` file.  However, a better way to do this is to request a
-pseudo terminal when creating your ssh connection.
+is to disable :code:`!requiretty` in your :code:`/etc/sudoers` file.  However, a quicker way to get around this is to request a
+pseudo terminal when creating your ssh connection.  Sshreader will do this for you when you use the :code:`combine` option
+when sending an :code:`ssh_command`.
 
 .. note::
 
-    As of version 3.4.6 the default behavior for the :code:`sshreader.SSH` class is to request pseudo terminals for every
-    connection.  Because of this functionality you do not need to modify your :code:`/etc/sudoers` file.
+    When using a pseudo terminal stderr is piped to stdout.  At the moment this is simply just a "feature" of paramiko.
+    If this ever changes in the future we will certainly support pseudo terminals with stdout and stderr as separate outputs.
 
 Changing Logging
 ~~~~~~~~~~~~~~~~

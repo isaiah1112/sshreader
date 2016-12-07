@@ -331,6 +331,10 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     if totaljobs > __jobHardLimit__:
         raise ExceededJobLimit(str(totaljobs) + ' > ' + str(__jobHardLimit__))
 
+    if logging.getLogger('sshreader').getEffectiveLevel() < 30 and progress_bar:
+        logger.info('Logging output enabled. Disabling progress_bar')
+        progress_bar = False
+
     item_counter = multiprocessing.Value('L', 0)
     if progress_bar:
         bar = ProgressBar(max_value=totaljobs)
