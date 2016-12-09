@@ -21,6 +21,7 @@ from __future__ import print_function
 import logging
 import os
 import paramiko
+import socket
 import warnings
 from collections import namedtuple
 from getpass import getuser
@@ -174,22 +175,28 @@ class SSH(object):
         if self.__is_alive() is False:
             raise paramiko.SSHException("Connection is not established")
         if combine:
-            stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout, get_pty=True)
-            if decodebytes:
-                result = ShellCommandCombined(cmd=command, stdout=stdout.read().decode().strip(),
-                                              return_code=stdout.channel.recv_exit_status())
-            else:
-                result = ShellCommandCombined(cmd=command, stdout=stdout.read().strip(),
-                                              return_code=stdout.channel.recv_exit_status())
+            try:
+                stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout, get_pty=True)
+                if decodebytes:
+                    result = ShellCommandCombined(cmd=command, stdout=stdout.read().decode().strip(),
+                                                  return_code=stdout.channel.recv_exit_status())
+                else:
+                    result = ShellCommandCombined(cmd=command, stdout=stdout.read().strip(),
+                                                  return_code=stdout.channel.recv_exit_status())
+            except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):
+                result = ShellCommandCombined(cmd=command, stdout='Command timed out', return_code=124)
         else:
-            stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
-            if decodebytes:
-                result = ShellCommand(cmd=command, stdout=stdout.read().decode().strip(),
-                                      stderr=stderr.read().decode().strip(),
-                                      return_code=stdout.channel.recv_exit_status())
-            else:
-                result = ShellCommand(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip(),
-                                      return_code=stdout.channel.recv_exit_status())
+            try:
+                stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
+                if decodebytes:
+                    result = ShellCommand(cmd=command, stdout=stdout.read().decode().strip(),
+                                          stderr=stderr.read().decode().strip(),
+                                          return_code=stdout.channel.recv_exit_status())
+                else:
+                    result = ShellCommand(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip(),
+                                          return_code=stdout.channel.recv_exit_status())
+            except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):
+                result = ShellCommandCombined(cmd=command, stdout='', stderr='Command timed out', return_code=124)
         return result
 
     def close(self):
