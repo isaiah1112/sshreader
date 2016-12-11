@@ -4,6 +4,8 @@
 """
 from __future__ import print_function
 from builtins import range, str
+import click
+import json
 import os
 import sys
 import unittest
@@ -13,12 +15,6 @@ __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 import sshreader
-
-# Configure this info before running your tests
-ssh_data = {'fqdn': 'DEFAULT', 'username': 'DEFAULT', 'password': 'DEFAULT', 'keyfile': 'DEFAULT'}
-if ssh_data['fqdn'] == 'DEFAULT':
-    print('Please update the ssh_data dictionary before running this test')
-    sys.exit(0)
 
 
 class TestShellScript(unittest.TestCase):
@@ -69,8 +65,8 @@ class TestSSH(unittest.TestCase):
         :return: Connection state conn.is_alive()
         """
         global ssh_data
-        self.conn = sshreader.SSH(ssh_data['fqdn'], username=ssh_data['username'], password=ssh_data['password'],
-                                  connect=False)
+        self.conn = sshreader.SSH(ssh_data['host_fqdn'], username=ssh_data['ssh_user'],
+                                  password=ssh_data['ssh_password'], connect=False)
         return self.conn.is_alive()
 
     def test_password(self):
@@ -78,7 +74,7 @@ class TestSSH(unittest.TestCase):
         """
         self.conn.connect()
         self.conn.is_alive()
-        self.assertTrue(self.conn.is_alive(), msg='ssh connection using password failed to: ' + ssh_data['fqdn'])
+        self.assertTrue(self.conn.is_alive(), msg='ssh connection using password failed to: ' + ssh_data['host_fqdn'])
         self.conn.close()
         pass
 
@@ -86,8 +82,9 @@ class TestSSH(unittest.TestCase):
         """ Test an SSH connection using an ssh key
         """
         global ssh_data
-        conn = sshreader.SSH(ssh_data['fqdn'], username=ssh_data['username'], keyfile=ssh_data['keyfile'])
-        self.assertTrue(conn.is_alive(), msg='ssh connection using password failed to: ' + ssh_data['fqdn'])
+        conn = sshreader.SSH(ssh_data['host_fqdn'], username=ssh_data['ssh_user'],
+                             keyfile=ssh_data['ssh_public_key_path'])
+        self.assertTrue(conn.is_alive(), msg='ssh connection using password failed to: ' + ssh_data['host_fqdn'])
         pass
 
     def test_reconnect(self):
@@ -131,48 +128,60 @@ class TestSSH(unittest.TestCase):
         self.assertEqual(result.stdout, 'foo\r\nbar')
         pass
 
-
-def my_hook(*args):
-    """ Function for testing hook
-    :param args: Args should be ('pre|post', sshreader.ServerJob)
-    :return:
-    """
-    args = list(args)
-    if len(args) == 1:
-        if args[0] in ('pre', 'post') and isinstance(args.pop(), sshreader.ServerJob):
-            return True
-        else:
-            return False
-    else:
-        if args[0] in ('pre', 'post'):
-            return True
-        else:
-            return False
+    def test_cmd_timeout(self):
+        """ Test handling of cmd timeout via SSH
+        """
+        if self.conn.is_alive() is False:
+            self.conn.connect()
+        self.assertTrue(self.conn.is_alive())
+        result = self.conn.ssh_command('sleep 10', timeout=5)
+        self.assertIsInstance(result, tuple)
+        self.assertEqual(result.return_code, 124)
+        self.assertIn('Command timed out', result.stderr)
+        pass
 
 
 class TestSshreader(unittest.TestCase):
     """ Test cases for the sshreader module
     """
 
-    def configure_serverjob_list(self, length):
+    @staticmethod
+    def my_hook(*args):
+        """ Function for testing hook
+        :param args: Args should be ('pre|post', sshreader.ServerJob)
+        :return:
+        """
+        args = list(args)
+        if len(args) == 1:
+            if args[0] in ('pre', 'post') and isinstance(args.pop(), sshreader.ServerJob):
+                return True
+            else:
+                return False
+        else:
+            if args[0] in ('pre', 'post'):
+                return True
+            else:
+                return False
+
+    def configure_serverjob_list(self, size):
         """ Configure a list of serverjob objects to sshread (including pre and post hooks) and local commands
         :return: List
         """
         global ssh_data
-        pre = sshreader.Hook(my_hook, args=['pre'])
-        post = sshreader.Hook(my_hook, args=['post'])
+        pre = sshreader.Hook(self.my_hook, args=['pre'])
+        post = sshreader.Hook(self.my_hook, args=['post'])
         jobs = list()
-        for x in range(length):
-            jobs.append(sshreader.ServerJob(ssh_data['fqdn'], 'sleep 1', prehook=pre, posthook=post,
-                                            username=ssh_data['username'], password=ssh_data['password']))
-        for x in range(length):
+        for x in range(size):
+            jobs.append(sshreader.ServerJob(ssh_data['host_fqdn'], 'sleep 1', prehook=pre, posthook=post,
+                                            username=ssh_data['ssh_user'], password=ssh_data['ssh_password']))
+        for x in range(size):
             jobs.append(sshreader.ServerJob('local-' + str(x), 'sleep 1', runlocal=True))
         return jobs
 
     def test_Hook_creation(self):
         """ Test valid hook creation
         """
-        myhook = sshreader.Hook(my_hook, args=['pre'])
+        myhook = sshreader.Hook(self.my_hook, args=['pre'])
         self.assertIsInstance(myhook, sshreader.Hook)
         pass
 
@@ -180,8 +189,8 @@ class TestSshreader(unittest.TestCase):
         """ Test valid ServerJob creation
         """
         global ssh_data
-        job = sshreader.ServerJob(ssh_data['fqdn'], 'echo foo',
-                                  username=ssh_data['username'], password=ssh_data['password'])
+        job = sshreader.ServerJob(ssh_data['host_fqdn'], 'echo foo',
+                                  username=ssh_data['ssh_user'], password=ssh_data['ssh_password'])
         self.assertIsInstance(job, sshreader.ServerJob)
         pass
 
@@ -189,10 +198,10 @@ class TestSshreader(unittest.TestCase):
         """ Test ServerJob with hooks
         """
         global ssh_data
-        pre = sshreader.Hook(my_hook, args=['pre'])
-        post = sshreader.Hook(my_hook, args=['post'])
-        job = sshreader.ServerJob(ssh_data['fqdn'], 'echo foo', prehook=pre, posthook=post,
-                                  username=ssh_data['username'], password=ssh_data['password'])
+        pre = sshreader.Hook(self.my_hook, args=['pre'])
+        post = sshreader.Hook(self.my_hook, args=['post'])
+        job = sshreader.ServerJob(ssh_data['host_fqdn'], 'echo foo', prehook=pre, posthook=post,
+                                  username=ssh_data['ssh_user'], password=ssh_data['ssh_password'])
         self.assertIsInstance(job, sshreader.ServerJob)
         pass
 
@@ -232,5 +241,16 @@ class TestSshreader(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    global ssh_data
+    try:
+        params_file = open(project_root + '/test/test_params.json')
+        ssh_data = json.load(params_file)
+    except IOError:
+        ssh_data = {'host_fqdn': None, 'ssh_user': None, 'ssh_password': None, 'ssh_public_key_path': None}
+    if any(val is None for key, val in ssh_data.items()):
+        for key in ssh_data:
+            ssh_data[key] = click.prompt('Please enter value for (' + key + ')', default=None, type=str)
+        with open(project_root + '/test/test_params.json', 'w') as params_file:
+            json.dump(ssh_data, params_file)
     with warnings.catch_warnings(record=True):
         unittest.main()
