@@ -134,42 +134,42 @@ class TestSSH(unittest.TestCase):
         if self.conn.is_alive() is False:
             self.conn.connect()
         self.assertTrue(self.conn.is_alive())
-        result = self.conn.ssh_command('sleep 10', timeout=5)
+        result = self.conn.ssh_command('sleep 5', timeout=2)
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 124)
         self.assertIn('Command timed out', result.stderr)
         pass
 
 
+def my_hook(*args):
+    """ Function for testing hook
+    :param args: Args should be ('pre|post', sshreader.ServerJob)
+    :return:
+    """
+    args = list(args)
+    if len(args) == 1:
+        if args[0] in ('pre', 'post') and isinstance(args.pop(), sshreader.ServerJob):
+            return True
+        else:
+            return False
+    else:
+        if args[0] in ('pre', 'post'):
+            return True
+        else:
+            return False
+
+
 class TestSshreader(unittest.TestCase):
     """ Test cases for the sshreader module
     """
-
-    @staticmethod
-    def my_hook(*args):
-        """ Function for testing hook
-        :param args: Args should be ('pre|post', sshreader.ServerJob)
-        :return:
-        """
-        args = list(args)
-        if len(args) == 1:
-            if args[0] in ('pre', 'post') and isinstance(args.pop(), sshreader.ServerJob):
-                return True
-            else:
-                return False
-        else:
-            if args[0] in ('pre', 'post'):
-                return True
-            else:
-                return False
 
     def configure_serverjob_list(self, size):
         """ Configure a list of serverjob objects to sshread (including pre and post hooks) and local commands
         :return: List
         """
         global ssh_data
-        pre = sshreader.Hook(self.my_hook, args=['pre'])
-        post = sshreader.Hook(self.my_hook, args=['post'])
+        pre = sshreader.Hook(my_hook, args=['pre'])
+        post = sshreader.Hook(my_hook, args=['post'])
         jobs = list()
         for x in range(size):
             jobs.append(sshreader.ServerJob(ssh_data['host_fqdn'], 'sleep 1', prehook=pre, posthook=post,
@@ -181,7 +181,7 @@ class TestSshreader(unittest.TestCase):
     def test_Hook_creation(self):
         """ Test valid hook creation
         """
-        myhook = sshreader.Hook(self.my_hook, args=['pre'])
+        myhook = sshreader.Hook(my_hook, args=['pre'])
         self.assertIsInstance(myhook, sshreader.Hook)
         pass
 
@@ -198,8 +198,8 @@ class TestSshreader(unittest.TestCase):
         """ Test ServerJob with hooks
         """
         global ssh_data
-        pre = sshreader.Hook(self.my_hook, args=['pre'])
-        post = sshreader.Hook(self.my_hook, args=['post'])
+        pre = sshreader.Hook(my_hook, args=['pre'])
+        post = sshreader.Hook(my_hook, args=['post'])
         job = sshreader.ServerJob(ssh_data['host_fqdn'], 'echo foo', prehook=pre, posthook=post,
                                   username=ssh_data['ssh_user'], password=ssh_data['ssh_password'])
         self.assertIsInstance(job, sshreader.ServerJob)
