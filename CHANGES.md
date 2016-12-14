@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 3.5.1
+ * Updated SSH.ssh_command to capture timeouts properly and return errors gracefully. [fdfba44](https://bitbucket.org/isaiah1112/sshreader/commits/fdfba443cd48e0907ffb23da7616b3c9385e33ac)
+ * Increased Timeout to 10 Minutes [858f048](https://bitbucket.org/isaiah1112/sshreader/commits/858f0486878ad08a5d0d0cae245b2b8cd5afefa7)
+ * Fixing small bug with assignment of NamedTuple [2d82fa1](https://bitbucket.org/isaiah1112/sshreader/commits/2d82fa16809bd17f19ffa2ccbc82ff160a8719f8)
+ * Updating unit/integration tests to prompt for params initially and save them for future runs. [abd8c34](https://bitbucket.org/isaiah1112/sshreader/commits/abd8c341005b21797c262c771851aa74655cd3d0)
+ * Fixing bugs in tests in Python2.7 [d5ff0b7](https://bitbucket.org/isaiah1112/sshreader/commits/d5ff0b7a1ea83c30e2ef327079a7d3943e4d1064)
+
 ## Version 3.5
  * Updated pydsh so that commands that do not return any output are not displayed.  Closes issue #12 [48d376c](https://bitbucket.org/isaiah1112/sshreader/commits/48d376cd019c70aa9588ba4bca609cb4cf4bb9c2)
  * Pydsh 2.0.  Works more like pdsh but now includes ability to perform dshbak grouping and coalescing within the tool! [3277bb5](https://bitbucket.org/isaiah1112/sshreader/commits/3277bb5677760352be08fcd908c62c172a271296)
