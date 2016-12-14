@@ -12,7 +12,7 @@ import sshreader
 import sys
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '2.0'
+__version__ = '2.0.1'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
@@ -105,7 +105,7 @@ def validate_hostlist(ctx, param, value):
 @click.option('--keyfile', '-k', type=click.Path(exists=True, dir_okay=False, readable=True), help='Override ssh key')
 @click.option('--prompt', '-p', is_flag=True, help='Prompt for ssh password')
 @click.option('--password', '-P', help='Supply ssh password')
-@click.option('--timeout', '-T', default=300, help='Timeout for ssh commands')
+@click.option('--timeout', '-T', default=600, help='Timeout for ssh commands')
 @click.option('--dshbak', '-D', is_flag=True, help='Group output by host')
 @click.option('--coalesce', '-C', is_flag=True, help='Coalesce similar output from hosts')
 @click.option('--debug', '-d', is_flag=True, help='Enable debug output')
