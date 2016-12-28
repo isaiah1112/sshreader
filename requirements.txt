@@ -11,7 +11,9 @@ imagesize==0.7.1
 Jinja2==2.8
 MarkupSafe==0.23
 paramiko==2.1.1
+pluggy==0.4.0
 progressbar2==3.11.0
+py==1.4.32
 pyasn1==0.1.9
 pycparser==2.17
 pycrypto==2.6.1
@@ -24,3 +26,5 @@ six==1.10.0
 snowballstemmer==1.2.1
 Sphinx==1.5.1
 sphinx-rtd-theme==0.1.9
+tox==2.5.0
+virtualenv==15.1.0

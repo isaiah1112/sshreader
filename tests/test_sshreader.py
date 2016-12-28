@@ -16,6 +16,18 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 import sshreader
 
+global ssh_data
+try:
+    params_file = open(project_root + '/tests/test_params.json')
+    ssh_data = json.load(params_file)
+except IOError:
+    ssh_data = {'host_fqdn': None, 'ssh_user': None, 'ssh_password': None, 'ssh_public_key_path': None}
+if any(val is None for key, val in ssh_data.items()):
+    for key in ssh_data:
+        ssh_data[key] = click.prompt('Please enter value for (' + key + ')', default=None, type=str)
+    with open(project_root + '/tests/test_params.json', 'w') as params_file:
+        json.dump(ssh_data, params_file)
+
 
 class TestShellScript(unittest.TestCase):
     """ Test Cases for the shell script portion of SSH module
@@ -241,16 +253,5 @@ class TestSshreader(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    global ssh_data
-    try:
-        params_file = open(project_root + '/test/test_params.json')
-        ssh_data = json.load(params_file)
-    except IOError:
-        ssh_data = {'host_fqdn': None, 'ssh_user': None, 'ssh_password': None, 'ssh_public_key_path': None}
-    if any(val is None for key, val in ssh_data.items()):
-        for key in ssh_data:
-            ssh_data[key] = click.prompt('Please enter value for (' + key + ')', default=None, type=str)
-        with open(project_root + '/test/test_params.json', 'w') as params_file:
-            json.dump(ssh_data, params_file)
     with warnings.catch_warnings(record=True):
         unittest.main()
