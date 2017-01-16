@@ -34,13 +34,13 @@ def cli(**kwargs):
     """ Copy ssh public key to remote hosts
     """
     sshenv = sshreader.envvars()
+    
+    if sshenv.rsa_key is None and sshenv.dsa_key is None:
+        raise click.ClickException('Unable to find a valid ssh key')
 
     click.echo("Please enter the username and password to copy the ssh key to on remote hosts")
     user = click.prompt('Username')
     passwd = click.prompt('Password', hide_input=True)
-
-    if sshenv.rsa_key is None and sshenv.dsa_key is None:
-        raise click.ClickException('Unable to find a valid ssh key')
 
     if sshenv.rsa_key is not None:
         with open(sshenv.rsa_key + '.pub') as f:
@@ -51,6 +51,7 @@ def cli(**kwargs):
     with click.progressbar(kwargs['hostlist'], label='Copying ssh keys to remote hosts') as bar:
         for host in bar:
             with sshreader.SSH(host, username=user, password=passwd) as s:
+                s.ssh_command('mkdir ~/.ssh && chmod 700 ~/.ssh')
                 s.ssh_command('echo "' + ssh_pubkey + '" >> ~/.ssh/authorized_keys')
     sys.exit(0)
 
