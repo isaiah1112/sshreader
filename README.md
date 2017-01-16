@@ -5,7 +5,7 @@
 [sshreader][] is a Python Module for multi-processing/threading ssh connections in order to make ssh operations
 across multiple servers more parallel.  It utilizes the [Paramiko](http://www.paramiko.org/) module for its ssh client.
 
-As of version 3.0, sshreader is compatible with both Python 2.7.x and Python 3.5.x!
+As of version 3.5.1, sshreader has been tested against Python 2.7, 3.5, and 3.6.
 
 ## License
 
@@ -62,7 +62,7 @@ project](https://bitbucket.org/isaiah1112/sshreader) and submit pull requests to
 
 Included with sshreader is a binary called **pydsh** (generally installed in /usr/local/bin/).  This works very similar to
 [pdsh](https://computing.llnl.gov/linux/pdsh.html) but uses sshreader at its core to perform ssh commands in parallel
-and return the results.  The output of *pydsh -D* can also be piped through the **dshbak** tool that comes with pdsh.
+and return the results.  The output of *pydsh* can also be piped through the **dshbak** tool that comes with pdsh.
 
 Pydsh uses [hostlist expressions](https://www.nsc.liu.se/~kent/python-hostlist/) to get its list of hosts
 to process.

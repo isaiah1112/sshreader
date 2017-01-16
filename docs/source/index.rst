@@ -108,7 +108,7 @@ Extras
 Compatibility
 -------------
 
-As of version 3.0, sshreader now supports both Python 2.7 and 3.5.
+As of version 3.5.1, sshreader now is tested using Python 2.7, 3.5, and 3.6.
 
 Indices and tables
 ------------------
