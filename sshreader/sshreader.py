@@ -35,7 +35,6 @@ __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
 __jobHardLimit__ = int(10 ** 6)
 __cpuHardLimitFactor__ = 3
-__threadlimit__ = 100
 _printlock_ = multiprocessing.Lock()
 logger = logging.getLogger('sshreader')
 
@@ -292,6 +291,14 @@ def cpuhardlimit():
     return cpusoftlimit() * __cpuHardLimitFactor__
 
 
+def threadlimit():
+    """ Return the default number of threads your system is allowed to spawn
+
+    :return: cpu_count()
+    """
+    return multiprocessing.cpu_count() - 1
+
+
 def echo(*args, **kwargs):
     """ Wrapper for print that implements a multiprocessing.Lock object as well as uses unbuffered output
     to sys.stdout.
@@ -317,7 +324,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     :return: List with completed ServerJob objects (single object returned if 1 job was passed)
     :raises: ProcessesOrThreads, ExceededJobLimit, ExceedCPULimit, TypeError,
     """
-    global __jobHardLimit__, __threadlimit__
+    global __jobHardLimit__
     if tcount is None and pcount is None:
         raise ProcessesOrThreads('Specify an integer for pcount or tcount')
     if isinstance(serverjobs, list):
@@ -349,13 +356,9 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
             task_queue.put(job)
         # Limit the number of threads to spawn
         if tcount == 0:
-            tcount = totaljobs
-            if tcount > __threadlimit__:
-                # Ensure you don't accidentally create too many threads for a single process
-                warnings.warn('Auto thread limit reached. Limiting to ' + str(__threadlimit__) + ' threads.')
-                tcount = __threadlimit__
-        elif tcount > totaljobs:
-            tcount = totaljobs
+            tcount = int(min(totaljobs, threadlimit()))
+        else:
+            tcount = int(min(tcount, totaljobs))
 
         logger.info(u"Spawning " + str(tcount) + u" threads")
         # Start a thread pool
@@ -373,23 +376,17 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
             pcount = cpusoftlimit()
         elif pcount < 0:
             pcount = cpuhardlimit()
-        if pcount >= totaljobs:
-            pcount = totaljobs
+        pcount = int(min(pcount, totaljobs))
 
         if pcount > cpuhardlimit():
-            raise ExceededCPULimit(str(pcount) + ' > ' + str(cpuhardlimit))
+            raise ExceededCPULimit(str(pcount) + ' > ' + str(cpuhardlimit()))
 
         if tcount is not None:
             if tcount == 0:
-                tcount = totaljobs // pcount
-                if tcount < 2:
-                    # Basically, unless we have enough jobs to spawn more than 1 thread per process we only
-                    # need the sub process.
-                    tcount = None
-                elif tcount > __threadlimit__:
-                    # Ensure you don't accidentally create too many threads per process
-                    warnings.warn('Auto thread limit reached. Limiting to ' + str(__threadlimit__) + ' threads.')
-                    tcount = __threadlimit__
+                tcount = int(min(totaljobs // pcount, threadlimit()))
+            if tcount < 2:
+                # If we don't have enough jobs to spawn more than 1 thread per process, then we won't spawn threads
+                tcount = None
 
         task_queue = multiprocessing.Queue(maxsize=totaljobs)
         result_queue = multiprocessing.Queue(maxsize=totaljobs)
