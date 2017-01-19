@@ -43,47 +43,7 @@ sshreader will adjust those numbers down automatically. Generally though, the to
 .. code:: Python
 
     total_processes = sshreader.cpusoftlimit()
-    total_threads = min(jobs // total_processes, threadlimit())
-
-Global Limits
--------------
-
-**jobHardLimit**:
-
-Sshreader currently limits you to processing :code:`1,000,000` server jobs set via the \_\_jobHardLimit\_\_ global.
-
-**threadlimit**:
-
-The threadlimit for a box is defined as:
-
-.. code:: Python
-
-    threadlimit = cpu_count()
-
-This was determined based on the fact that this number will scale nicely on a given box.  If you manually specify a number
-of threads for sshreader to use this number is ignored.
-
-**cpusoftlimit**:
-
-The cpusoftlimit for a box is defined as:
-
-.. code:: Python
-
-    cpusoftlimit = cpu_count() - 1
-
-This means that sshreader will spawn a sub-process for all but one cpu on a given box.
-
-**cpuhardlimit**:
-
-The cpuhardlimit is the maximum number of sub-processes that sshreader will spawn on a given box (when **pcount** is
-set to -1) is defined as:
-
-.. code:: Python
-
-    cpuhardlimit = cpusoftlimit() * __cpuHardLimitFactor__
-
-This is so that you don't make a box unusable and was arrived at per my own testing.  Currently,
-\_\_cpuHardLimitFactor\_\_ is set to 3 [1]_ .
+    total_threads = min(len(jobs) // total_processes, threadlimit())
 
 Topics
 ------
@@ -92,6 +52,8 @@ Topics
    :maxdepth: 1
 
    getting_started
+   faq
+   pydsh
 
 API Documentation
 -----------------
@@ -101,14 +63,6 @@ API Documentation
 
    sshreader
    ssh
-
-Extras
-------
-.. toctree::
-   :maxdepth: 1
-
-   pydsh
-   faq
 
 Compatibility
 -------------
@@ -121,5 +75,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-.. [1] These numbers may increase in the future.

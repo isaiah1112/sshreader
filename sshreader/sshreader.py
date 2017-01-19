@@ -16,55 +16,30 @@
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import absolute_import, print_function, division
-import logging
-import os
-import paramiko
-import multiprocessing
-import queue
-import sys
-import time
-import threading
-import warnings
 from builtins import range  # Replaces xrange in Python2
 from collections import namedtuple
 from progressbar import ProgressBar
-from types import FunctionType
 from sshreader.ssh import SSH, shell_command
+from types import FunctionType
+import logging
+import multiprocessing
+import os
+import paramiko
+import sys
+import threading
+import time
+import warnings
+
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
-__jobHardLimit__ = int(10 ** 6)
 __cpuHardLimitFactor__ = 3
 _printlock_ = multiprocessing.Lock()
 logger = logging.getLogger('sshreader')
 
 
-class InvalidHook(Exception):
-    """ A pre or post hook definition is invalid
-    """
-    pass
-
-
-class ProcessesOrThreads(Exception):
-    """ You did not specify whether to use sub-processing or threading
-    """
-    pass
-
-
-class ExceededJobLimit(Exception):
-    """ Your number of jobs exceeds the current limit
-    """
-    pass
-
-
 class ExceededCPULimit(Exception):
     """ You have asked for more sub processes than your CPU is allowed to handle
-    """
-    pass
-
-
-class InvalidArgument(Exception):
-    """ An invalid argument was passed to a function
     """
     pass
 
@@ -76,28 +51,28 @@ class Hook(object):
     :param args: List of args to pass to target
     :param kwargs: Dictionary of kwargs to pass to target
     :return: Hook
-    :raises: InvalidArgument
+    :raises: TypeError
     """
 
     def __init__(self, target, args=None, kwargs=None):
         if isinstance(target, FunctionType):
             self.target = target
         else:
-            raise InvalidArgument('target should be of type: <function>')
+            raise TypeError('target should be of type: ' + str(FunctionType))
         if args is None:
             self.args = list()
         else:
             if isinstance(args, list):
                 self.args = args
             else:
-                raise InvalidArgument('args should be of type: <list>')
+                raise TypeError('args should be of type: ' + str(list))
         if kwargs is None:
             self.kwargs = dict()
         else:
             if isinstance(kwargs, dict):
                 self.kwargs = kwargs
             else:
-                raise InvalidArgument('kwargs should be of type: <dict>')
+                raise ValueError('kwargs should be of type: ' + str(dict))
         self.result = None
 
     def run(self, *args, **kwargs):
@@ -129,6 +104,7 @@ class ServerJob(object):
     :param posthook: Optional Hook object
     :param combine_output: Combine stdout and stderr
     :return: ServerJob Object
+    :raises: ValueError, TypeError
 
     :property results: List of namedtuples (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
     :property status: Sum of return codes for entire job (255 = ssh did not connect)
@@ -149,7 +125,7 @@ class ServerJob(object):
             self.cmds = [cmds]
         if isinstance(timeout, (tuple, list)):
             if len(timeout) != 2:
-                raise InvalidArgument('You must supply two timeouts if you pass a tuple or list')
+                raise ValueError('You must supply two timeouts if you pass a tuple or list')
             self.sshtimeout = timeout[0]
             self.cmdtimeout = timeout[1]
         else:
@@ -159,14 +135,14 @@ class ServerJob(object):
             if isinstance(prehook, Hook):
                 self.prehook = prehook
             else:
-                raise InvalidArgument('prehook should be of type: <Hook>')
+                raise TypeError('prehook should be of type: ' + str(Hook))
         else:
             self.prehook = prehook
         if posthook is not None:
             if isinstance(posthook, Hook):
                 self.posthook = posthook
             else:
-                raise InvalidArgument('prehook should be of type: <Hook>')
+                raise TypeError('posthook should be of type: ' + str(Hook))
         else:
             self.posthook = posthook
         if runlocal is False:
@@ -277,24 +253,29 @@ def print_results(serverjobs):
 def cpusoftlimit():
     """ Return the default number of sub-processes your system is allowed to spawn
 
-    :return: cpu_count() - 1
+    cpu_count() - 1
+
+    :return: Integer
     """
     return multiprocessing.cpu_count() - 1
 
 
 def cpuhardlimit():
-    """ Return the maximum number of sub-processes your system is allowed to spawn
+    """ Return the maximum number of sub-processes your system is allowed to spawn.
+    
+    cpusoftlimit() * __cpuHardLimitFactor__
 
-    :return: (cpu_count() - 1) * __cpuHardLimitFactor__
+    :return: Integer
     """
     global __cpuHardLimitFactor__
+    assert isinstance(__cpuHardLimitFactor__, int)
     return cpusoftlimit() * __cpuHardLimitFactor__
 
 
 def threadlimit():
     """ Return the maximum number of threads each process is allowed to spawn.  The idea here is to not overload a system.
 
-    :return: cpu_count()
+    :return: Integer
     """
     return multiprocessing.cpu_count()
 
@@ -318,25 +299,20 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     """Takes a list of ServerJob objects and puts them into threads/sub-processes and runs them
 
     :param serverjobs: List of ServerJob objects (A list of 1 job is acceptable)
-    :param pcount: Number of sub-processes to spawn (None = off, 0 = cpuSoftLimit, -1 = cpuHardLimit)
-    :param tcount: Number of threads to spawn (None = off, 0 = adjusted length of ServerJobList)
+    :param pcount: Number of sub-processes to spawn (None = off, 0 = cpusoftlimit, -1 = cpuhardlimit)
+    :param tcount: Number of threads to spawn (None = off, 0 = threadlimit)
     :param progress_bar: Print a progress bar
     :return: List with completed ServerJob objects (single object returned if 1 job was passed)
-    :raises: ProcessesOrThreads, ExceededJobLimit, ExceedCPULimit, TypeError,
+    :raises: ExceedCPULimit, TypeError, ValueError
     """
-    global __jobHardLimit__
     if tcount is None and pcount is None:
-        raise ProcessesOrThreads('Specify an integer for pcount or tcount')
+        raise ValueError('Specify an integer for pcount or tcount')
     if isinstance(serverjobs, list):
         islist = True
     else:
         islist = False
         serverjobs = [serverjobs]
     totaljobs = len(serverjobs)
-
-    # Per testing, don't allow more than __jobHardLimit__ jobs
-    if totaljobs > __jobHardLimit__:
-        raise ExceededJobLimit(str(totaljobs) + ' > ' + str(__jobHardLimit__))
 
     if logging.getLogger('sshreader').getEffectiveLevel() < 30 and progress_bar:
         logger.info('Logging output enabled. Disabling progress_bar')
@@ -348,12 +324,13 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     else:
         bar = None
 
+    task_queue = multiprocessing.Queue(maxsize=totaljobs)
+    result_queue = multiprocessing.Queue(maxsize=totaljobs)
+
+    for job in serverjobs:
+        task_queue.put(job)
+
     if pcount is None:
-        task_queue = queue.Queue(maxsize=totaljobs)
-        result_queue = queue.Queue(maxsize=totaljobs)
-        # Fill up the Queue
-        for job in serverjobs:
-            task_queue.put(job)
         # Limit the number of threads to spawn
         if tcount == 0:
             tcount = int(min(totaljobs, threadlimit()))
@@ -388,13 +365,6 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
                 # If we don't have enough jobs to spawn more than 1 thread per process, then we won't spawn threads
                 tcount = None
 
-        task_queue = multiprocessing.Queue(maxsize=totaljobs)
-        result_queue = multiprocessing.Queue(maxsize=totaljobs)
-
-        # Add each ServerJob object to the queue
-        for job in serverjobs:
-            task_queue.put(job)
-
         logger.info(u"Spawning " + str(pcount) + u" sub-processes")
         for pid in range(pcount):
             pid = multiprocessing.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter),
@@ -413,11 +383,12 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     completed_jobs = list()
     while result_queue.empty() is False:
         completed_jobs.append(result_queue.get())
+
     # If we were passed a list then we will return a list
-    if len(completed_jobs) > 1 or islist:
+    if islist:
         return completed_jobs
-    else:  # If an object, return an object
-        return completed_jobs[0]
+    else:
+        return completed_jobs.pop()
 
 
 def _sub_process_(task_queue, result_queue, item_counter, thread_count=None):

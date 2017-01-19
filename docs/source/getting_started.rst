@@ -103,7 +103,7 @@ Creating a Hook is as is as simple as:
     # Create the function as a hook object
     myhook = Hook(target=print_name)
     # Create a ServerJob with a prehook
-    job = ServerJob('myhost.example.com',['uname -a', 'hostname', 'whoami'] username='jdoe', password='jdoe1',
+    job = ServerJob('myhost.example.com',['uname -a', 'hostname', 'whoami'], username='jdoe', password='jdoe1',
                     prehook=myhook)
     # Now, run the job
     sshread(job, tcount=1)
