@@ -52,6 +52,17 @@ Global Limits
 
 Sshreader currently limits you to processing :code:`1,000,000` server jobs set via the \_\_jobHardLimit\_\_ global.
 
+**threadlimit**:
+
+The threadlimit for a box is defined as:
+
+.. code:: Python
+
+    threadlimit = cpu_count()
+
+This was determined based on the fact that this number will scale nicely on a given box.  If you manually specify a number
+of threads for sshreader to use this number is ignored.
+
 **cpusoftlimit**:
 
 The cpusoftlimit for a box is defined as:
