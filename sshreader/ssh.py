@@ -18,32 +18,33 @@ shell_command function for running local shell scripts!
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
+from collections import namedtuple
+from getpass import getuser
+from subprocess import Popen, PIPE, STDOUT
 import logging
 import os
 import paramiko
 import socket
 import warnings
-from collections import namedtuple
-from getpass import getuser
-from subprocess import Popen, PIPE, STDOUT
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
 # Using namedtuple because... why not?
 ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr', 'return_code'])
 ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout', 'return_code'])
-EnvVars = namedtuple('EnvVars', ['username', 'rsa_key', 'dsa_key'])
 
 
 def envvars():
     """ Attempt to determine the current username and location of any ssh keys.  If any value is unable to be determined
     it is returned as 'None'.
 
-    :return: NamedTuple of (username, rsa_key, dsa_key)
+    :return: NamedTuple of (username, rsa_key, dsa_key, ecdsa_key)
     """
+    EnvVars = namedtuple('EnvVars', ['username', 'rsa_key', 'dsa_key', 'ecdsa_key'])
     user = None
     rsa_key = None
     dsa_key = None
+    ecdsa_key = None
     if os.getlogin() == getuser():
         user = getuser()
     userhome = os.path.expanduser('~')
@@ -53,7 +54,9 @@ def envvars():
             rsa_key = userhome + "/.ssh/id_rsa"
         if "id_dsa" in keyfiles:
             dsa_key = userhome + "/.ssh/id_dsa"
-    return EnvVars(user, rsa_key, dsa_key)
+        if 'id_ecdsa' in keyfiles:
+            ecdsa_key = userhome + '/.ssh/id_ecdsa'
+    return EnvVars(user, rsa_key, dsa_key, ecdsa_key)
 
 
 def shell_command(command, combine=False, decodebytes=True):
