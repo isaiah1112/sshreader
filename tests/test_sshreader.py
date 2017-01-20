@@ -21,7 +21,7 @@ try:
     params_file = open(project_root + '/tests/test_params.json')
     ssh_data = json.load(params_file)
 except IOError:
-    ssh_data = {'host_fqdn': None, 'ssh_user': None, 'ssh_password': None, 'ssh_public_key_path': None}
+    ssh_data = {'host_fqdn': None, 'ssh_user': None, 'ssh_password': None, 'ssh_key_path': None}
 if any(val is None for key, val in ssh_data.items()):
     for key in ssh_data:
         ssh_data[key] = click.prompt('Please enter value for (' + key + ')', default=None, type=str)
@@ -95,7 +95,7 @@ class TestSSH(unittest.TestCase):
         """
         global ssh_data
         conn = sshreader.SSH(ssh_data['host_fqdn'], username=ssh_data['ssh_user'],
-                             keyfile=ssh_data['ssh_public_key_path'])
+                             keyfile=ssh_data['ssh_key_path'])
         self.assertTrue(conn.is_alive(), msg='ssh connection using password failed to: ' + ssh_data['host_fqdn'])
         pass
 
