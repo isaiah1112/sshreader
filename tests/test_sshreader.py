@@ -175,7 +175,8 @@ class TestSshreader(unittest.TestCase):
     """ Test cases for the sshreader module
     """
 
-    def configure_serverjob_list(self, size):
+    @staticmethod
+    def configure_serverjob_list(size):
         """ Configure a list of serverjob objects to sshread (including pre and post hooks) and local commands
         :return: List
         """
@@ -184,10 +185,10 @@ class TestSshreader(unittest.TestCase):
         post = sshreader.Hook(my_hook, args=['post'])
         jobs = list()
         for x in range(size):
-            jobs.append(sshreader.ServerJob(ssh_data['host_fqdn'], 'sleep 1', prehook=pre, posthook=post,
+            jobs.append(sshreader.ServerJob(ssh_data['host_fqdn'], ['sleep 1', 'echo done'], prehook=pre, posthook=post,
                                             username=ssh_data['ssh_user'], password=ssh_data['ssh_password']))
         for x in range(size):
-            jobs.append(sshreader.ServerJob('local-' + str(x), 'sleep 1', runlocal=True))
+            jobs.append(sshreader.ServerJob('local-' + str(x), ['sleep 1', 'echo done'], runlocal=True))
         return jobs
 
     def test_Hook_creation(self):
@@ -230,7 +231,7 @@ class TestSshreader(unittest.TestCase):
         """ Test sshread method using processes
         """
         jobs = self.configure_serverjob_list(10)
-        result = sshreader.sshread(jobs, pcount=1)
+        result = sshreader.sshread(jobs, pcount=0)
         for x in result:
             self.assertEqual(x.status, 0)
         pass
@@ -238,7 +239,7 @@ class TestSshreader(unittest.TestCase):
     def test_sshread(self):
         """ Test sshread method using threads and processes
         """
-        jobs = self.configure_serverjob_list(21)
+        jobs = self.configure_serverjob_list(20)
         result = sshreader.sshread(jobs, pcount=0, tcount=0)
         for x in result:
             self.assertEqual(x.status, 0)
