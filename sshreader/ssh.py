@@ -128,8 +128,8 @@ class SSH(object):
             self.keyfile = keyfile
         self.port = port
         self.timeout = timeout
-        self.connection = paramiko.SSHClient()
-        self.connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self._connection = paramiko.SSHClient()
+        self._connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         if connect:
             self.__connect()
 
@@ -148,7 +148,7 @@ class SSH(object):
         :param dstfile: Path to the remote file
         :return: Result of paramiko.SFTPClient.put()
         """
-        sftp = paramiko.SFTPClient.from_transport(self.connection.get_transport())
+        sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         result = sftp.put(os.path.expanduser(srcfile), os.path.expanduser(dstfile), confirm=True)
         sftp.close()
         return result
@@ -160,7 +160,7 @@ class SSH(object):
         :param dstfile: Path to the local file
         :return: Result of paramiko.SFTPClient.get()
         """
-        sftp = paramiko.SFTPClient.from_transport(self.connection.get_transport())
+        sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
         sftp.close()
         return result
@@ -179,7 +179,7 @@ class SSH(object):
             raise paramiko.SSHException("Connection is not established")
         if combine:
             try:
-                stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout, get_pty=True)
+                stdin, stdout, stderr = self._connection.exec_command(command, timeout=timeout, get_pty=True)
                 if decodebytes:
                     result = ShellCommandCombined(cmd=command, stdout=stdout.read().decode().strip(),
                                                   return_code=stdout.channel.recv_exit_status())
@@ -190,7 +190,7 @@ class SSH(object):
                 result = ShellCommandCombined(cmd=command, stdout='Command timed out', return_code=124)
         else:
             try:
-                stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
+                stdin, stdout, stderr = self._connection.exec_command(command, timeout=timeout)
                 if decodebytes:
                     result = ShellCommand(cmd=command, stdout=stdout.read().decode().strip(),
                                           stderr=stderr.read().decode().strip(),
@@ -207,7 +207,7 @@ class SSH(object):
 
         :return: None
         """
-        self.connection.close()
+        self._connection.close()
         return None
 
     def is_alive(self):
@@ -216,10 +216,10 @@ class SSH(object):
         :return: True or False
         :raises: SSHException
         """
-        if self.connection.get_transport() is None:
+        if self._connection.get_transport() is None:
             return False
         else:
-            if self.connection.get_transport().is_alive():
+            if self._connection.get_transport().is_alive():
                 return True
             else:
                 raise paramiko.SSHException("Unable to determine state of ssh session")
@@ -240,16 +240,16 @@ class SSH(object):
             raise paramiko.SSHException("Connection is already established")
         if self.keyfile is not None:
             if self.username is not None:  # Key file with a custom username!
-                self.connection.connect(self.host, port=self.port, username=self.username,
+                self._connection.connect(self.host, port=self.port, username=self.username,
                                         key_filename=self.keyfile, timeout=self.timeout, look_for_keys=False)
             else:
-                self.connection.connect(self.host, port=self.port, key_filename=self.keyfile,
+                self._connection.connect(self.host, port=self.port, key_filename=self.keyfile,
                                         timeout=self.timeout, look_for_keys=False)
         else:  # Username and password combo
             if self.username is None or self.password is None:
                 raise paramiko.SSHException("You must provide a username and password or supply an SSH key")
             else:
-                self.connection.connect(self.host, port=self.port, username=self.username,
+                self._connection.connect(self.host, port=self.port, username=self.username,
                                         password=self.password, timeout=self.timeout, look_for_keys=False)
         return True
 
