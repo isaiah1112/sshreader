@@ -18,32 +18,33 @@ shell_command function for running local shell scripts!
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
+from collections import namedtuple
+from getpass import getuser
+from subprocess import Popen, PIPE, STDOUT
 import logging
 import os
 import paramiko
 import socket
 import warnings
-from collections import namedtuple
-from getpass import getuser
-from subprocess import Popen, PIPE, STDOUT
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
 # Using namedtuple because... why not?
 ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr', 'return_code'])
 ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout', 'return_code'])
-EnvVars = namedtuple('EnvVars', ['username', 'rsa_key', 'dsa_key'])
 
 
 def envvars():
     """ Attempt to determine the current username and location of any ssh keys.  If any value is unable to be determined
     it is returned as 'None'.
 
-    :return: NamedTuple of (username, rsa_key, dsa_key)
+    :return: NamedTuple of (username, rsa_key, dsa_key, ecdsa_key)
     """
+    EnvVars = namedtuple('EnvVars', ['username', 'rsa_key', 'dsa_key', 'ecdsa_key'])
     user = None
     rsa_key = None
     dsa_key = None
+    ecdsa_key = None
     if os.getlogin() == getuser():
         user = getuser()
     userhome = os.path.expanduser('~')
@@ -53,7 +54,9 @@ def envvars():
             rsa_key = userhome + "/.ssh/id_rsa"
         if "id_dsa" in keyfiles:
             dsa_key = userhome + "/.ssh/id_dsa"
-    return EnvVars(user, rsa_key, dsa_key)
+        if 'id_ecdsa' in keyfiles:
+            ecdsa_key = userhome + '/.ssh/id_ecdsa'
+    return EnvVars(user, rsa_key, dsa_key, ecdsa_key)
 
 
 def shell_command(command, combine=False, decodebytes=True):
@@ -125,8 +128,8 @@ class SSH(object):
             self.keyfile = keyfile
         self.port = port
         self.timeout = timeout
-        self.connection = paramiko.SSHClient()
-        self.connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        self._connection = paramiko.SSHClient()
+        self._connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         if connect:
             self.__connect()
 
@@ -145,7 +148,7 @@ class SSH(object):
         :param dstfile: Path to the remote file
         :return: Result of paramiko.SFTPClient.put()
         """
-        sftp = paramiko.SFTPClient.from_transport(self.connection.get_transport())
+        sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         result = sftp.put(os.path.expanduser(srcfile), os.path.expanduser(dstfile), confirm=True)
         sftp.close()
         return result
@@ -157,7 +160,7 @@ class SSH(object):
         :param dstfile: Path to the local file
         :return: Result of paramiko.SFTPClient.get()
         """
-        sftp = paramiko.SFTPClient.from_transport(self.connection.get_transport())
+        sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
         sftp.close()
         return result
@@ -176,7 +179,7 @@ class SSH(object):
             raise paramiko.SSHException("Connection is not established")
         if combine:
             try:
-                stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout, get_pty=True)
+                stdin, stdout, stderr = self._connection.exec_command(command, timeout=timeout, get_pty=True)
                 if decodebytes:
                     result = ShellCommandCombined(cmd=command, stdout=stdout.read().decode().strip(),
                                                   return_code=stdout.channel.recv_exit_status())
@@ -187,7 +190,7 @@ class SSH(object):
                 result = ShellCommandCombined(cmd=command, stdout='Command timed out', return_code=124)
         else:
             try:
-                stdin, stdout, stderr = self.connection.exec_command(command, timeout=timeout)
+                stdin, stdout, stderr = self._connection.exec_command(command, timeout=timeout)
                 if decodebytes:
                     result = ShellCommand(cmd=command, stdout=stdout.read().decode().strip(),
                                           stderr=stderr.read().decode().strip(),
@@ -204,7 +207,7 @@ class SSH(object):
 
         :return: None
         """
-        self.connection.close()
+        self._connection.close()
         return None
 
     def is_alive(self):
@@ -213,10 +216,10 @@ class SSH(object):
         :return: True or False
         :raises: SSHException
         """
-        if self.connection.get_transport() is None:
+        if self._connection.get_transport() is None:
             return False
         else:
-            if self.connection.get_transport().is_alive():
+            if self._connection.get_transport().is_alive():
                 return True
             else:
                 raise paramiko.SSHException("Unable to determine state of ssh session")
@@ -237,16 +240,16 @@ class SSH(object):
             raise paramiko.SSHException("Connection is already established")
         if self.keyfile is not None:
             if self.username is not None:  # Key file with a custom username!
-                self.connection.connect(self.host, port=self.port, username=self.username,
+                self._connection.connect(self.host, port=self.port, username=self.username,
                                         key_filename=self.keyfile, timeout=self.timeout, look_for_keys=False)
             else:
-                self.connection.connect(self.host, port=self.port, key_filename=self.keyfile,
+                self._connection.connect(self.host, port=self.port, key_filename=self.keyfile,
                                         timeout=self.timeout, look_for_keys=False)
         else:  # Username and password combo
             if self.username is None or self.password is None:
                 raise paramiko.SSHException("You must provide a username and password or supply an SSH key")
             else:
-                self.connection.connect(self.host, port=self.port, username=self.username,
+                self._connection.connect(self.host, port=self.port, username=self.username,
                                         password=self.password, timeout=self.timeout, look_for_keys=False)
         return True
 

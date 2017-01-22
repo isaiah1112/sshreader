@@ -16,6 +16,18 @@ project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(project_root)
 import sshreader
 
+global ssh_data
+try:
+    params_file = open(project_root + '/tests/test_params.json')
+    ssh_data = json.load(params_file)
+except IOError:
+    ssh_data = {'host_fqdn': None, 'ssh_user': None, 'ssh_password': None, 'ssh_key_path': None}
+if any(val is None for key, val in ssh_data.items()):
+    for key in ssh_data:
+        ssh_data[key] = click.prompt('Please enter value for (' + key + ')', default=None, type=str)
+    with open(project_root + '/tests/test_params.json', 'w') as params_file:
+        json.dump(ssh_data, params_file)
+
 
 class TestShellScript(unittest.TestCase):
     """ Test Cases for the shell script portion of SSH module
@@ -83,7 +95,7 @@ class TestSSH(unittest.TestCase):
         """
         global ssh_data
         conn = sshreader.SSH(ssh_data['host_fqdn'], username=ssh_data['ssh_user'],
-                             keyfile=ssh_data['ssh_public_key_path'])
+                             keyfile=ssh_data['ssh_key_path'])
         self.assertTrue(conn.is_alive(), msg='ssh connection using password failed to: ' + ssh_data['host_fqdn'])
         pass
 
@@ -163,7 +175,8 @@ class TestSshreader(unittest.TestCase):
     """ Test cases for the sshreader module
     """
 
-    def configure_serverjob_list(self, size):
+    @staticmethod
+    def configure_serverjob_list(size):
         """ Configure a list of serverjob objects to sshread (including pre and post hooks) and local commands
         :return: List
         """
@@ -172,10 +185,10 @@ class TestSshreader(unittest.TestCase):
         post = sshreader.Hook(my_hook, args=['post'])
         jobs = list()
         for x in range(size):
-            jobs.append(sshreader.ServerJob(ssh_data['host_fqdn'], 'sleep 1', prehook=pre, posthook=post,
+            jobs.append(sshreader.ServerJob(ssh_data['host_fqdn'], ['sleep 1', 'echo done'], prehook=pre, posthook=post,
                                             username=ssh_data['ssh_user'], password=ssh_data['ssh_password']))
         for x in range(size):
-            jobs.append(sshreader.ServerJob('local-' + str(x), 'sleep 1', runlocal=True))
+            jobs.append(sshreader.ServerJob('local-' + str(x), ['sleep 1', 'echo done'], runlocal=True))
         return jobs
 
     def test_Hook_creation(self):
@@ -218,7 +231,7 @@ class TestSshreader(unittest.TestCase):
         """ Test sshread method using processes
         """
         jobs = self.configure_serverjob_list(10)
-        result = sshreader.sshread(jobs, pcount=1)
+        result = sshreader.sshread(jobs, pcount=0)
         for x in result:
             self.assertEqual(x.status, 0)
         pass
@@ -226,7 +239,7 @@ class TestSshreader(unittest.TestCase):
     def test_sshread(self):
         """ Test sshread method using threads and processes
         """
-        jobs = self.configure_serverjob_list(21)
+        jobs = self.configure_serverjob_list(20)
         result = sshreader.sshread(jobs, pcount=0, tcount=0)
         for x in result:
             self.assertEqual(x.status, 0)
@@ -241,16 +254,5 @@ class TestSshreader(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    global ssh_data
-    try:
-        params_file = open(project_root + '/test/test_params.json')
-        ssh_data = json.load(params_file)
-    except IOError:
-        ssh_data = {'host_fqdn': None, 'ssh_user': None, 'ssh_password': None, 'ssh_public_key_path': None}
-    if any(val is None for key, val in ssh_data.items()):
-        for key in ssh_data:
-            ssh_data[key] = click.prompt('Please enter value for (' + key + ')', default=None, type=str)
-        with open(project_root + '/test/test_params.json', 'w') as params_file:
-            json.dump(ssh_data, params_file)
     with warnings.catch_warnings(record=True):
         unittest.main()
