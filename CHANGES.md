@@ -1,5 +1,17 @@
 # Changelog
 
+## Version 3.6
+ * Automating testing with tox [0be301e](https://bitbucket.org/isaiah1112/sshreader/commits/0be301e8d96af100ff09b3dafe3d18680af0cf99)
+ * Adding creation of .ssh directory for copy-ssh-key example script. [eedc862](https://bitbucket.org/isaiah1112/sshreader/commits/eedc862ad44bf2fe4f40676c71b53c7a08d65763)
+ * Updated Python versions SSHreader is tested against. [c6a108f](https://bitbucket.org/isaiah1112/sshreader/commits/c6a108f6a5af8cb36c724f2e5f4103b4422dd1e6)
+ * Updating methodology for determining tcount dynamically.  Things should scale nicer now. [e03c3b8](https://bitbucket.org/isaiah1112/sshreader/commits/e03c3b82c336fcac662e58dcf9fc541ba1218e0a)
+ * Can you say “code cleanup”?  This will make things better in the long run! [a95a6d8](https://bitbucket.org/isaiah1112/sshreader/commits/a95a6d83f511d6a7cbad4236dfe55a2cb29a4c98)
+ * Changing ssh_public_key_path to ssh_key_path in unit tests for sshreader. [081aabe](https://bitbucket.org/isaiah1112/sshreader/commits/081aabeec5cee7db3ab0653372f3daad77908b25)
+ * Added docs env to tox for testing documentation builds. [ae1fbc2](https://bitbucket.org/isaiah1112/sshreader/commits/ae1fbc2b000e5de47a22fcf4f45957fcb209dd7a)
+ * Added support for ECDSA ssh key discovery in envvars method [b239dfd](https://bitbucket.org/isaiah1112/sshreader/commits/b239dfdefe2300c52fff5ae256661a7bf49b1311)
+ * Renaming SSH.connection to SSH._connection. [7d0fad2](https://bitbucket.org/isaiah1112/sshreader/commits/7d0fad2860f27ea6ca1170b68d5e620acc7ebe87)
+ * Updating unittests to increase speed. [aacb7c7](https://bitbucket.org/isaiah1112/sshreader/commits/aacb7c7e17909c56e1c903d0b98d028e7c8d0bfb)
+
 ## Version 3.5.1
  * Updated SSH.ssh_command to capture timeouts properly and return errors gracefully. [fdfba44](https://bitbucket.org/isaiah1112/sshreader/commits/fdfba443cd48e0907ffb23da7616b3c9385e33ac)
  * Increased Timeout to 10 Minutes [858f048](https://bitbucket.org/isaiah1112/sshreader/commits/858f0486878ad08a5d0d0cae245b2b8cd5afefa7)
