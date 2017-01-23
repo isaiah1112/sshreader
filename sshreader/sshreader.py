@@ -38,12 +38,6 @@ _printlock_ = multiprocessing.Lock()
 logger = logging.getLogger('sshreader')
 
 
-class ExceededCPULimit(Exception):
-    """ You have asked for more sub processes than your CPU is allowed to handle
-    """
-    pass
-
-
 class Hook(object):
     """ Custom class for pre and post hooks
 
@@ -356,7 +350,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
         pcount = int(min(pcount, totaljobs))
 
         if pcount > cpuhardlimit():
-            raise ExceededCPULimit(str(pcount) + ' > ' + str(cpuhardlimit()))
+            raise ValueError('CPUHardLimit exceeded: ' + str(pcount) + ' > ' + str(cpuhardlimit()))
 
         if tcount is not None:
             if tcount == 0:

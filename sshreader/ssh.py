@@ -29,10 +29,6 @@ import warnings
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
-# Using namedtuple because... why not?
-ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr', 'return_code'])
-ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout', 'return_code'])
-
 
 def envvars():
     """ Attempt to determine the current username and location of any ssh keys.  If any value is unable to be determined
@@ -67,6 +63,8 @@ def shell_command(command, combine=False, decodebytes=True):
     :param decodebytes: Decode bytes objects to unicode strings
     :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
     """
+    ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr', 'return_code'])
+    ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout', 'return_code'])
     if combine:
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
         stdout, stderr = pipeout.communicate()
@@ -175,6 +173,8 @@ class SSH(object):
         :return: Namedtuple of (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
         :raises: SSHException
         """
+        ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr', 'return_code'])
+        ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout', 'return_code'])
         if self.__is_alive() is False:
             raise paramiko.SSHException("Connection is not established")
         if combine:
@@ -241,16 +241,16 @@ class SSH(object):
         if self.keyfile is not None:
             if self.username is not None:  # Key file with a custom username!
                 self._connection.connect(self.host, port=self.port, username=self.username,
-                                        key_filename=self.keyfile, timeout=self.timeout, look_for_keys=False)
+                                         key_filename=self.keyfile, timeout=self.timeout, look_for_keys=False)
             else:
                 self._connection.connect(self.host, port=self.port, key_filename=self.keyfile,
-                                        timeout=self.timeout, look_for_keys=False)
+                                         timeout=self.timeout, look_for_keys=False)
         else:  # Username and password combo
             if self.username is None or self.password is None:
                 raise paramiko.SSHException("You must provide a username and password or supply an SSH key")
             else:
                 self._connection.connect(self.host, port=self.port, username=self.username,
-                                        password=self.password, timeout=self.timeout, look_for_keys=False)
+                                         password=self.password, timeout=self.timeout, look_for_keys=False)
         return True
 
     # Privatizing some of the functions so SSH can be subclassed
