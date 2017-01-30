@@ -29,6 +29,9 @@ import warnings
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
+ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr', 'return_code'])
+ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout', 'return_code'])
+
 
 def envvars():
     """ Attempt to determine the current username and location of any ssh keys.  If any value is unable to be determined
@@ -63,8 +66,6 @@ def shell_command(command, combine=False, decodebytes=True):
     :param decodebytes: Decode bytes objects to unicode strings
     :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
     """
-    ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr', 'return_code'])
-    ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout', 'return_code'])
     if combine:
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
         stdout, stderr = pipeout.communicate()
@@ -173,8 +174,6 @@ class SSH(object):
         :return: Namedtuple of (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
         :raises: SSHException
         """
-        ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr', 'return_code'])
-        ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout', 'return_code'])
         if self.__is_alive() is False:
             raise paramiko.SSHException("Connection is not established")
         if combine:
