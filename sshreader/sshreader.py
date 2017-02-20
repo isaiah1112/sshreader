@@ -268,10 +268,12 @@ def cpuhardlimit():
 
 def threadlimit():
     """ Return the maximum number of threads each process is allowed to spawn.  The idea here is to not overload a system.
+    
+    cpu_count() * 2
 
     :return: Integer
     """
-    return multiprocessing.cpu_count()
+    return multiprocessing.cpu_count() * 2
 
 
 def echo(*args, **kwargs):
