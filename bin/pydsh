@@ -111,7 +111,7 @@ def validate_hostlist(ctx, param, value):
 @click.option('--coalesce', '-C', is_flag=True, help='Coalesce similar output from hosts')
 @click.option('--file', '-F', is_flag=True, help='Treat CMD as a script file')
 @click.option('--debug', '-d', is_flag=True, help='Enable debug output')
-@click.option('--redline', is_flag=True, help='Run as many sub-processes as possible')
+@click.option('--redline', is_flag=True, help='Run pydsh faster')
 @click.argument('cmd', nargs=1, required=True)
 def cli(**kwargs):
     """  Run ssh commands in parallel across hosts
