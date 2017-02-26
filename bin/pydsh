@@ -8,6 +8,7 @@ from hashlib import md5
 from hostlist import expand_hostlist, collect_hostlist
 import click
 import logging
+import os
 import sshreader
 import sys
 # GLOBALS
@@ -20,6 +21,19 @@ Examples:
     pydsh -u root -P Password123 -w host[1-3] "uname -r"
     pydsh -F -w host[01-10] myscript.sh
 """
+
+
+def copy_script(scriptfile, job):
+    """ Copy script to remote host using SFTP connection
+
+    :param scriptfile: Path to script file
+    :param job: <ServerJob> object
+    :return: True on file copy
+    """
+    script_name = os.path.split(scriptfile)[1]
+    with sshreader.SSH(job.name, username=job.username, password=job.password, keyfile=job.key, timeout=job.sshtimeout) as conn:
+        conn.sftp_put(scriptfile, '/tmp/' + script_name)
+    return True
 
 
 def output(thisjob):
@@ -118,12 +132,14 @@ def cli(**kwargs):
     """
     if kwargs['file']:
         mkpath = click.Path(exists=True, dir_okay=False)
-        scriptpath = mkpath(kwargs['cmd'])
-        with open(scriptpath) as s:
-            kwargs['cmd'] = s.readlines()
-        if kwargs['cmd'][0].startswith('#!') is False:
+        script_path = mkpath(kwargs['cmd'])
+        script_name = os.path.split(script_path)[1]
+        prehook = sshreader.Hook(copy_script, args=[script_path])
+        with open(script_path) as s:
+            script = s.readlines()
+        if script[0].startswith('#!') is False:
             raise click.UsageError('Script must start with #!')
-        kwargs['cmd'] = ''.join(kwargs['cmd'])
+        kwargs['cmd'] = [script[0].split('#!').pop().strip() + ' /tmp/' + script_name, 'rm /tmp/' + script_name]
     sshenv = sshreader.envvars()
 
     if kwargs['username'] is None:
@@ -163,7 +179,7 @@ def cli(**kwargs):
     if kwargs['debug']:
         logging.getLogger('sshreader').setLevel(logging.INFO)
 
-    post = sshreader.Hook(target=output)
+    posthook = sshreader.Hook(target=output)
     jobs = list()
     for host in kwargs['hostlist']:
         if kwargs['keyfile'] is not None:
@@ -173,7 +189,9 @@ def cli(**kwargs):
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
                                       timeout=kwargs['timeout'], combine_output=True)
         if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
-            job.posthook = post
+            job.posthook = posthook
+        if kwargs['file']:
+            job.prehook = prehook
         jobs.append(job)
 
     if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
