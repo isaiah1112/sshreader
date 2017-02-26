@@ -31,10 +31,12 @@ def copy_script(scriptfile, job):
     :return: True on file copy
     """
     script_name = os.path.split(scriptfile)[1]
-    with sshreader.SSH(job.name, username=job.username, password=job.password, keyfile=job.key, timeout=job.sshtimeout) as conn:
-        conn.sftp_put(scriptfile, '/tmp/' + script_name)
-    return True
-
+    try:
+        with sshreader.SSH(job.name, username=job.username, password=job.password, keyfile=job.key, timeout=job.sshtimeout) as conn:
+            conn.sftp_put(scriptfile, '/tmp/' + script_name)
+        return True
+    except Exception as err:
+        return err
 
 def output(thisjob):
     """ Print output from jobs as they complete in a format that could be piped to dshbak
