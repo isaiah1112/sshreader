@@ -38,6 +38,7 @@ def copy_script(scriptfile, job):
     except Exception as err:
         return err
 
+
 def output(thisjob):
     """ Print output from jobs as they complete in a format that could be piped to dshbak
 
