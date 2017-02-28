@@ -147,6 +147,8 @@ class SSH(object):
         :param dstfile: Path to the remote file
         :return: Result of paramiko.SFTPClient.put()
         """
+        if self.__is_alive() is False:
+            raise paramiko.SSHException("Connection is not established")
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         result = sftp.put(os.path.expanduser(srcfile), os.path.expanduser(dstfile), confirm=True)
         sftp.close()
@@ -159,6 +161,8 @@ class SSH(object):
         :param dstfile: Path to the local file
         :return: Result of paramiko.SFTPClient.get()
         """
+        if self.__is_alive() is False:
+            raise paramiko.SSHException("Connection is not established")
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
         sftp.close()
