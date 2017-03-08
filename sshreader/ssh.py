@@ -150,8 +150,11 @@ class SSH(object):
         if self.__is_alive() is False:
             raise paramiko.SSHException("Connection is not established")
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
-        result = sftp.put(os.path.expanduser(srcfile), os.path.expanduser(dstfile), confirm=True)
-        sftp.close()
+        try:
+            result = sftp.put(os.path.expanduser(srcfile), os.path.expanduser(dstfile), confirm=True)
+        except IOError as err:
+            sftp.close()
+            raise err
         return result
 
     def sftp_get(self, srcfile, dstfile):
@@ -164,7 +167,11 @@ class SSH(object):
         if self.__is_alive() is False:
             raise paramiko.SSHException("Connection is not established")
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
-        result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
+        try:
+            result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
+        except IOError as err:
+            sftp.close()
+            raise err
         sftp.close()
         return result
 
