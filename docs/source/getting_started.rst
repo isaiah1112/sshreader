@@ -134,7 +134,7 @@ Copying Files
 -------------
 
 Version 3.4 of sshreader introduced the :code:`sftp_put()` and :code:`sfpt_get()` methods into SSH objects.  These
-methods attempt to make it easier to use Paramiko's SFTP protocol to copy files to and from a remote server.  The cool thing
+methods attempt to make it easier to use OpenSSH's SFTP protocol to copy files to and from a remote server.  The cool thing
 about having them inside the SSH class is that you can use one object to both SFTP files and run SSH commands on a remote server.
 
 .. code-block:: python
