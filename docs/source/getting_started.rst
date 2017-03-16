@@ -74,7 +74,7 @@ as needed.
         jobs.append(job)
     finished = sshread(jobs, tcount=0)
     for job in finished:
-        job.print()
+        job.output()
 
 Now you are ready to sshread all your servers as fast as possible!
 

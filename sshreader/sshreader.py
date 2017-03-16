@@ -188,7 +188,7 @@ class ServerJob(object):
         logger.info(u"Finished running ServerJob: " + str(self.name))
         return self.status
 
-    def print(self):
+    def output(self):
         """ Prints the status of the ServerJob and details of each cmd in the job
 
         :return: None
