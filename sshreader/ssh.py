@@ -18,7 +18,7 @@ shell_command function for running local shell scripts!
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from getpass import getuser
 from subprocess import Popen, PIPE, STDOUT
 import logging
@@ -39,23 +39,20 @@ def envvars():
 
     :return: NamedTuple of (username, rsa_key, dsa_key, ecdsa_key)
     """
-    EnvVars = namedtuple('EnvVars', ['username', 'rsa_key', 'dsa_key', 'ecdsa_key'])
-    user = None
-    rsa_key = None
-    dsa_key = None
-    ecdsa_key = None
+    env = OrderedDict(user=None, rsa_key=None, dsa_key=None, ecdsa_key=None)
+    EnvVars = namedtuple('EnvVars', env.keys())
     if os.getlogin() == getuser():
-        user = getuser()
+        env['user'] = getuser()
     userhome = os.path.expanduser('~')
     if os.path.exists(userhome + "/.ssh"):
         keyfiles = os.listdir(userhome + "/.ssh")
         if "id_rsa" in keyfiles:
-            rsa_key = userhome + "/.ssh/id_rsa"
+            env['rsa_key'] = userhome + "/.ssh/id_rsa"
         if "id_dsa" in keyfiles:
-            dsa_key = userhome + "/.ssh/id_dsa"
+            env['dsa_key'] = userhome + "/.ssh/id_dsa"
         if 'id_ecdsa' in keyfiles:
-            ecdsa_key = userhome + '/.ssh/id_ecdsa'
-    return EnvVars(user, rsa_key, dsa_key, ecdsa_key)
+            env['ecdsa_key'] = userhome + '/.ssh/id_ecdsa'
+    return EnvVars(**env)
 
 
 def shell_command(command, combine=False, decodebytes=True):
@@ -139,7 +136,7 @@ class SSH(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__close()
-        
+
     def sftp_put(self, srcfile, dstfile):
         """ Use the SFTP subsystem of OpenSSH to copy a local file to a remote host
 
