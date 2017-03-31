@@ -34,7 +34,7 @@ To ensure all development requirements are met. This will allow you to build the
 
 ## Documentation
 
-The documentation for sshreader can be found at [JA Computing](http://pydoc.jacomputing.net/sshreader/)
+The documentation for sshreader can be found at https://pythonhosted.org/sshreader/
 
 ### Building Docs
 

@@ -3,7 +3,7 @@
 """A wrapper for Paramiko that attempts to make ssh sessions easier to work with.  It also contains the
 shell_command function for running local shell scripts!
 """
-# Copyright (C) 2015 Jesse Almanrode
+# Copyright (C) 2015-2017 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -89,7 +89,7 @@ def do_shell_script(command, combine=False):
 
     .. warning::
 
-        This call will be deprecated in v4.0
+        This call will be removed in v4.0
 
     :param command: String containing the shell script to run
     :param combine: Combine stderr and stdout in output

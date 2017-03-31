@@ -1,7 +1,7 @@
 # coding=utf-8
 """ All the classes and functions that make sshreader tick
 """
-# Copyright (C) 2015 Jesse Almanrode
+# Copyright (C) 2015-2017 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -216,7 +216,7 @@ def print_results(serverjobs):
 
     .. warning::
 
-        This call will be deprecated in v4.0
+        This call will be removed in v4.0
 
     :param serverjobs: List of ServerJob objects
     :return: SortedJobs named tuple
@@ -250,7 +250,7 @@ def cpusoftlimit():
 
 def cpuhardlimit():
     """ Return the maximum number of sub-processes your system is allowed to spawn.
-    
+
     cpusoftlimit() * __cpuHardLimitFactor__
 
     :return: Integer
@@ -262,7 +262,7 @@ def cpuhardlimit():
 
 def threadlimit():
     """ Return the maximum number of threads each process is allowed to spawn.  The idea here is to not overload a system.
-    
+
     cpu_count() * 2
 
     :return: Integer
