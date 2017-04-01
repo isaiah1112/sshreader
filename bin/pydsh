@@ -2,23 +2,55 @@
 # coding=utf-8
 """ A Pythonic implementation of pdsh powered by sshreader
 """
+# Copyright (C) 2015-2017 Jesse Almanrode
+#
+#     This program is free software: you can redistribute it and/or modify
+#     it under the terms of the GNU Lesser General Public License as published by
+#     the Free Software Foundation, either version 3 of the License, or
+#     (at your option) any later version.
+#
+#     This program is distributed in the hope that it will be useful,
+#     but WITHOUT ANY WARRANTY; without even the implied warranty of
+#     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#     GNU Lesser General Public License for more details.
+#
+#     You should have received a copy of the GNU Lesser General Public License
+#     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
 from collections import defaultdict
 from hashlib import md5
 from hostlist import expand_hostlist, collect_hostlist
 import click
 import logging
+import os
 import sshreader
 import sys
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '2.0.1'
+__version__ = '2.1'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
     pydsh -u root -k /root/.ssh/id_rsa -w host[1,3] "uname -r"
     pydsh -u root -P Password123 -w host[1-3] "uname -r"
+    pydsh -F -w host[01-10] myscript.sh
 """
+
+
+def copy_script(scriptfile, job):
+    """ Copy script to remote host using SFTP connection
+
+    :param scriptfile: Path to script file
+    :param job: <ServerJob> object
+    :return: True on file copy
+    """
+    script_name = os.path.split(scriptfile)[1]
+    try:
+        with sshreader.SSH(job.name, username=job.username, password=job.password, keyfile=job.key, timeout=job.sshtimeout) as conn:
+            conn.sftp_put(scriptfile, '/tmp/' + script_name)
+        return True
+    except Exception as err:
+        return err
 
 
 def output(thisjob):
@@ -85,7 +117,7 @@ def coalesce(jobresults):
 
 def validate_hostlist(ctx, param, value):
     """ Callback for click to expand hostlist expressions or error
-    
+
     :param ctx: Click context
     :param param: Parameter Name
     :param value: Hostlist expression to expand
@@ -108,12 +140,23 @@ def validate_hostlist(ctx, param, value):
 @click.option('--timeout', '-T', default=600, help='Timeout for ssh commands')
 @click.option('--dshbak', '-D', is_flag=True, help='Group output by host')
 @click.option('--coalesce', '-C', is_flag=True, help='Coalesce similar output from hosts')
+@click.option('--file', '-F', is_flag=True, help='Treat CMD as a script file')
 @click.option('--debug', '-d', is_flag=True, help='Enable debug output')
-@click.option('--redline', is_flag=True, help='Run as many sub-processes as possible')
+@click.option('--redline', is_flag=True, help='Run pydsh faster')
 @click.argument('cmd', nargs=1, required=True)
 def cli(**kwargs):
     """  Run ssh commands in parallel across hosts
     """
+    if kwargs['file']:
+        mkpath = click.Path(exists=True, dir_okay=False)
+        script_path = mkpath(kwargs['cmd'])
+        script_name = os.path.split(script_path)[1]
+        prehook = sshreader.Hook(copy_script, args=[script_path])
+        with open(script_path) as s:
+            script = s.readlines()
+        if script[0].startswith('#!') is False:
+            raise click.UsageError('Script must start with #!')
+        kwargs['cmd'] = [script[0].split('#!').pop().strip() + ' /tmp/' + script_name, 'rm /tmp/' + script_name]
     sshenv = sshreader.envvars()
 
     if kwargs['username'] is None:
@@ -153,7 +196,7 @@ def cli(**kwargs):
     if kwargs['debug']:
         logging.getLogger('sshreader').setLevel(logging.INFO)
 
-    post = sshreader.Hook(target=output)
+    posthook = sshreader.Hook(target=output)
     jobs = list()
     for host in kwargs['hostlist']:
         if kwargs['keyfile'] is not None:
@@ -163,7 +206,9 @@ def cli(**kwargs):
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
                                       timeout=kwargs['timeout'], combine_output=True)
         if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
-            job.posthook = post
+            job.posthook = posthook
+        if kwargs['file']:
+            job.prehook = prehook
         jobs.append(job)
 
     if kwargs['dshbak'] is False and kwargs['coalesce'] is False:

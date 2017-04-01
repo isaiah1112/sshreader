@@ -1,128 +1,141 @@
 # Changelog
 
+## Version 3.7
+ * Added ability to run script file via pydsh. [9bd476e]
+ * Increasing threadlimit [1e07336]
+ * Updated redline help in pydsh. [7bd1f82]
+ * Expanded ability for running script files remotely. [5fb6172]
+ * Catching errors in SFTP pre-hook. [5112dee]
+ * Fixing Hook.run so that additional args/kwargs are appended to the existing ones. [158db6f]
+ * Added is_alive check for ssh connection on sftp_put and sftp_get [d39a30d]
+ * Fixing bug when sftp exception occurs that sftp connection doesnt get closed. [7b716aa]
+ * Changing ServerJob.print() to ServerJob.output() [e5d1f28]
+ * Converting dict to named tuple for sshreader.ssh.envvars() method [46e0bba]
+ * Updated Requirements and Version [4381413]
+
 ## Version 3.6
- * Automating testing with tox [0be301e](https://bitbucket.org/isaiah1112/sshreader/commits/0be301e8d96af100ff09b3dafe3d18680af0cf99)
- * Adding creation of .ssh directory for copy-ssh-key example script. [eedc862](https://bitbucket.org/isaiah1112/sshreader/commits/eedc862ad44bf2fe4f40676c71b53c7a08d65763)
- * Updated Python versions SSHreader is tested against. [c6a108f](https://bitbucket.org/isaiah1112/sshreader/commits/c6a108f6a5af8cb36c724f2e5f4103b4422dd1e6)
- * Updating methodology for determining tcount dynamically.  Things should scale nicer now. [e03c3b8](https://bitbucket.org/isaiah1112/sshreader/commits/e03c3b82c336fcac662e58dcf9fc541ba1218e0a)
- * Can you say “code cleanup”?  This will make things better in the long run! [a95a6d8](https://bitbucket.org/isaiah1112/sshreader/commits/a95a6d83f511d6a7cbad4236dfe55a2cb29a4c98)
- * Changing ssh_public_key_path to ssh_key_path in unit tests for sshreader. [081aabe](https://bitbucket.org/isaiah1112/sshreader/commits/081aabeec5cee7db3ab0653372f3daad77908b25)
- * Added docs env to tox for testing documentation builds. [ae1fbc2](https://bitbucket.org/isaiah1112/sshreader/commits/ae1fbc2b000e5de47a22fcf4f45957fcb209dd7a)
- * Added support for ECDSA ssh key discovery in envvars method [b239dfd](https://bitbucket.org/isaiah1112/sshreader/commits/b239dfdefe2300c52fff5ae256661a7bf49b1311)
- * Renaming SSH.connection to SSH._connection. [7d0fad2](https://bitbucket.org/isaiah1112/sshreader/commits/7d0fad2860f27ea6ca1170b68d5e620acc7ebe87)
- * Updating unittests to increase speed. [aacb7c7](https://bitbucket.org/isaiah1112/sshreader/commits/aacb7c7e17909c56e1c903d0b98d028e7c8d0bfb)
+ * Automating testing with tox [0be301e]
+ * Adding creation of .ssh directory for copy-ssh-key example script. [eedc862]
+ * Updated Python versions SSHreader is tested against. [c6a108f]
+ * Updating methodology for determining tcount dynamically.  Things should scale nicer now. [e03c3b8]
+ * Can you say “code cleanup”?  This will make things better in the long run! [a95a6d8]
+ * Changing ssh_public_key_path to ssh_key_path in unit tests for sshreader. [081aabe]
+ * Added docs env to tox for testing documentation builds. [ae1fbc2]
+ * Added support for ECDSA ssh key discovery in envvars method [b239dfd]
+ * Renaming SSH.connection to SSH._connection. [7d0fad2]
+ * Updating unittests to increase speed. [aacb7c7]
 
 ## Version 3.5.1
- * Updated SSH.ssh_command to capture timeouts properly and return errors gracefully. [fdfba44](https://bitbucket.org/isaiah1112/sshreader/commits/fdfba443cd48e0907ffb23da7616b3c9385e33ac)
- * Increased Timeout to 10 Minutes [858f048](https://bitbucket.org/isaiah1112/sshreader/commits/858f0486878ad08a5d0d0cae245b2b8cd5afefa7)
- * Fixing small bug with assignment of NamedTuple [2d82fa1](https://bitbucket.org/isaiah1112/sshreader/commits/2d82fa16809bd17f19ffa2ccbc82ff160a8719f8)
- * Updating unit/integration tests to prompt for params initially and save them for future runs. [abd8c34](https://bitbucket.org/isaiah1112/sshreader/commits/abd8c341005b21797c262c771851aa74655cd3d0)
- * Fixing bugs in tests in Python2.7 [d5ff0b7](https://bitbucket.org/isaiah1112/sshreader/commits/d5ff0b7a1ea83c30e2ef327079a7d3943e4d1064)
+ * Updated SSH.ssh_command to capture timeouts properly and return errors gracefully. [fdfba44]
+ * Increased Timeout to 10 Minutes [858f048]
+ * Fixing small bug with assignment of NamedTuple [2d82fa1]
+ * Updating unit/integration tests to prompt for params initially and save them for future runs. [abd8c34]
+ * Fixing bugs in tests in Python2.7 [d5ff0b7]
 
 ## Version 3.5
- * Updated pydsh so that commands that do not return any output are not displayed.  Closes issue #12 [48d376c](https://bitbucket.org/isaiah1112/sshreader/commits/48d376cd019c70aa9588ba4bca609cb4cf4bb9c2)
- * Pydsh 2.0.  Works more like pdsh but now includes ability to perform dshbak grouping and coalescing within the tool! [3277bb5](https://bitbucket.org/isaiah1112/sshreader/commits/3277bb5677760352be08fcd908c62c172a271296)
- * Adding example script for copying ssh key to remote hosts. Created new examples directory! [86323da](https://bitbucket.org/isaiah1112/sshreader/commits/86323daa9d504803abb90f857990c6f9238c7ec3)
- * Updated documentation to include more Getting Started examples [b9d884d](https://bitbucket.org/isaiah1112/sshreader/commits/b9d884da6fed2339160ac57a4d343f8ac737cce7)
- * Exiting cli properly in pydsh [d8d3e08](https://bitbucket.org/isaiah1112/sshreader/commits/d8d3e0843c6caff35642f21a9e245e9540bf046f)
- * Silencing paramiko logging to better handle pre-connection errors that occur when openSSH cannot complete handshake.  Exceptions are still passed but log entries are silenced. [3d4a893](https://bitbucket.org/isaiah1112/sshreader/commits/3d4a893be624153f1ff28ff0389b3595dcf2b7d6)
- * Moving to Python logging module for INFO and DEBUG statements [caafc6f](https://bitbucket.org/isaiah1112/sshreader/commits/caafc6f08104f620848d98e2c4f5bc730f567222)
- * Updated pydsh debug to enable logging level INFO [510e16b](https://bitbucket.org/isaiah1112/sshreader/commits/510e16b167e8bef888f064f3ab5439ed71756b32)
+ * Updated pydsh so that commands that do not return any output are not displayed.  Closes issue #12 [48d376c]
+ * Pydsh 2.0.  Works more like pdsh but now includes ability to perform dshbak grouping and coalescing within the tool! [3277bb5]
+ * Adding example script for copying ssh key to remote hosts. Created new examples directory! [86323da]
+ * Updated documentation to include more Getting Started examples [b9d884d]
+ * Exiting cli properly in pydsh [d8d3e08]
+ * Silencing paramiko logging to better handle pre-connection errors that occur when openSSH cannot complete handshake.  Exceptions are still passed but log entries are silenced. [3d4a893]
+ * Moving to Python logging module for INFO and DEBUG statements [caafc6f]
+ * Updated pydsh debug to enable logging level INFO [510e16b]
 
 ## Version 3.4.6
- * Adding pseudo terminal creation to ssh_command method. It already existed for when output is combined. Closes issue #11 [6d85e77](https://bitbucket.org/isaiah1112/sshreader/commits/6d85e772c6123f2cb65ccd447bccc1dc41e88d65)
+ * Adding pseudo terminal creation to ssh_command method. It already existed for when output is combined. Closes issue #11 [6d85e77]
 
 ## Version 3.4.5
- * Changing default thread limit to 100 rather than 500 [211531d](https://bitbucket.org/isaiah1112/sshreader/commits/211531d3ea31a575b0477230a7e1738a2353fb67)
- * Fixing bug with ServerJob.print() method [084b377](https://bitbucket.org/isaiah1112/sshreader/commits/084b37727ce9a3c38030ed62cbcd4ee413f81fbc)
+ * Changing default thread limit to 100 rather than 500 [211531d]
+ * Fixing bug with ServerJob.print() method [084b377]
 
 ## Version 3.4.4
- * Updated echo method to flush stdout after every print.  This will allow for better access to unbuffered output. Closes issue #10 [604e6e7](https://bitbucket.org/isaiah1112/sshreader/commits/604e6e76273c9efe53d642eadd8301e6cbe993b2)
+ * Updated echo method to flush stdout after every print.  This will allow for better access to unbuffered output. Closes issue #10 [604e6e7]
 
 ## Version 3.4.3
- * Fixing mixed tabs. [086d94f](https://bitbucket.org/isaiah1112/sshreader/commits/086d94fb64bebc44d3aa1bbb72d8daedc571353d)
- * Refactoring debuglevels and making ssh connection errors more apparent. Closes issue #9 [7f2e79b](https://bitbucket.org/isaiah1112/sshreader/commits/7f2e79be15e4491164401086f903196a66610375)
- * Updating requirements! [c694370](https://bitbucket.org/isaiah1112/sshreader/commits/c694370d722b9f0b59ed06779d9d084f7e20c17c)
+ * Fixing mixed tabs. [086d94f]
+ * Refactoring debuglevels and making ssh connection errors more apparent. Closes issue #9 [7f2e79b]
+ * Updating requirements! [c694370]
 
 ## Version 3.4.2
- * Not documenting private members. [0d91962](https://bitbucket.org/isaiah1112/sshreader/commits/0d9196243e4c665b191ec45b034649b0c7633c39)
- * Updated examples in Getting Started [7ac82bb](https://bitbucket.org/isaiah1112/sshreader/commits/7ac82bbc2849765d72803cd59d7247b486d3df70)
- * Added validate_expr callback for click to expand hostlist expressions. [8f2e37b](https://bitbucket.org/isaiah1112/sshreader/commits/8f2e37b89b9d9483f30b19a0d75d3c55b77bb819)
+ * Not documenting private members. [0d91962]
+ * Updated examples in Getting Started [7ac82bb]
+ * Added validate_expr callback for click to expand hostlist expressions. [8f2e37b]
 
 ## Version 3.4
- * Updated FAQ for byte string vs unicode string to include new default behavior for sshreader. [009258e](https://bitbucket.org/isaiah1112/sshreader/commits/009258e7b375e2f8068e2e108777bc5de4851e02)
- * Beginning to add sftp commands to SSH class for extended abilities within sshreader. [2ede38b](https://bitbucket.org/isaiah1112/sshreader/commits/2ede38b2b79808dae77b421ae212047892f2d3ad)
- * Updated requirements for sshreader. [fabc179](https://bitbucket.org/isaiah1112/sshreader/commits/fabc17983e033359ce735caddc51a9b59fa5bb5a)
- * Updated documentation version. [1d541dc](https://bitbucket.org/isaiah1112/sshreader/commits/1d541dc7d0d3491a5a6d5278f720674783b716b8)
- * Removing extra debug statements [9375187](https://bitbucket.org/isaiah1112/sshreader/commits/93751876e2caf4fb718acac4bdcb269b2949d8cc)
- * Removing hostname from 'Unable to establish connection' message. [10a9591](https://bitbucket.org/isaiah1112/sshreader/commits/10a9591a234eafcf34c4fd3659ebb82d996b503e)
- * Removing sshreader from requirements file. [7a43f6d](https://bitbucket.org/isaiah1112/sshreader/commits/7a43f6dc5bb6388b7af169ddb95f2086da5ef7d8)
- * Protecting class methods within SSH (so it can be subclassed if needed) [680c0df](https://bitbucket.org/isaiah1112/sshreader/commits/680c0df606ecaabce6692526d9c7979205adedd0)
- * Updated README file [2c11c62](https://bitbucket.org/isaiah1112/sshreader/commits/2c11c62cdfc3d5b6290258160224135ab1a0e059)
- * You typo 1 thing and it all falls apart! smh [2b2b860](https://bitbucket.org/isaiah1112/sshreader/commits/2b2b860b4d9d06b42e8270a88ca864a98bb536bf)
- * Go bold or go home! [982bf7e](https://bitbucket.org/isaiah1112/sshreader/commits/982bf7e53c6ae029b0d60b8b2d6f4ddba1311395)
- * Updated package version. [ba29bce](https://bitbucket.org/isaiah1112/sshreader/commits/ba29bce4411473f1217da782259e5f7e52163375)
- * Updated docs. [e04c9ee](https://bitbucket.org/isaiah1112/sshreader/commits/e04c9eee53ed1cc26b28fccc26bdcc916763836f)
- * Updated Requirements. [6874fc5](https://bitbucket.org/isaiah1112/sshreader/commits/6874fc5cd1b35300e9b415b87197e869fa3ddd52)
- * dirty hack, have a better idea ? [66b8902](https://bitbucket.org/isaiah1112/sshreader/commits/66b89021fcaf1094f047f556954cb20150d71157)
+ * Updated FAQ for byte string vs unicode string to include new default behavior for sshreader. [009258e]
+ * Beginning to add sftp commands to SSH class for extended abilities within sshreader. [2ede38b]
+ * Updated requirements for sshreader. [fabc179]
+ * Updated documentation version. [1d541dc]
+ * Removing extra debug statements [9375187]
+ * Removing hostname from 'Unable to establish connection' message. [10a9591]
+ * Removing sshreader from requirements file. [7a43f6d]
+ * Protecting class methods within SSH (so it can be subclassed if needed) [680c0df]
+ * Updated README file [2c11c62]
+ * You typo 1 thing and it all falls apart! smh [2b2b860]
+ * Go bold or go home! [982bf7e]
+ * Updated package version. [ba29bce]
+ * Updated docs. [e04c9ee]
+ * Updated Requirements. [6874fc5]
+ * dirty hack, have a better idea ? [66b8902]
 
 ## Version 3.3
- * Added --redline option to run sshreader at hardCPULimit [b9f4530](https://bitbucket.org/isaiah1112/sshreader/commits/b9f45307582a1169693c2824120c00c70b162bb9)
- * Rewrote pydsh to use Click library for argument parsing.  Some flags have changed! [80d8e2c](https://bitbucket.org/isaiah1112/sshreader/commits/80d8e2c55dd405320cf24a261458d8be88dfbecb)
- * Removing sort option and cleaning up logic. [dbdfe90](https://bitbucket.org/isaiah1112/sshreader/commits/dbdfe904f586553c927075ac941ac1f966a1cf79)
- * Added examples to help epilog [bd4a3c0](https://bitbucket.org/isaiah1112/sshreader/commits/bd4a3c0337f96dd3fb4eab94fa0247a6863b5057)
- * Rewrote printjobs and dshbak hooks [9ad72dc](https://bitbucket.org/isaiah1112/sshreader/commits/9ad72dcb9482f75c5c158b881c733c8bcd55a21a)
- * Updated keyfile and password preference logic. [f10098a](https://bitbucket.org/isaiah1112/sshreader/commits/f10098a0a6a3641e8885695707e0880b37c26b04)
- * Added cpusoftlimit and cpuhardlimit methods that return number of sub-processes your system is allowed to spawn. [4145a89](https://bitbucket.org/isaiah1112/sshreader/commits/4145a89d48b5570186683effbccc88af93a1df8b)
- * Bumping pydsh version to 1.3 [6ba7de7](https://bitbucket.org/isaiah1112/sshreader/commits/6ba7de74b285135fb52664925a1788e905c5dc0f)
- * Testing cpusoftlimit and cpuhardlimit methods. [b701489](https://bitbucket.org/isaiah1112/sshreader/commits/b701489b6eb24ac74529c1d0ada1bfe29f423ccb)
- * Debug output can let you know how many sub-processes your system might use while running pydsh. [54374ce](https://bitbucket.org/isaiah1112/sshreader/commits/54374cea94943d6bb8d925b0efc72c5948dac821)
- * Updating print_results method to print [1028856](https://bitbucket.org/isaiah1112/sshreader/commits/10288564451a283b9530a96d47e195134a9682f8)
- * Updated deprecation messages. [007ece6](https://bitbucket.org/isaiah1112/sshreader/commits/007ece610406a7f2caee6091987649fe949978f9)
- * Not looping over lines in default output. [49a347c](https://bitbucket.org/isaiah1112/sshreader/commits/49a347c8c165ea4d004678e346cb6ea5430fa227)
- * Moving print statements to click wrapper [d0e9e7a](https://bitbucket.org/isaiah1112/sshreader/commits/d0e9e7abde49e85f69416943c11d29a809ea933f)
- * Changing timeout for SSH commands to default at 300 seconds [5a649b6](https://bitbucket.org/isaiah1112/sshreader/commits/5a649b6292e0b29c31ed9fab37bee7941eb2e9e7)
- * Changed decode bytes option to True by default [13a2b2a](https://bitbucket.org/isaiah1112/sshreader/commits/13a2b2a08ffaba11dc41aed3c754c816df7a6306)
+ * Added --redline option to run sshreader at hardCPULimit [b9f4530]
+ * Rewrote pydsh to use Click library for argument parsing.  Some flags have changed! [80d8e2c]
+ * Removing sort option and cleaning up logic. [dbdfe90]
+ * Added examples to help epilog [bd4a3c0]
+ * Rewrote printjobs and dshbak hooks [9ad72dc]
+ * Updated keyfile and password preference logic. [f10098a]
+ * Added cpusoftlimit and cpuhardlimit methods that return number of sub-processes your system is allowed to spawn. [4145a89]
+ * Bumping pydsh version to 1.3 [6ba7de7]
+ * Testing cpusoftlimit and cpuhardlimit methods. [b701489]
+ * Debug output can let you know how many sub-processes your system might use while running pydsh. [54374ce]
+ * Updating print_results method to print [1028856]
+ * Updated deprecation messages. [007ece6]
+ * Not looping over lines in default output. [49a347c]
+ * Moving print statements to click wrapper [d0e9e7a]
+ * Changing timeout for SSH commands to default at 300 seconds [5a649b6]
+ * Changed decode bytes option to True by default [13a2b2a]
 
 ## Version 3.2
- * Added echo method that implements a multiprocessing.Lock object for print. [7216411](https://bitbucket.org/isaiah1112/sshreader/commits/72164116e2422b44e6704342f0bf3da855a9a054)
- * Implementing a thread limit when using pcount and tcount in conjuction when tcount == 0.  This limits each process to automatically launching 500 each. [ac0c413](https://bitbucket.org/isaiah1112/sshreader/commits/ac0c413e5c8dfc19327e846f3ad26cb766a7cb0b)
- * Limiting threads to 500 when tcount=0 and pcount=None. [c5ef02c](https://bitbucket.org/isaiah1112/sshreader/commits/c5ef02c427adcfa2e43bbd40fbabaaf4d57efa7f)
- * Restructuring methodology for implementing thread limit when only using threads. [156c9a0](https://bitbucket.org/isaiah1112/sshreader/commits/156c9a0f694816783cd1dd3f1904b9c3d7cbad4f)
- * Added warnings for exceeding threadlimit [808a5d4](https://bitbucket.org/isaiah1112/sshreader/commits/808a5d4558d84e0aa06a491d03da5ed6f20b27cd)
- * Adding documentation for getting started. [5ab175f](https://bitbucket.org/isaiah1112/sshreader/commits/5ab175f48df35dd9f60c3f5425de97431a82c50c)
- * Added envvars method which attempts to gather username and ssh_key info from OS. [6911582](https://bitbucket.org/isaiah1112/sshreader/commits/69115829d3d118c5b36ed9325d50e6f1eb66aa6e)
+ * Added echo method that implements a multiprocessing.Lock object for print. [7216411]
+ * Implementing a thread limit when using pcount and tcount in conjuction when tcount == 0.  This limits each process to automatically launching 500 each. [ac0c413]
+ * Limiting threads to 500 when tcount=0 and pcount=None. [c5ef02c]
+ * Restructuring methodology for implementing thread limit when only using threads. [156c9a0]
+ * Added warnings for exceeding threadlimit [808a5d4]
+ * Adding documentation for getting started. [5ab175f]
+ * Added envvars method which attempts to gather username and ssh_key info from OS. [6911582]
 
 ## Version 3.1
- * Using os and getpass modules in conjunction when determining username. [1199c86](https://bitbucket.org/isaiah1112/sshreader/commits/1199c8616cf6a3441dcc77fd2828971617fe4128)
- * Added decodebytes flag to ssh_command and shell_command for decoding byte-strings to unicode-strings. This can help with compatibility when using Python 3. [86a7ed0](https://bitbucket.org/isaiah1112/sshreader/commits/86a7ed01d9c069fea02b409d3892557d5fb2a23b)
- * Using all unicode_literals because, well, because I said so! [7c247e9](https://bitbucket.org/isaiah1112/sshreader/commits/7c247e9938eb9340bf9b1afc4975304a4b6d9832)
- * Added unicode strings FAQ. [3d76108](https://bitbucket.org/isaiah1112/sshreader/commits/3d761080b447203e8cbe544ea27c8c804c866bc3)
- * Added timeout flag to pydsh cli so it can be overriden for long running commands. [2999e5c](https://bitbucket.org/isaiah1112/sshreader/commits/2999e5c836eb1d33af4577c9fc9f9b45a9631be5)
+ * Using os and getpass modules in conjunction when determining username. [1199c86]
+ * Added decodebytes flag to ssh_command and shell_command for decoding byte-strings to unicode-strings. This can help with compatibility when using Python 3. [86a7ed0]
+ * Using all unicode_literals because, well, because I said so! [7c247e9]
+ * Added unicode strings FAQ. [3d76108]
+ * Added timeout flag to pydsh cli so it can be overriden for long running commands. [2999e5c]
 
 # Version 3.0.1
- * Fixed typo in ssh docstring [328bb5c](https://bitbucket.org/isaiah1112/sshreader/commits/328bb5c86e6313d452e20406665f5a3e5507425c)
- * SSH class can now be used with Python 'with' statement [f54ac3d](https://bitbucket.org/isaiah1112/sshreader/commits/f54ac3d5fd342cbcfae2315f1be7043fe40d65a1)
+ * Fixed typo in ssh docstring [328bb5c]
+ * SSH class can now be used with Python 'with' statement [f54ac3d]
 
 # Version 3.0
  * Now works with Python2.7 and Python3.5!
- * Added pydsh script (installs in /usr/local/bin) (Python implemenation of pdsh that uses sshreader) [1cbf65a](https://bitbucket.org/isaiah1112/sshreader/commits/1cbf65a)
- * Now using progressbar2 module for progress bar in sshread method! [e9431e0](https://bitbucket.org/isaiah1112/sshreader/commits/e9431e0)
- * Initial Unittests... Many more to come! [9d1996f](https://bitbucket.org/isaiah1112/sshreader/commits/9d1996f)
- * Created new Hook class for working with pre and post hooks. [473051a](https://bitbucket.org/isaiah1112/sshreader/commits/473051a)
- * Major rework of how sub-processes and threads are generated/managed. [160fecf](https://bitbucket.org/isaiah1112/sshreader/commits/160fecf)
- * Moved do\_shell\_script to shell\_command to match ssh\_command from SSH class.  do\_shell\_script will be removed in sshreader v4.0 [de4523d](https://bitbucket.org/isaiah1112/sshreader/commits/de4523d)
- * Removed tprint function. [ea90405](https://bitbucket.org/isaiah1112/sshreader/commits/ea90405)
- * Removed ability to override prehook, posthook, and debuglevel via the sshread method.  Set them at the ServerJob level. [160fecf](https://bitbucket.org/isaiah1112/sshreader/commits/160fecf)
- * Added connect kwarg to SSH class and testing for established connection when issuing ssh\_command. [35f5d24](https://bitbucket.org/isaiah1112/sshreader/commits/35f5d24)
- * Silencing progress\_bar when used in conjunction with debuglevel. [dab6ac2](https://bitbucket.org/isaiah1112/sshreader/commits/dab6ac2)
- * Fixed issue with not closing file specification from Popen. [af1c641](https://bitbucket.org/isaiah1112/sshreader/commits/af1c641)
- * Fixed bug if keyfile is not set when initializing SSH object. [46ac270](https://bitbucket.org/isaiah1112/sshreader/commits/46ac270)
- * Added return\_code to ShellCommand namedtuple. [182570b](https://bitbucket.org/isaiah1112/sshreader/commits/182570b)
- * ServerJob.status now is a sum of return codes from each cmd in the job (a status of 255 means ssh did not connect). [182570b](https://bitbucket.org/isaiah1112/sshreader/commits/182570b)
- * Removed ServerJob.cmdStatus and renamed ServerJob.cmdResults to ServerJob.results [182570b](https://bitbucket.org/isaiah1112/sshreader/commits/182570b)
- * Renamed ServerJob.ssh\_con to ServerJob.\_conn [c4fe4b5](https://bitbucket.org/isaiah1112/sshreader/commits/c4fe4b5)
- * Added FAQ to docs for including helpful hints. [f7139c6](https://bitbucket.org/isaiah1112/sshreader/commits/f7139c6f798002d4b743e1a52d5644a446587da6)
+ * Added pydsh script (installs in /usr/local/bin) (Python implemenation of pdsh that uses sshreader) [1cbf65a]
+ * Now using progressbar2 module for progress bar in sshread method! [e9431e0]
+ * Initial Unittests... Many more to come! [9d1996f]
+ * Created new Hook class for working with pre and post hooks. [473051a]
+ * Major rework of how sub-processes and threads are generated/managed. [160fecf]
+ * Moved do\_shell\_script to shell\_command to match ssh\_command from SSH class.  do\_shell\_script will be removed in sshreader v4.0 [de4523d]
+ * Removed tprint function. [ea90405]
+ * Removed ability to override prehook, posthook, and debuglevel via the sshread method.  Set them at the ServerJob level. [160fecf]
+ * Added connect kwarg to SSH class and testing for established connection when issuing ssh\_command. [35f5d24]
+ * Silencing progress\_bar when used in conjunction with debuglevel. [dab6ac2]
+ * Fixed issue with not closing file specification from Popen. [af1c641]
+ * Fixed bug if keyfile is not set when initializing SSH object. [46ac270]
+ * Added return\_code to ShellCommand namedtuple. [182570b]
+ * ServerJob.status now is a sum of return codes from each cmd in the job (a status of 255 means ssh did not connect). [182570b]
+ * Removed ServerJob.cmdStatus and renamed ServerJob.cmdResults to ServerJob.results [182570b]
+ * Renamed ServerJob.ssh\_con to ServerJob.\_conn [c4fe4b5]
+ * Added FAQ to docs for including helpful hints. [f7139c6]
 
 # Version 2.3
  * Importing \_\_future\_\_ statements for print\_function and division

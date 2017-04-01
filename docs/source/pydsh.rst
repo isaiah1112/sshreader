@@ -26,6 +26,16 @@ Simplest form of pydsh [1]_.  Run a command and show the output of the commands 
     When using the :code:`--dshbak` or :code:`coalesce` options, a progress bar will be shown to the user as jobs
     are processing.
 
+Run a script file rather than a simple command on remote hosts:
+
+.. code-block:: bash
+
+    pydsh -F -w myhost[1-100].example.com my_complex_script.sh
+
+.. note::
+
+    At this time scripts must have the first line start with :code:`#!` in order to be loaded and run as a script by pydsh.
+
 Print output organized by host (similar to piping to :code:`dshbak` command):
 
 .. code-block:: bash

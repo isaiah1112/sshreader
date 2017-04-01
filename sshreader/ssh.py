@@ -3,7 +3,7 @@
 """A wrapper for Paramiko that attempts to make ssh sessions easier to work with.  It also contains the
 shell_command function for running local shell scripts!
 """
-# Copyright (C) 2015 Jesse Almanrode
+# Copyright (C) 2015-2017 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -18,7 +18,7 @@ shell_command function for running local shell scripts!
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from __future__ import print_function
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from getpass import getuser
 from subprocess import Popen, PIPE, STDOUT
 import logging
@@ -29,7 +29,6 @@ import warnings
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
-# Using namedtuple because... why not?
 ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr', 'return_code'])
 ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout', 'return_code'])
 
@@ -40,23 +39,20 @@ def envvars():
 
     :return: NamedTuple of (username, rsa_key, dsa_key, ecdsa_key)
     """
-    EnvVars = namedtuple('EnvVars', ['username', 'rsa_key', 'dsa_key', 'ecdsa_key'])
-    user = None
-    rsa_key = None
-    dsa_key = None
-    ecdsa_key = None
+    env = OrderedDict(user=None, rsa_key=None, dsa_key=None, ecdsa_key=None)
+    EnvVars = namedtuple('EnvVars', env.keys())
     if os.getlogin() == getuser():
-        user = getuser()
+        env['user'] = getuser()
     userhome = os.path.expanduser('~')
     if os.path.exists(userhome + "/.ssh"):
         keyfiles = os.listdir(userhome + "/.ssh")
         if "id_rsa" in keyfiles:
-            rsa_key = userhome + "/.ssh/id_rsa"
+            env['rsa_key'] = userhome + "/.ssh/id_rsa"
         if "id_dsa" in keyfiles:
-            dsa_key = userhome + "/.ssh/id_dsa"
+            env['dsa_key'] = userhome + "/.ssh/id_dsa"
         if 'id_ecdsa' in keyfiles:
-            ecdsa_key = userhome + '/.ssh/id_ecdsa'
-    return EnvVars(user, rsa_key, dsa_key, ecdsa_key)
+            env['ecdsa_key'] = userhome + '/.ssh/id_ecdsa'
+    return EnvVars(**env)
 
 
 def shell_command(command, combine=False, decodebytes=True):
@@ -93,7 +89,7 @@ def do_shell_script(command, combine=False):
 
     .. warning::
 
-        This call will be deprecated in v4.0
+        This call will be removed in v4.0
 
     :param command: String containing the shell script to run
     :param combine: Combine stderr and stdout in output
@@ -140,7 +136,7 @@ class SSH(object):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__close()
-        
+
     def sftp_put(self, srcfile, dstfile):
         """ Use the SFTP subsystem of OpenSSH to copy a local file to a remote host
 
@@ -148,9 +144,14 @@ class SSH(object):
         :param dstfile: Path to the remote file
         :return: Result of paramiko.SFTPClient.put()
         """
+        if self.__is_alive() is False:
+            raise paramiko.SSHException("Connection is not established")
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
-        result = sftp.put(os.path.expanduser(srcfile), os.path.expanduser(dstfile), confirm=True)
-        sftp.close()
+        try:
+            result = sftp.put(os.path.expanduser(srcfile), os.path.expanduser(dstfile), confirm=True)
+        except IOError as err:
+            sftp.close()
+            raise err
         return result
 
     def sftp_get(self, srcfile, dstfile):
@@ -160,8 +161,14 @@ class SSH(object):
         :param dstfile: Path to the local file
         :return: Result of paramiko.SFTPClient.get()
         """
+        if self.__is_alive() is False:
+            raise paramiko.SSHException("Connection is not established")
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
-        result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
+        try:
+            result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
+        except IOError as err:
+            sftp.close()
+            raise err
         sftp.close()
         return result
 
@@ -241,16 +248,16 @@ class SSH(object):
         if self.keyfile is not None:
             if self.username is not None:  # Key file with a custom username!
                 self._connection.connect(self.host, port=self.port, username=self.username,
-                                        key_filename=self.keyfile, timeout=self.timeout, look_for_keys=False)
+                                         key_filename=self.keyfile, timeout=self.timeout, look_for_keys=False)
             else:
                 self._connection.connect(self.host, port=self.port, key_filename=self.keyfile,
-                                        timeout=self.timeout, look_for_keys=False)
+                                         timeout=self.timeout, look_for_keys=False)
         else:  # Username and password combo
             if self.username is None or self.password is None:
                 raise paramiko.SSHException("You must provide a username and password or supply an SSH key")
             else:
                 self._connection.connect(self.host, port=self.port, username=self.username,
-                                        password=self.password, timeout=self.timeout, look_for_keys=False)
+                                         password=self.password, timeout=self.timeout, look_for_keys=False)
         return True
 
     # Privatizing some of the functions so SSH can be subclassed

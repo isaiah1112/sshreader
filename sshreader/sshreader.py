@@ -1,7 +1,7 @@
 # coding=utf-8
 """ All the classes and functions that make sshreader tick
 """
-# Copyright (C) 2015 Jesse Almanrode
+# Copyright (C) 2015-2017 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -38,12 +38,6 @@ _printlock_ = multiprocessing.Lock()
 logger = logging.getLogger('sshreader')
 
 
-class ExceededCPULimit(Exception):
-    """ You have asked for more sub processes than your CPU is allowed to handle
-    """
-    pass
-
-
 class Hook(object):
     """ Custom class for pre and post hooks
 
@@ -76,16 +70,14 @@ class Hook(object):
         self.result = None
 
     def run(self, *args, **kwargs):
-        """ Run the Hook.
+        """ Run the Hook.  You can add additional args or kwargs at this time!
 
-        :param args: Override args
-        :param kwargs: Override kwargs
+        :param args: Append to args
+        :param kwargs: Append to/update kwargs
         :return: Result from target function
         """
-        if len(args) == 0:
-            args = self.args
-        if len(kwargs) == 0:
-            kwargs = self.kwargs
+        args =  self.args + list(args)
+        kwargs = dict(list(self.kwargs.items()) + list(kwargs.items()))
         self.result = self.target(*args, **kwargs)
         return self.result
 
@@ -162,9 +154,7 @@ class ServerJob(object):
         # Run prehook if it is defined
         if self.prehook is not None:
             logger.debug(u"Running prehook")
-            self.prehook.args.append(self)
-            self.prehook.run()
-            self.prehook.args.remove(self)
+            self.prehook.run(self)
         # Establish SSH Connection if we are not working locally
         if self.runlocal is False:
             try:
@@ -194,13 +184,11 @@ class ServerJob(object):
             # Run post hook before we are done with this job
         if self.posthook is not None:
             logger.debug(u"Running posthook")
-            self.posthook.args.append(self)
-            self.posthook.run()
-            self.posthook.args.remove(self)
+            self.posthook.run(self)
         logger.info(u"Finished running ServerJob: " + str(self.name))
         return self.status
 
-    def print(self):
+    def output(self):
         """ Prints the status of the ServerJob and details of each cmd in the job
 
         :return: None
@@ -228,7 +216,7 @@ def print_results(serverjobs):
 
     .. warning::
 
-        This call will be deprecated in v4.0
+        This call will be removed in v4.0
 
     :param serverjobs: List of ServerJob objects
     :return: SortedJobs named tuple
@@ -262,7 +250,7 @@ def cpusoftlimit():
 
 def cpuhardlimit():
     """ Return the maximum number of sub-processes your system is allowed to spawn.
-    
+
     cpusoftlimit() * __cpuHardLimitFactor__
 
     :return: Integer
@@ -275,9 +263,11 @@ def cpuhardlimit():
 def threadlimit():
     """ Return the maximum number of threads each process is allowed to spawn.  The idea here is to not overload a system.
 
+    cpu_count() * 2
+
     :return: Integer
     """
-    return multiprocessing.cpu_count()
+    return multiprocessing.cpu_count() * 2
 
 
 def echo(*args, **kwargs):
@@ -356,7 +346,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
         pcount = int(min(pcount, totaljobs))
 
         if pcount > cpuhardlimit():
-            raise ExceededCPULimit(str(pcount) + ' > ' + str(cpuhardlimit()))
+            raise ValueError('CPUHardLimit exceeded: ' + str(pcount) + ' > ' + str(cpuhardlimit()))
 
         if tcount is not None:
             if tcount == 0:
