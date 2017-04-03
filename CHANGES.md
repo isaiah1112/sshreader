@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 3.7.1
+ * Fixing bug in sshreader.ssh.envvars() method [d24fe51]
+
 ## Version 3.7
  * Added ability to run script file via pydsh. [9bd476e]
  * Increasing threadlimit [1e07336]
