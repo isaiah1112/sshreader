@@ -39,10 +39,10 @@ def envvars():
 
     :return: NamedTuple of (username, rsa_key, dsa_key, ecdsa_key)
     """
-    env = OrderedDict(user=None, rsa_key=None, dsa_key=None, ecdsa_key=None)
+    env = OrderedDict(username=None, rsa_key=None, dsa_key=None, ecdsa_key=None)
     EnvVars = namedtuple('EnvVars', env.keys())
     if os.getlogin() == getuser():
-        env['user'] = getuser()
+        env['username'] = getuser()
     userhome = os.path.expanduser('~')
     if os.path.exists(userhome + "/.ssh"):
         keyfiles = os.listdir(userhome + "/.ssh")
