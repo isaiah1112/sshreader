@@ -7,11 +7,9 @@ click==6.7
 colorama==0.3.7
 cryptography==1.8.1
 docutils==0.13.1
-enum34==1.1.6
 future==0.16.0
 idna==2.5
 imagesize==0.7.1
-ipaddress==1.0.18
 Jinja2==2.9.5
 MarkupSafe==1.0
 packaging==16.8
@@ -24,7 +22,7 @@ pycparser==2.17
 Pygments==2.2.0
 pyparsing==2.2.0
 python-hostlist==1.17
-python-utils==2.0.1
+python-utils==2.1.0
 pytz==2017.2
 requests==2.13.0
 six==1.10.0
