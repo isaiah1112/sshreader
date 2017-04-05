@@ -10,12 +10,12 @@ docutils==0.13.1
 future==0.16.0
 idna==2.5
 imagesize==0.7.1
-Jinja2==2.9.5
+Jinja2==2.9.6
 MarkupSafe==1.0
 packaging==16.8
 paramiko==2.1.2
 pluggy==0.4.0
-progressbar2==3.16.1
+progressbar2==3.17.1
 py==1.4.33
 pyasn1==0.2.3
 pycparser==2.17
@@ -27,6 +27,6 @@ pytz==2017.2
 requests==2.13.0
 six==1.10.0
 snowballstemmer==1.2.1
-Sphinx==1.5.3
+Sphinx==1.5.5
 tox==2.6.0
 virtualenv==15.1.0
