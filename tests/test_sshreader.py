@@ -248,8 +248,8 @@ class TestSshreader(unittest.TestCase):
     def test_cpulimits(self):
         """ Ensure the cpulimit methods
         """
-        self.assertIsInstance(sshreader.sshreader.cpusoftlimit(), int)
-        self.assertIsInstance(sshreader.sshreader.cpuhardlimit(), int)
+        self.assertIsInstance(sshreader.utils.cpusoftlimit(), int)
+        self.assertIsInstance(sshreader.utils.cpuhardlimit(), int)
         pass
 
 

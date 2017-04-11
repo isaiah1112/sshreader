@@ -19,7 +19,8 @@ from __future__ import absolute_import, print_function, division
 from builtins import range  # Replaces xrange in Python2
 from collections import namedtuple
 from progressbar import ProgressBar
-from sshreader.ssh import SSH, shell_command
+from sshreader.ssh import SSH
+from subprocess import Popen, PIPE, STDOUT
 from types import FunctionType
 import logging
 import multiprocessing
@@ -28,7 +29,6 @@ import paramiko
 import sys
 import threading
 import time
-import warnings
 
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
@@ -36,6 +36,38 @@ __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 __cpuHardLimitFactor__ = 3
 _printlock_ = multiprocessing.Lock()
 logger = logging.getLogger('sshreader')
+
+
+# Globals
+Command = namedtuple('Command', ['cmd', 'stdout', 'stderr', 'return_code'])
+
+
+def shell_command(command, combine=False, decodebytes=True):
+    """Run a command in the shell on localhost and return the output
+
+    :param command: String containing the shell script to run
+    :param combine: Direct stderr to stdout
+    :param decodebytes: Decode bytes objects to unicode strings
+    :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
+    """
+    if combine:
+        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
+        stdout, stderr = pipeout.communicate()
+        assert stderr is None
+        if decodebytes:
+            result = Command(cmd=command, stdout=stdout.decode().strip(), stderr=None, return_code=pipeout.returncode)
+        else:
+            result = Command(cmd=command, stdout=stdout.strip(), stderr=None, return_code=pipeout.returncode)
+    else:
+        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = pipeout.communicate()
+        if decodebytes:
+            result = Command(cmd=command, stdout=stdout.decode().strip(),
+                                  stderr=stderr.decode().strip(), return_code=pipeout.returncode)
+        else:
+            result = Command(cmd=command, stdout=stdout.strip(), stderr=stderr.strip(),
+                                  return_code=pipeout.returncode)
+    return result
 
 
 class Hook(object):
@@ -76,7 +108,7 @@ class Hook(object):
         :param kwargs: Append to/update kwargs
         :return: Result from target function
         """
-        args =  self.args + list(args)
+        args = self.args + list(args)
         kwargs = dict(list(self.kwargs.items()) + list(kwargs.items()))
         self.result = self.target(*args, **kwargs)
         return self.result
@@ -205,37 +237,7 @@ class ServerJob(object):
     def __getitem__(self, item):
         return self.__dict__[item]
 
-    def keys(self):
-        """So you can work with the object in Dictionary form
-        """
-        return self.__dict__.keys()
-
-
-def print_results(serverjobs):
-    """Print the output of all ServerJobs in as ServerJobList by job status
-
-    .. warning::
-
-        This call will be removed in v4.0
-
-    :param serverjobs: List of ServerJob objects
-    :return: SortedJobs named tuple
-    """
-    warnings.warn('The <print_results> method will be deprecated in v4.0')
-    SortedJobs = namedtuple("SortedJobs", ['completed', 'failed', 'unknown'])
-    status_complete = [x for x in serverjobs if x.status == 0]
-    status_failed = [x for x in serverjobs if x.status > 0]
-    status_unknown = [x for x in serverjobs if x.status == 255]
-    if len(status_complete) > 0:
-        for job in status_complete:
-            job.print_results()
-    if len(status_failed) > 0:
-        for job in status_failed:
-            job.print_results()
-    if len(status_unknown) > 0:
-        for job in status_unknown:
-            job.print_results()
-    return SortedJobs(completed=status_complete, failed=status_failed, unknown=status_unknown)
+    __output = output
 
 
 def cpusoftlimit():
