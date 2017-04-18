@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 3.7.2
+ * Fixing bug in pydsh if script file is empty [b075256]
+
 ## Version 3.7.1
  * Fixing bug in sshreader.ssh.envvars() method [d24fe51]
 
