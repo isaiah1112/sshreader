@@ -27,7 +27,7 @@ import sshreader
 import sys
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '2.1'
+__version__ = '2.1.1'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
@@ -153,10 +153,10 @@ def cli(**kwargs):
         script_name = os.path.split(script_path)[1]
         prehook = sshreader.Hook(copy_script, args=[script_path])
         with open(script_path) as s:
-            script = s.readlines()
-        if script[0].startswith('#!') is False:
+            script = s.readline()
+        if script.startswith('#!') is False:
             raise click.UsageError('Script must start with #!')
-        kwargs['cmd'] = [script[0].split('#!').pop().strip() + ' /tmp/' + script_name, 'rm /tmp/' + script_name]
+        kwargs['cmd'] = [script.split('#!').pop().strip() + ' /tmp/' + script_name, 'rm /tmp/' + script_name]
     sshenv = sshreader.envvars()
 
     if kwargs['username'] is None:
