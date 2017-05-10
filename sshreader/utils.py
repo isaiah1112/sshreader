@@ -62,11 +62,10 @@ def shell_command(command, combine=False, decodebytes=True):
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
         stdout, stderr = pipeout.communicate()
         if decodebytes:
-            result = Command(cmd=command, stdout=stdout.decode().strip(),
-                                  stderr=stderr.decode().strip(), return_code=pipeout.returncode)
+            result = Command(cmd=command, stdout=stdout.decode().strip(), stderr=stderr.decode().strip(),
+                             return_code=pipeout.returncode)
         else:
-            result = Command(cmd=command, stdout=stdout.strip(), stderr=stderr.strip(),
-                                  return_code=pipeout.returncode)
+            result = Command(cmd=command, stdout=stdout.strip(), stderr=stderr.strip(), return_code=pipeout.returncode)
     return result
 
 
@@ -113,6 +112,9 @@ class Hook(object):
         self.result = self.target(*args, **kwargs)
         return self.result
 
+    def __str__(self):
+        return self.__dict__
+
 
 class ServerJob(object):
     """ Custom class for holding all the info needed to run ssh commands or shell commands in sub-processes or threads
@@ -136,7 +138,7 @@ class ServerJob(object):
     def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, timeout=(30, 30),
                  runlocal=False, prehook=None, posthook=None, combine_output=False):
         self.name = fqdn
-        self.results = []
+        self.results = list()
         self.username = username
         self.password = password
         self.key = keyfile
@@ -220,24 +222,11 @@ class ServerJob(object):
         logger.info(u"Finished running ServerJob: " + str(self.name))
         return self.status
 
-    def output(self):
-        """ Prints the status of the ServerJob and details of each cmd in the job
-
-        :return: None
-        """
-        print(str('-' * 16))
-        print(u'ServerJob: ' + str(self.name) + u'\tStatus: ' + str(self.status))
-        for result in self.results:
-            print(result)
-        return None
-
     def __str__(self):
-        return str(self.__dict__)
+        return self.__dict__
 
     def __getitem__(self, item):
         return self.__dict__[item]
-
-    __output = output
 
 
 def cpusoftlimit():

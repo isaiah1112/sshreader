@@ -84,6 +84,9 @@ class SSH(object):
         if connect:
             self.__connect()
 
+    def __str__(self):
+        return self.__dict__
+
     def __enter__(self):
         if self.__alive() is False:
             self.__connect()
@@ -168,8 +171,7 @@ class SSH(object):
 
         :return: None
         """
-        self._connection.close()
-        return None
+        return self._connection.close()
 
     def alive(self):
         """Is an SSH connection alive

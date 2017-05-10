@@ -24,7 +24,7 @@ except IOError:
     ssh_data = {'host_fqdn': None, 'ssh_user': None, 'ssh_password': None, 'ssh_key_path': None}
 if any(val is None for key, val in ssh_data.items()):
     for key in ssh_data:
-        ssh_data[key] = click.prompt('Please enter value for (' + key + ')', default=None, type=str)
+        ssh_data[key] = click.prompt('Please enter value for (' + key + ')', type=str)
     with open(project_root + '/tests/test_params.json', 'w') as params_file:
         json.dump(ssh_data, params_file)
 
