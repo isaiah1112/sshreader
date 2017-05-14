@@ -171,55 +171,48 @@ class ServerJob(object):
                 raise TypeError('posthook should be of type: ' + str(Hook))
         else:
             self.posthook = posthook
-        if runlocal is False:
-            self._conn = None
-            if keyfile is None:
-                if username is None or password is None:
-                    raise paramiko.SSHException("You must enter a username and password or supply an SSH key")
-        else:
+        if runlocal:
             self._conn = "localhost"
+        elif not keyfile and not all([username, password]):
+            raise paramiko.SSHException("You must enter a username and password or supply an SSH key")
 
     def run(self):
         """Run a ServerJob. SSH to server, run cmds, return result
 
         :return: ServerJob.status
         """
-        logger.info(u"Running ServerJob: " + str(self.name))
-        # Run prehook if it is defined
+        logger.info(str(self.name) + u': Starting')
         if self.prehook is not None:
-            logger.debug(u"Running prehook")
+            logger.debug(str(self.name) + u':Running prehook')
             self.prehook.run(self)
-        # Establish SSH Connection if we are not working locally
-        if self.runlocal is False:
+        if self.runlocal:
+            for cmd in self.cmds:
+                logger.debug(str(self.name) + u': ' + str(cmd))
+                result = shell_command(cmd, combine=self.combine_output)
+                self.results.append(result)
+                logger.debug(str(self.name) + u': ' + str(cmd) + u': ' + str(result))
+                self.status += result.return_code
+        else:
             try:
                 self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
                                  timeout=self.sshtimeout)
             except Exception as errorMsg:
                 logger.debug(str(errorMsg))
-                self._conn = None
                 self.status = 255
                 self.results.append(str(errorMsg))
-        # This is a trick statement to allow ssh and local shell scripts to be run using similar output processing code
-        if self._conn is not None:
-            for thiscmd in self.cmds:
-                # Now running each command in turn
-                logger.debug(str(self.name) + u" running: " + str(thiscmd))
-                if self.runlocal:
-                    result = shell_command(thiscmd, combine=self.combine_output)
-                else:
-                    result = self._conn.ssh_command(thiscmd, timeout=self.cmdtimeout, combine=self.combine_output)
-                self.results.append(result)
-                logger.debug(str(self.name) + u": " + str(thiscmd) + u": Finished")
-                self.status += result.return_code
-            # Close ssh connection if needed
-            if self.runlocal is False:
+            else:
+                for cmd in self.cmds:
+                    logger.debug(str(self.name) + u': ' + str(cmd))
+                    result = self._conn.ssh_command(cmd, timeout=self.cmdtimeout, combine=self.combine_output)
+                    self.results.append(result)
+                    logger.debug(str(self.name) + u': ' + str(cmd) + u': ' + str(result))
+                    self.status += result.return_code
                 self._conn.close()
-            self._conn = None
-            # Run post hook before we are done with this job
+                self._conn = None  # So the ssh connection can be pickled!
         if self.posthook is not None:
-            logger.debug(u"Running posthook")
+            logger.debug(str(self.name) + u':Running posthook')
             self.posthook.run(self)
-        logger.info(u"Finished running ServerJob: " + str(self.name))
+        logger.info(str(self.name) + u': Finished')
         return self.status
 
     def __str__(self):
