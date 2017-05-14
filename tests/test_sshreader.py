@@ -79,14 +79,14 @@ class TestSSH(unittest.TestCase):
         global ssh_data
         self.conn = sshreader.SSH(ssh_data['host_fqdn'], username=ssh_data['ssh_user'],
                                   password=ssh_data['ssh_password'], connect=False)
-        return self.conn.is_alive()
+        return self.conn.alive()
 
     def test_password(self):
         """ Test an SSH connection using a password
         """
         self.conn.connect()
-        self.conn.is_alive()
-        self.assertTrue(self.conn.is_alive(), msg='ssh connection using password failed to: ' + ssh_data['host_fqdn'])
+        self.conn.alive()
+        self.assertTrue(self.conn.alive(), msg='ssh connection using password failed to: ' + ssh_data['host_fqdn'])
         self.conn.close()
         pass
 
@@ -96,21 +96,21 @@ class TestSSH(unittest.TestCase):
         global ssh_data
         conn = sshreader.SSH(ssh_data['host_fqdn'], username=ssh_data['ssh_user'],
                              keyfile=ssh_data['ssh_key_path'])
-        self.assertTrue(conn.is_alive(), msg='ssh connection using password failed to: ' + ssh_data['host_fqdn'])
+        self.assertTrue(conn.alive(), msg='ssh connection using password failed to: ' + ssh_data['host_fqdn'])
         pass
 
     def test_reconnect(self):
         """ Test re-opening an SSH connection
         """
-        self.assertFalse(self.conn.is_alive())
+        self.assertFalse(self.conn.alive())
         self.conn.reconnect()
-        self.assertTrue(self.conn.is_alive())
+        self.assertTrue(self.conn.alive())
         pass
 
     def test_command(self):
         """ Test an ssh_command
         """
-        self.assertFalse(self.conn.is_alive())
+        self.assertFalse(self.conn.alive())
         self.conn.connect()
         result = self.conn.ssh_command('echo foo')
         self.assertIsInstance(result, tuple)
@@ -121,7 +121,7 @@ class TestSSH(unittest.TestCase):
     def test_command_stderr(self):
         """ Test an ssh_command
         """
-        self.assertFalse(self.conn.is_alive())
+        self.assertFalse(self.conn.alive())
         self.conn.connect()
         result = self.conn.ssh_command('echo bar 1>&2')
         self.assertIsInstance(result, tuple)
@@ -132,7 +132,7 @@ class TestSSH(unittest.TestCase):
     def test_combine_output(self):
         """ Test combining stdout and stderr of ssh_command
         """
-        self.assertFalse(self.conn.is_alive())
+        self.assertFalse(self.conn.alive())
         self.conn.connect()
         result = self.conn.ssh_command('echo foo; echo bar 1>&2;', combine=True)
         self.assertIsInstance(result, tuple)
@@ -143,9 +143,9 @@ class TestSSH(unittest.TestCase):
     def test_cmd_timeout(self):
         """ Test handling of cmd timeout via SSH
         """
-        if self.conn.is_alive() is False:
+        if self.conn.alive() is False:
             self.conn.connect()
-        self.assertTrue(self.conn.is_alive())
+        self.assertTrue(self.conn.alive())
         result = self.conn.ssh_command('sleep 5', timeout=2)
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 124)
