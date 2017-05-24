@@ -80,24 +80,18 @@ class Hook(object):
     """
 
     def __init__(self, target, args=None, kwargs=None):
-        if isinstance(target, FunctionType):
-            self.target = target
-        else:
-            raise TypeError('target should be of type: ' + str(FunctionType))
+        assert isinstance(target, FunctionType)
+        self.target = target
         if args is None:
             self.args = list()
         else:
-            if isinstance(args, list):
-                self.args = args
-            else:
-                raise TypeError('args should be of type: ' + str(list))
+            assert isinstance(args, list)
+            self.args = args
         if kwargs is None:
             self.kwargs = dict()
         else:
-            if isinstance(kwargs, dict):
-                self.kwargs = kwargs
-            else:
-                raise ValueError('kwargs should be of type: ' + str(dict))
+            assert isinstance(kwargs, dict)
+            self.kwargs = kwargs
         self.result = None
 
     def run(self, *args, **kwargs):
@@ -182,7 +176,7 @@ class ServerJob(object):
         :return: ServerJob.status
         """
         logger.info(str(self.name) + u': Starting')
-        if self.prehook is not None:
+        if self.prehook:
             logger.debug(str(self.name) + u':Running prehook')
             self.prehook.run(self)
         if self.runlocal:
@@ -209,7 +203,7 @@ class ServerJob(object):
                     self.status += result.return_code
                 self._conn.close()
                 self._conn = None  # So the ssh connection can be pickled!
-        if self.posthook is not None:
+        if self.posthook:
             logger.debug(str(self.name) + u':Running posthook')
             self.posthook.run(self)
         logger.info(str(self.name) + u': Finished')
