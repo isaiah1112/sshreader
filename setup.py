@@ -5,11 +5,11 @@
 from setuptools import setup
 
 setup(name='sshreader',
-      version='3.7.2',
+      version='3.7.3',
       description='Multi-threading/processing wrapper for Paramiko',
       author='Jesse Almanrode',
       author_email='jesse@almanrode.com',
-      url='https://pythonhosted.org/sshreader/',
+      url='http://sshreader.readthedocs.io/',
       packages=['sshreader'],
       include_package_data=True,
       scripts=['bin/pydsh'],
