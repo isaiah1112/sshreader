@@ -61,6 +61,7 @@ class SSH(object):
     :param username: SSH username
     :param password: SSH password
     :param keyfile: SSH private key file
+    :param keypass: SSH private key password
     :param port: SSH port
     :param timeout: SSH connection timeout in seconds
     :param connect: Initiate the connect

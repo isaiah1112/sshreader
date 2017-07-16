@@ -118,6 +118,7 @@ class ServerJob(object):
     :param username: Username for SSH
     :param password: Password for SSH
     :param keyfile: Path to ssh key (can be used instead of password)
+    :param keypass: Password for private ssh key file
     :param timeout: Tuple of timeouts in seconds (sshtimeout, cmdtimeout)
     :param runlocal: Run job on localhost (skips ssh to localhost)
     :param prehook: Optional Hook object
