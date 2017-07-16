@@ -129,13 +129,14 @@ class ServerJob(object):
     :property results: List of namedtuples (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
     :property status: Sum of return codes for entire job (255 = ssh did not connect)
     """
-    def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, timeout=(30, 30),
+    def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, keypass=None, timeout=(30, 30),
                  runlocal=False, prehook=None, posthook=None, combine_output=False):
         self.name = fqdn
         self.results = list()
         self.username = username
         self.password = password
         self.key = keyfile
+        self.keypass = keypass
         self.status = 0
         self.combine_output = combine_output
         self.runlocal = runlocal

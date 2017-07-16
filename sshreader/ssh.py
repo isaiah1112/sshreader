@@ -67,16 +67,17 @@ class SSH(object):
     :return: SSH connection object
     :raises: SSHException
     """
-    def __init__(self, fqdn, username=None, password=None, keyfile=None, port=22, timeout=30, connect=True):
+    def __init__(self, fqdn, username=None, password=None, keyfile=None, keypass=None, port=22, timeout=30, connect=True):
         if keyfile is None and username is None:
             raise paramiko.SSHException('You must specify a password or keyfile')
         self.host = fqdn
         self.username = username
         self.password = password
-        if keyfile is not None:
+        if keyfile:
             self.keyfile = os.path.abspath(os.path.expanduser(keyfile))
         else:
             self.keyfile = keyfile
+        self.keypass = keypass
         self.port = port
         self.timeout = timeout
         self._connection = paramiko.SSHClient()
@@ -203,10 +204,10 @@ class SSH(object):
             raise paramiko.SSHException("Connection is already established")
         if self.keyfile is not None:
             if self.username is not None:  # Key file with a custom username!
-                self._connection.connect(self.host, port=self.port, username=self.username,
+                self._connection.connect(self.host, port=self.port, username=self.username, password=self.keypass,
                                          key_filename=self.keyfile, timeout=self.timeout, look_for_keys=False)
             else:
-                self._connection.connect(self.host, port=self.port, key_filename=self.keyfile,
+                self._connection.connect(self.host, port=self.port, key_filename=self.keyfile, password=self.keypass,
                                          timeout=self.timeout, look_for_keys=False)
         else:  # Username and password combo
             if self.username is None or self.password is None:
