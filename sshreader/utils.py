@@ -19,7 +19,8 @@ from __future__ import absolute_import, print_function, division
 from builtins import range  # Replaces xrange in Python2
 from collections import namedtuple
 from progressbar import ProgressBar
-from sshreader.ssh import SSH, shell_command
+from sshreader.ssh import SSH
+from subprocess import Popen, PIPE, STDOUT
 from types import FunctionType
 import logging
 import multiprocessing
@@ -28,7 +29,6 @@ import paramiko
 import sys
 import threading
 import time
-import warnings
 
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
@@ -36,6 +36,37 @@ __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 __cpuHardLimitFactor__ = 3
 _printlock_ = multiprocessing.Lock()
 logger = logging.getLogger('sshreader')
+
+
+# Globals
+Command = namedtuple('Command', ['cmd', 'stdout', 'stderr', 'return_code'])
+
+
+def shell_command(command, combine=False, decodebytes=True):
+    """Run a command in the shell on localhost and return the output
+
+    :param command: String containing the shell script to run
+    :param combine: Direct stderr to stdout
+    :param decodebytes: Decode bytes objects to unicode strings
+    :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
+    """
+    if combine:
+        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
+        stdout, stderr = pipeout.communicate()
+        assert stderr is None
+        if decodebytes:
+            result = Command(cmd=command, stdout=stdout.decode().strip(), stderr=None, return_code=pipeout.returncode)
+        else:
+            result = Command(cmd=command, stdout=stdout.strip(), stderr=None, return_code=pipeout.returncode)
+    else:
+        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = pipeout.communicate()
+        if decodebytes:
+            result = Command(cmd=command, stdout=stdout.decode().strip(), stderr=stderr.decode().strip(),
+                             return_code=pipeout.returncode)
+        else:
+            result = Command(cmd=command, stdout=stdout.strip(), stderr=stderr.strip(), return_code=pipeout.returncode)
+    return result
 
 
 class Hook(object):
@@ -49,24 +80,18 @@ class Hook(object):
     """
 
     def __init__(self, target, args=None, kwargs=None):
-        if isinstance(target, FunctionType):
-            self.target = target
-        else:
-            raise TypeError('target should be of type: ' + str(FunctionType))
+        assert isinstance(target, FunctionType)
+        self.target = target
         if args is None:
             self.args = list()
         else:
-            if isinstance(args, list):
-                self.args = args
-            else:
-                raise TypeError('args should be of type: ' + str(list))
+            assert isinstance(args, list)
+            self.args = args
         if kwargs is None:
             self.kwargs = dict()
         else:
-            if isinstance(kwargs, dict):
-                self.kwargs = kwargs
-            else:
-                raise ValueError('kwargs should be of type: ' + str(dict))
+            assert isinstance(kwargs, dict)
+            self.kwargs = kwargs
         self.result = None
 
     def run(self, *args, **kwargs):
@@ -76,10 +101,13 @@ class Hook(object):
         :param kwargs: Append to/update kwargs
         :return: Result from target function
         """
-        args =  self.args + list(args)
+        args = self.args + list(args)
         kwargs = dict(list(self.kwargs.items()) + list(kwargs.items()))
         self.result = self.target(*args, **kwargs)
         return self.result
+
+    def __str__(self):
+        return self.__dict__
 
 
 class ServerJob(object):
@@ -101,13 +129,14 @@ class ServerJob(object):
     :property results: List of namedtuples (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
     :property status: Sum of return codes for entire job (255 = ssh did not connect)
     """
-    def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, timeout=(30, 30),
+    def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, keypass=None, timeout=(30, 30),
                  runlocal=False, prehook=None, posthook=None, combine_output=False):
         self.name = fqdn
-        self.results = []
+        self.results = list()
         self.username = username
         self.password = password
         self.key = keyfile
+        self.keypass = keypass
         self.status = 0
         self.combine_output = combine_output
         self.runlocal = runlocal
@@ -137,105 +166,55 @@ class ServerJob(object):
                 raise TypeError('posthook should be of type: ' + str(Hook))
         else:
             self.posthook = posthook
-        if runlocal is False:
-            self._conn = None
-            if keyfile is None:
-                if username is None or password is None:
-                    raise paramiko.SSHException("You must enter a username and password or supply an SSH key")
-        else:
+        if runlocal:
             self._conn = "localhost"
+        elif not keyfile and not all([username, password]):
+            raise paramiko.SSHException("You must enter a username and password or supply an SSH key")
 
     def run(self):
         """Run a ServerJob. SSH to server, run cmds, return result
 
         :return: ServerJob.status
         """
-        logger.info(u"Running ServerJob: " + str(self.name))
-        # Run prehook if it is defined
-        if self.prehook is not None:
-            logger.debug(u"Running prehook")
+        logger.info(str(self.name) + u': Starting')
+        if self.prehook:
+            logger.debug(str(self.name) + u':Running prehook')
             self.prehook.run(self)
-        # Establish SSH Connection if we are not working locally
-        if self.runlocal is False:
+        if self.runlocal:
+            for cmd in self.cmds:
+                logger.debug(str(self.name) + u': ' + str(cmd))
+                result = shell_command(cmd, combine=self.combine_output)
+                self.results.append(result)
+                logger.debug(str(self.name) + u': ' + str(cmd) + u': ' + str(result))
+                self.status += result.return_code
+        else:
             try:
                 self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
                                  timeout=self.sshtimeout)
             except Exception as errorMsg:
                 logger.debug(str(errorMsg))
-                self._conn = None
                 self.status = 255
                 self.results.append(str(errorMsg))
-        # This is a trick statement to allow ssh and local shell scripts to be run using similar output processing code
-        if self._conn is not None:
-            for thiscmd in self.cmds:
-                # Now running each command in turn
-                logger.debug(str(self.name) + u" running: " + str(thiscmd))
-                if self.runlocal:
-                    result = shell_command(thiscmd, combine=self.combine_output)
-                else:
-                    result = self._conn.ssh_command(thiscmd, timeout=self.cmdtimeout, combine=self.combine_output)
-                self.results.append(result)
-                logger.debug(str(self.name) + u": " + str(thiscmd) + u": Finished")
-                self.status += result.return_code
-            # Close ssh connection if needed
-            if self.runlocal is False:
+            else:
+                for cmd in self.cmds:
+                    logger.debug(str(self.name) + u': ' + str(cmd))
+                    result = self._conn.ssh_command(cmd, timeout=self.cmdtimeout, combine=self.combine_output)
+                    self.results.append(result)
+                    logger.debug(str(self.name) + u': ' + str(cmd) + u': ' + str(result))
+                    self.status += result.return_code
                 self._conn.close()
-            self._conn = None
-            # Run post hook before we are done with this job
-        if self.posthook is not None:
-            logger.debug(u"Running posthook")
+                self._conn = None  # So the ssh connection can be pickled!
+        if self.posthook:
+            logger.debug(str(self.name) + u':Running posthook')
             self.posthook.run(self)
-        logger.info(u"Finished running ServerJob: " + str(self.name))
+        logger.info(str(self.name) + u': Finished')
         return self.status
 
-    def output(self):
-        """ Prints the status of the ServerJob and details of each cmd in the job
-
-        :return: None
-        """
-        print(str('-' * 16))
-        print(u'ServerJob: ' + str(self.name) + u'\tStatus: ' + str(self.status))
-        for result in self.results:
-            print(result)
-        return None
-
     def __str__(self):
-        return str(self.__dict__)
+        return self.__dict__
 
     def __getitem__(self, item):
         return self.__dict__[item]
-
-    def keys(self):
-        """So you can work with the object in Dictionary form
-        """
-        return self.__dict__.keys()
-
-
-def print_results(serverjobs):
-    """Print the output of all ServerJobs in as ServerJobList by job status
-
-    .. warning::
-
-        This call will be removed in v4.0
-
-    :param serverjobs: List of ServerJob objects
-    :return: SortedJobs named tuple
-    """
-    warnings.warn('The <print_results> method will be deprecated in v4.0')
-    SortedJobs = namedtuple("SortedJobs", ['completed', 'failed', 'unknown'])
-    status_complete = [x for x in serverjobs if x.status == 0]
-    status_failed = [x for x in serverjobs if x.status > 0]
-    status_unknown = [x for x in serverjobs if x.status == 255]
-    if len(status_complete) > 0:
-        for job in status_complete:
-            job.print_results()
-    if len(status_failed) > 0:
-        for job in status_failed:
-            job.print_results()
-    if len(status_unknown) > 0:
-        for job in status_unknown:
-            job.print_results()
-    return SortedJobs(completed=status_complete, failed=status_failed, unknown=status_unknown)
 
 
 def cpusoftlimit():
