@@ -241,11 +241,13 @@ def print_results(serverjobs):
 def cpusoftlimit():
     """ Return the default number of sub-processes your system is allowed to spawn
 
-    cpu_count() - 1
-
     :return: Integer
     """
-    return multiprocessing.cpu_count() - 1
+    cpu_count = multiprocessing.cpu_count()
+    if cpu_count > 1:
+        return cpu_count - 1
+    else:
+        return cpu_count
 
 
 def cpuhardlimit():
