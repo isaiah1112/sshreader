@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 3.7.4
+ * Fixing bug when cpu_count() for a machine is 1 that causes cpusoftlimit() to return 0. [67133a4]
+
 ## Version 3.7.3
  * Updated documentation hosting [ec1f6f9]
 
