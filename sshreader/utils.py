@@ -190,6 +190,9 @@ class ServerJob(object):
                 self.results.append(result)
                 logger.debug(str(self.name) + u': ' + str(cmd) + u': ' + str(result))
                 self.status += result.return_code
+            if self.posthook:
+                logger.debug(str(self.name) + u':Running posthook')
+                self.posthook.run(self)
         else:
             if self.prehook and self.prehook.ssh_established is False:
                 logger.debug(str(self.name) + u':Running prehook')
@@ -216,9 +219,9 @@ class ServerJob(object):
                     self.posthook.run(self)
                 self._conn.close()
                 self._conn = None  # So the ssh connection can be pickled!
-        if self.posthook and self.posthook.ssh_established is False:
-            logger.debug(str(self.name) + u':Running posthook')
-            self.posthook.run(self)
+            if self.posthook and self.posthook.ssh_established is False:
+                logger.debug(str(self.name) + u':Running posthook')
+                self.posthook.run(self)
         logger.info(str(self.name) + u': Finished')
         return self.status
 
