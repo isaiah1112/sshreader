@@ -75,13 +75,15 @@ class Hook(object):
     :param target: Function to call when using the hook
     :param args: List of args to pass to target
     :param kwargs: Dictionary of kwargs to pass to target
+    :param ssh_established: Should the ssh connection be established when the hook is run
     :return: Hook
     :raises: TypeError
     """
 
-    def __init__(self, target, args=None, kwargs=None):
+    def __init__(self, target, args=None, kwargs=None, ssh_established=False):
         assert isinstance(target, FunctionType)
         self.target = target
+        self.ssh_established = ssh_established
         if args is None:
             self.args = list()
         else:
@@ -178,10 +180,10 @@ class ServerJob(object):
         :return: ServerJob.status
         """
         logger.info(str(self.name) + u': Starting')
-        if self.prehook:
-            logger.debug(str(self.name) + u':Running prehook')
-            self.prehook.run(self)
         if self.runlocal:
+            if self.prehook:
+                logger.debug(str(self.name) + u':Running prehook')
+                self.prehook.run(self)
             for cmd in self.cmds:
                 logger.debug(str(self.name) + u': ' + str(cmd))
                 result = shell_command(cmd, combine=self.combine_output)
@@ -189,6 +191,9 @@ class ServerJob(object):
                 logger.debug(str(self.name) + u': ' + str(cmd) + u': ' + str(result))
                 self.status += result.return_code
         else:
+            if self.prehook and self.prehook.ssh_established is False:
+                logger.debug(str(self.name) + u':Running prehook')
+                self.prehook.run(self)
             try:
                 self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
                                  timeout=self.sshtimeout)
@@ -197,15 +202,21 @@ class ServerJob(object):
                 self.status = 255
                 self.results.append(str(errorMsg))
             else:
+                if self.prehook and self.prehook.ssh_established:
+                    logger.debug(str(self.name) + u':Running prehook')
+                    self.prehook.run(self)
                 for cmd in self.cmds:
                     logger.debug(str(self.name) + u': ' + str(cmd))
                     result = self._conn.ssh_command(cmd, timeout=self.cmdtimeout, combine=self.combine_output)
                     self.results.append(result)
                     logger.debug(str(self.name) + u': ' + str(cmd) + u': ' + str(result))
                     self.status += result.return_code
+                if self.posthook and self.posthook.ssh_established:
+                    logger.debug(str(self.name) + u':Running posthook')
+                    self.posthook.run(self)
                 self._conn.close()
                 self._conn = None  # So the ssh connection can be pickled!
-        if self.posthook:
+        if self.posthook and self.posthook.ssh_established is False:
             logger.debug(str(self.name) + u':Running posthook')
             self.posthook.run(self)
         logger.info(str(self.name) + u': Finished')

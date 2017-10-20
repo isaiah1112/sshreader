@@ -46,9 +46,7 @@ def copy_script(scriptfile, job):
     """
     script_name = os.path.split(scriptfile)[1]
     try:
-        with sshreader.SSH(job.name, username=job.username, password=job.password, keyfile=job.key, timeout=job.sshtimeout) as conn:
-            conn.sftp_put(scriptfile, '/tmp/' + script_name)
-        return True
+        job._conn.sftp_put(scriptfile, '/tmp/' + script_name)
     except Exception as err:
         return err
 
@@ -152,7 +150,7 @@ def cli(**kwargs):
         mkpath = click.Path(exists=True, dir_okay=False)
         script_path = mkpath(kwargs['cmd'])
         script_name = os.path.split(script_path)[1]
-        prehook = sshreader.Hook(copy_script, args=[script_path])
+        prehook = sshreader.Hook(copy_script, args=[script_path], ssh_established=True)
         with open(script_path) as s:
             script = s.readline()
         if script.startswith('#!') is False:
