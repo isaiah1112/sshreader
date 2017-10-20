@@ -108,6 +108,13 @@ Creating a Hook is as is as simple as:
     # Now, run the job
     sshread(job, tcount=1)
 
+ .. note::
+
+    By default the pre/post Hooks run before the ssh connection is established and after it is closed.  If you would like
+    the hook to run after the ssh connection is established or before it closes set the :code:`ssh_established` flag to
+    :code:`True` when creating the Hook.  This gives you ability to use the existing SSH connection within a job instead
+    of creating a new one within the Hook itself.
+
 Running Shell Commands
 ----------------------
 Sometimes you don't want to run commands via ssh but want to run them in the shell on the localhost.  Sshreader provides
