@@ -3,12 +3,12 @@ image: python:3.6
 pipelines:
   default:
     - step:
-      name: Not Ready yet
-      script:
-        - echo "Please run tox manually"
+        name: Not Ready yet
+        script:
+          - echo "Please run tox manually"
   branches:
     master:
       - step:
-        name: Deploy To PyPi
-        script:
-          - bash -e deploy.bash
+          name: Deploy To PyPi
+          script:
+            - bash -e deploy.bash
