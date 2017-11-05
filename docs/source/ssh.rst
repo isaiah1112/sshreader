@@ -4,7 +4,7 @@ ssh API
 =======
 
 .. automodule:: sshreader.ssh
-   :members: envvars, shell_command, SSH
+   :members: envvars, SSH
 
 
 Indices and tables

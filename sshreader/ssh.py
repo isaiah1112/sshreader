@@ -20,17 +20,16 @@ shell_command function for running local shell scripts!
 from __future__ import print_function
 from collections import namedtuple, OrderedDict
 from getpass import getuser
-from subprocess import Popen, PIPE, STDOUT
 import logging
 import os
 import paramiko
 import socket
-import warnings
 
+# Privates
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
-ShellCommand = namedtuple('ShellCommand', ['cmd', 'stdout', 'stderr', 'return_code'])
-ShellCommandCombined = namedtuple('ShellCommandCombined', ['cmd', 'stdout', 'return_code'])
+# Globals
+Command = namedtuple('Command', ['cmd', 'stdout', 'stderr', 'return_code'])
 
 
 def envvars():
@@ -55,73 +54,31 @@ def envvars():
     return EnvVars(**env)
 
 
-def shell_command(command, combine=False, decodebytes=True):
-    """Run a command in the shell on localhost and return the output
-
-    :param command: String containing the shell script to run
-    :param combine: Direct stderr to stdout
-    :param decodebytes: Decode bytes objects to unicode strings
-    :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
-    """
-    if combine:
-        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
-        stdout, stderr = pipeout.communicate()
-        assert stderr is None
-        if decodebytes:
-            result = ShellCommandCombined(cmd=command, stdout=stdout.decode().strip(),
-                                          return_code=pipeout.returncode)
-        else:
-            result = ShellCommandCombined(cmd=command, stdout=stdout.strip(), return_code=pipeout.returncode)
-    else:
-        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = pipeout.communicate()
-        if decodebytes:
-            result = ShellCommand(cmd=command, stdout=stdout.decode().strip(),
-                                  stderr=stderr.decode().strip(), return_code=pipeout.returncode)
-        else:
-            result = ShellCommand(cmd=command, stdout=stdout.strip(), stderr=stderr.strip(),
-                                  return_code=pipeout.returncode)
-    return result
-
-
-def do_shell_script(command, combine=False):
-    """ Alias to shell_command.
-
-    .. warning::
-
-        This call will be removed in v4.0
-
-    :param command: String containing the shell script to run
-    :param combine: Combine stderr and stdout in output
-    :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
-    """
-    warnings.warn('<do_shell_script> will be replaced by <shell_command> in v4.0')
-    return shell_command(command, combine=combine)
-
-
 class SSH(object):
     """SSH Session object
 
     :param fqdn: Fully qualified domain name or IP address
     :param username: SSH username
     :param password: SSH password
-    :param keyfile: SSH keyfile (can be used instead of password)
+    :param keyfile: SSH private key file
+    :param keypass: SSH private key password
     :param port: SSH port
     :param timeout: SSH connection timeout in seconds
     :param connect: Initiate the connect
     :return: SSH connection object
     :raises: SSHException
     """
-    def __init__(self, fqdn, username=None, password=None, keyfile=None, port=22, timeout=30, connect=True):
+    def __init__(self, fqdn, username=None, password=None, keyfile=None, keypass=None, port=22, timeout=30, connect=True):
         if keyfile is None and username is None:
             raise paramiko.SSHException('You must specify a password or keyfile')
         self.host = fqdn
         self.username = username
         self.password = password
-        if keyfile is not None:
+        if keyfile:
             self.keyfile = os.path.abspath(os.path.expanduser(keyfile))
         else:
             self.keyfile = keyfile
+        self.keypass = keypass
         self.port = port
         self.timeout = timeout
         self._connection = paramiko.SSHClient()
@@ -129,8 +86,11 @@ class SSH(object):
         if connect:
             self.__connect()
 
+    def __str__(self):
+        return self.__dict__
+
     def __enter__(self):
-        if self.__is_alive() is False:
+        if self.__alive() is False:
             self.__connect()
         return self
 
@@ -144,7 +104,7 @@ class SSH(object):
         :param dstfile: Path to the remote file
         :return: Result of paramiko.SFTPClient.put()
         """
-        if self.__is_alive() is False:
+        if self.__alive() is False:
             raise paramiko.SSHException("Connection is not established")
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         try:
@@ -161,7 +121,7 @@ class SSH(object):
         :param dstfile: Path to the local file
         :return: Result of paramiko.SFTPClient.get()
         """
-        if self.__is_alive() is False:
+        if self.__alive() is False:
             raise paramiko.SSHException("Connection is not established")
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         try:
@@ -182,31 +142,30 @@ class SSH(object):
         :return: Namedtuple of (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
         :raises: SSHException
         """
-        if self.__is_alive() is False:
+        if self.__alive() is False:
             raise paramiko.SSHException("Connection is not established")
         if combine:
             try:
                 stdin, stdout, stderr = self._connection.exec_command(command, timeout=timeout, get_pty=True)
                 if decodebytes:
-                    result = ShellCommandCombined(cmd=command, stdout=stdout.read().decode().strip(),
-                                                  return_code=stdout.channel.recv_exit_status())
+                    result = Command(cmd=command, stdout=stdout.read().decode().strip(), stderr=None,
+                                     return_code=stdout.channel.recv_exit_status())
                 else:
-                    result = ShellCommandCombined(cmd=command, stdout=stdout.read().strip(),
-                                                  return_code=stdout.channel.recv_exit_status())
+                    result = Command(cmd=command, stdout=stdout.read().strip(), stderr=None,
+                                     return_code=stdout.channel.recv_exit_status())
             except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):
-                result = ShellCommandCombined(cmd=command, stdout='Command timed out', return_code=124)
+                result = Command(cmd=command, stdout='Command timed out', stderr=None, return_code=124)
         else:
             try:
                 stdin, stdout, stderr = self._connection.exec_command(command, timeout=timeout)
                 if decodebytes:
-                    result = ShellCommand(cmd=command, stdout=stdout.read().decode().strip(),
-                                          stderr=stderr.read().decode().strip(),
-                                          return_code=stdout.channel.recv_exit_status())
+                    result = Command(cmd=command, stdout=stdout.read().decode().strip(),
+                                     stderr=stderr.read().decode().strip(), return_code=stdout.channel.recv_exit_status())
                 else:
-                    result = ShellCommand(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip(),
-                                          return_code=stdout.channel.recv_exit_status())
+                    result = Command(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip(),
+                                     return_code=stdout.channel.recv_exit_status())
             except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):
-                result = ShellCommand(cmd=command, stdout='', stderr='Command timed out', return_code=124)
+                result = Command(cmd=command, stdout='', stderr='Command timed out', return_code=124)
         return result
 
     def close(self):
@@ -214,10 +173,9 @@ class SSH(object):
 
         :return: None
         """
-        self._connection.close()
-        return None
+        return self._connection.close()
 
-    def is_alive(self):
+    def alive(self):
         """Is an SSH connection alive
 
         :return: True or False
@@ -243,14 +201,14 @@ class SSH(object):
         :raises: SSHException
         """
         paramiko.util.logging.getLogger().setLevel(logging.CRITICAL)  # Keeping paramiko from logging errors to stdout
-        if self.__is_alive():
+        if self.__alive():
             raise paramiko.SSHException("Connection is already established")
         if self.keyfile is not None:
             if self.username is not None:  # Key file with a custom username!
-                self._connection.connect(self.host, port=self.port, username=self.username,
+                self._connection.connect(self.host, port=self.port, username=self.username, password=self.keypass,
                                          key_filename=self.keyfile, timeout=self.timeout, look_for_keys=False)
             else:
-                self._connection.connect(self.host, port=self.port, key_filename=self.keyfile,
+                self._connection.connect(self.host, port=self.port, key_filename=self.keyfile, password=self.keypass,
                                          timeout=self.timeout, look_for_keys=False)
         else:  # Username and password combo
             if self.username is None or self.password is None:
@@ -261,6 +219,6 @@ class SSH(object):
         return True
 
     # Privatizing some of the functions so SSH can be subclassed
-    __is_alive = is_alive
+    __alive = alive
     __connect = connect
     __close = close

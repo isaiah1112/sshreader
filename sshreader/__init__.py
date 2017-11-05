@@ -19,8 +19,8 @@ from __future__ import print_function, absolute_import
 from pkg_resources import get_distribution, DistributionNotFound
 
 # For backwards compatibility
-from sshreader.ssh import SSH, shell_command, do_shell_script, envvars
-from sshreader.sshreader import ServerJob, Hook, sshread, print_results, echo, cpusoftlimit, cpuhardlimit, threadlimit
+from sshreader.ssh import SSH, envvars
+from sshreader.utils import ServerJob, Hook, sshread, echo, cpusoftlimit, cpuhardlimit, threadlimit, shell_command
 import logging
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
@@ -28,7 +28,7 @@ try:
     __version__ = get_distribution('sshreader').version
 except DistributionNotFound:
     __version__ = 'UNKNOWN'
-__all__ = ['sshreader', 'ssh']
+__all__ = ['utils', 'ssh']
 
 logging.basicConfig()
 logging.getLogger(__name__).addHandler(logging.NullHandler())

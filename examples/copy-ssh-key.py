@@ -55,5 +55,6 @@ def cli(**kwargs):
                 s.ssh_command('echo "' + ssh_pubkey + '" >> ~/.ssh/authorized_keys')
     sys.exit(0)
 
+
 if __name__ == '__main__':
     cli()

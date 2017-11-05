@@ -74,7 +74,7 @@ as needed.
         jobs.append(job)
     finished = sshread(jobs, tcount=0)
     for job in finished:
-        job.output()
+        print(job.status, job.results)
 
 Now you are ready to sshread all your servers as fast as possible!
 
@@ -107,6 +107,13 @@ Creating a Hook is as is as simple as:
                     prehook=myhook)
     # Now, run the job
     sshread(job, tcount=1)
+
+ .. note::
+
+    By default the pre/post Hooks run before the ssh connection is established and after it is closed.  If you would like
+    the hook to run after the ssh connection is established or before it closes set the :code:`ssh_established` flag to
+    :code:`True` when creating the Hook.  This gives you ability to use the existing SSH connection within a job instead
+    of creating a new one within the Hook itself.
 
 Running Shell Commands
 ----------------------
