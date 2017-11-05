@@ -1,5 +1,19 @@
 # Changelog
 
+## Release release/v4.0
+ * Refactor work for package. [f612acc]
+ * Setting up objects to have proper __str__ function [89682ca]
+ * Rewriting logic in ServerJob class functions. [d18e37a]
+ * Fixing errors in integration tests. [4324883]
+ * Cleaning up code in sshreader.Hook class. [65adfa9]
+ * Adding ability to pass private keyfile password to paramiko. [af3390a]
+ * If you haven't moved from Python 3.5 to 3.6 then you are living in the dark ages. [c010419]
+ * Added ability to run pre/post hooks while SSH connection is established. [f711a23]
+ * Updating Hook documentation. [8eb3140]
+ * Fixing location of posthook when runlocal is set to true [006d8ea]
+ * Setting up bitbucket pipelines. [592d090]
+ * Updated requirements and version [6d0bd75]
+
 ## Version 3.7.4
  * Fixing bug when cpu_count() for a machine is 1 that causes cpusoftlimit() to return 0. [67133a4]
 
