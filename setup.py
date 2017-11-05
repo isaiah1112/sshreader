@@ -5,7 +5,7 @@
 from setuptools import setup
 
 setup(name='sshreader',
-      version='3.7.4',
+      version='4.0',
       description='Multi-threading/processing wrapper for Paramiko',
       author='Jesse Almanrode',
       author_email='jesse@almanrode.com',
@@ -15,6 +15,7 @@ setup(name='sshreader',
       scripts=['bin/pydsh'],
       license='GNU Lesser General Public License v3 or later (LGPLv3+)',
       install_requires=['click==6.7',
+                        'colorama==0.3.9',
                         'future==0.16.0',
                         'paramiko==2.3.1',
                         'progressbar2==3.34.3',
