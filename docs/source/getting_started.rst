@@ -108,7 +108,7 @@ Creating a Hook is as is as simple as:
     # Now, run the job
     sshread(job, tcount=1)
 
- .. note::
+.. note::
 
     By default the pre/post Hooks run before the ssh connection is established and after it is closed.  If you would like
     the hook to run after the ssh connection is established or before it closes set the :code:`ssh_established` flag to
