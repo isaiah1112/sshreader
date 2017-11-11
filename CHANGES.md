@@ -211,7 +211,7 @@
 # Version 1.4.3
  * Fixed bug where progress_bar was printed with every loop
  * Fixed bug where Paramiko was searching for SSH host keys
- * Fixed bug where Paramiko was search user SSH keys (we require a manually specified key location)
+ * Fixed bug where Paramiko was searching user SSH keys (we require a manually specified key location)
  * Added shorter-style progress bar
 
 # Version 1.4
