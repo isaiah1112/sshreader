@@ -143,6 +143,7 @@ class ServerJob(object):
         self.status = 0
         self.combine_output = combine_output
         self.runlocal = runlocal
+        self.ssh_port = 22
         if isinstance(cmds, (list, tuple)):
             self.cmds = cmds
         else:
@@ -199,7 +200,7 @@ class ServerJob(object):
                 self.prehook.run(self)
             try:
                 self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
-                                 timeout=self.sshtimeout)
+                                 timeout=self.sshtimeout, port=self.ssh_port)
             except Exception as errorMsg:
                 logger.debug(str(errorMsg))
                 self.status = 255

@@ -27,7 +27,7 @@ import sshreader
 import sys
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '2.2'
+__version__ = '2.3'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
@@ -142,6 +142,7 @@ def validate_hostlist(ctx, param, value):
 @click.option('--file', '-F', is_flag=True, help='Treat CMD as a script file')
 @click.option('--debug', '-d', is_flag=True, help='Enable debug output')
 @click.option('--redline', is_flag=True, help='Run pydsh faster')
+@click.option('--port', default=22, help='SSH Port')
 @click.argument('cmd', nargs=1, required=True)
 def cli(**kwargs):
     """  Run ssh commands in parallel across hosts
@@ -157,6 +158,9 @@ def cli(**kwargs):
             raise click.UsageError('Script must start with #!')
         kwargs['cmd'] = [script.split('#!').pop().strip() + ' /tmp/' + script_name, 'rm /tmp/' + script_name]
     sshenv = sshreader.envvars()
+
+    if kwargs['port'] <= 0:
+        raise click.BadOptionUsage('Please enter a positive integer for --port')
 
     if kwargs['username'] is None:
         if sshenv.username is None:
@@ -208,6 +212,7 @@ def cli(**kwargs):
         else:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
                                       timeout=kwargs['timeout'], combine_output=True)
+        job.ssh_port = kwargs['port']
         if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
             job.posthook = posthook
         if kwargs['file']:
