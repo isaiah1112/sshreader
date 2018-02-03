@@ -1,6 +1,13 @@
 # Changelog
 
-## Release release/v4.0
+## Version 4.0.1
+ * Fixing bitbucket-pipelines script. [163c513]
+ * Fixing documentation formatting [6ae0153]
+ * Fixing typo in CHANGES.md [0ea4ee1]
+ * Added ability to specify SSH port when using pydsh. [8df2365]
+ * Updated Requirements [b8555b1]
+
+## Version 4.0
  * Refactor work for package. [f612acc]
  * Setting up objects to have proper __str__ function [89682ca]
  * Rewriting logic in ServerJob class functions. [d18e37a]
