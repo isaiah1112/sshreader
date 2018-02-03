@@ -1,6 +1,13 @@
 # Changelog
 
-## Release release/v4.0
+## Version 4.0.1
+ * Fixing bitbucket-pipelines script. [163c513]
+ * Fixing documentation formatting [6ae0153]
+ * Fixing typo in CHANGES.md [0ea4ee1]
+ * Added ability to specify SSH port when using pydsh. [8df2365]
+ * Updated Requirements [b8555b1]
+
+## Version 4.0
  * Refactor work for package. [f612acc]
  * Setting up objects to have proper __str__ function [89682ca]
  * Rewriting logic in ServerJob class functions. [d18e37a]
@@ -211,7 +218,7 @@
 # Version 1.4.3
  * Fixed bug where progress_bar was printed with every loop
  * Fixed bug where Paramiko was searching for SSH host keys
- * Fixed bug where Paramiko was search user SSH keys (we require a manually specified key location)
+ * Fixed bug where Paramiko was searching user SSH keys (we require a manually specified key location)
  * Added shorter-style progress bar
 
 # Version 1.4

@@ -1,7 +1,7 @@
 # coding=utf-8
 """A Python Package for parallelizing ssh connections via multi-threading and multi-processing.
 """
-# Copyright (C) 2015-2017 Jesse Almanrode
+# Copyright (C) 2015-2018 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
