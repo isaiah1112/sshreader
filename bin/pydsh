@@ -147,6 +147,8 @@ def validate_hostlist(ctx, param, value):
 def cli(**kwargs):
     """  Run ssh commands in parallel across hosts
     """
+    if kwargs['debug']:
+        logging.getLogger('sshreader').setLevel(logging.INFO)
     if kwargs['file']:
         mkpath = click.Path(exists=True, dir_okay=False)
         script_path = mkpath(kwargs['cmd'])
@@ -199,9 +201,6 @@ def cli(**kwargs):
     else:
         # You provided a password, ignore the SSH key
         kwargs['keyfile'] = None
-
-    if kwargs['debug']:
-        logging.getLogger('sshreader').setLevel(logging.INFO)
 
     posthook = sshreader.Hook(target=output)
     jobs = list()
