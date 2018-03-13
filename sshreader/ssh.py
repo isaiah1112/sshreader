@@ -109,9 +109,8 @@ class SSH(object):
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         try:
             result = sftp.put(os.path.expanduser(srcfile), os.path.expanduser(dstfile), confirm=True)
-        except IOError as err:
+        finally:
             sftp.close()
-            raise err
         return result
 
     def sftp_get(self, srcfile, dstfile):
@@ -126,10 +125,8 @@ class SSH(object):
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         try:
             result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
-        except IOError as err:
+        finally:
             sftp.close()
-            raise err
-        sftp.close()
         return result
 
     def ssh_command(self, command, timeout=30, combine=False, decodebytes=True):
