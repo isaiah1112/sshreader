@@ -27,7 +27,7 @@ import sshreader
 import sys
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '2.3'
+__version__ = '2.4'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
@@ -171,15 +171,18 @@ def cli(**kwargs):
             kwargs['username'] = sshenv.username
 
     # By default, we prefer ssh keys
-    if kwargs['keyfile'] is None:
-        if sshenv.rsa_key is None and sshenv.dsa_key is None:
-            if kwargs['password'] is None and kwargs['prompt'] is False:
-                raise click.ClickException('Unable to find ssh key to use and password not supplied.')
-        else:
-            if sshenv.rsa_key is not None:
+    if not kwargs['keyfile']:
+        if any((sshenv.rsa_key, sshenv.dsa_key, sshenv.ecdsa_key)):
+            if sshenv.rsa_key:
                 kwargs['keyfile'] = sshenv.rsa_key
+            elif sshenv.ecdsa_key:
+                kwargs['keyfile'] = sshenv.ecdsa_key
             else:
                 kwargs['keyfile'] = sshenv.dsa_key
+        else:
+            if len(sshenv.agent_keys) == 0:
+                if not all((kwargs['username'], kwargs['password'])):
+                    raise click.ClickException('Unable to find ssh key to use and password not supplied.')
             if kwargs['keypass']:
                 kwargs['keypass'] = click.prompt('Private Key Password', hide_input=True)
     else:
@@ -190,9 +193,9 @@ def cli(**kwargs):
             kwargs['keypass'] = click.prompt('Private Key Password', hide_input=True)
 
     # If you specify a password or prompt for one it overrides the ssh key
-    if kwargs['password'] is None:
-        if kwargs['prompt'] is False:
-            if kwargs['keyfile'] is None:
+    if not kwargs['password']:
+        if not kwargs['prompt']:
+            if not kwargs['keyfile']:
                 raise click.ClickException('Unable to find ssh key to use and password not supplied or prompt enabled.')
         else:
             kwargs['keyfile'] = None
@@ -205,7 +208,7 @@ def cli(**kwargs):
     posthook = sshreader.Hook(target=output)
     jobs = list()
     for host in kwargs['hostlist']:
-        if kwargs['keyfile'] is not None:
+        if kwargs['keyfile']:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
                                       keypass=kwargs['keypass'], timeout=kwargs['timeout'], combine_output=True)
         else:
