@@ -33,12 +33,14 @@ Command = namedtuple('Command', ['cmd', 'stdout', 'stderr', 'return_code'])
 
 
 def envvars():
-    """ Attempt to determine the current username and location of any ssh keys.  If any value is unable to be determined
-    it is returned as 'None'.
+    """ Attempt to determine the current username and location of any ssh private keys.
+    If any value is unable to be determined it is returned as 'None'.
 
-    :return: NamedTuple of (username, rsa_key, dsa_key, ecdsa_key)
+    This method also checks for any private keys loaded into the SSH Agent.
+
+    :return: NamedTuple of (username, agent_keys, rsa_key, dsa_key, ecdsa_key)
     """
-    env = OrderedDict(username=None, rsa_key=None, dsa_key=None, ecdsa_key=None)
+    env = OrderedDict(username=None, agent_keys=None, rsa_key=None, dsa_key=None, ecdsa_key=None)
     EnvVars = namedtuple('EnvVars', env.keys())
     if os.getlogin() == getuser():
         env['username'] = getuser()
@@ -51,6 +53,7 @@ def envvars():
             env['dsa_key'] = userhome + "/.ssh/id_dsa"
         if 'id_ecdsa' in keyfiles:
             env['ecdsa_key'] = userhome + '/.ssh/id_ecdsa'
+    env['agent_keys'] = paramiko.Agent().get_keys()
     return EnvVars(**env)
 
 
@@ -69,8 +72,10 @@ class SSH(object):
     :raises: SSHException
     """
     def __init__(self, fqdn, username=None, password=None, keyfile=None, keypass=None, port=22, timeout=30, connect=True):
-        if keyfile is None and username is None:
-            raise paramiko.SSHException('You must specify a password or keyfile')
+        if not keyfile:
+            if len(paramiko.Agent().get_keys()) == 0:
+                if not all((username, password)):
+                    paramiko.SSHException('You must specify a username/password or keyfile')
         self.host = fqdn
         self.username = username
         self.password = password
@@ -109,9 +114,8 @@ class SSH(object):
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         try:
             result = sftp.put(os.path.expanduser(srcfile), os.path.expanduser(dstfile), confirm=True)
-        except IOError as err:
+        finally:
             sftp.close()
-            raise err
         return result
 
     def sftp_get(self, srcfile, dstfile):
@@ -126,10 +130,8 @@ class SSH(object):
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         try:
             result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
-        except IOError as err:
+        finally:
             sftp.close()
-            raise err
-        sftp.close()
         return result
 
     def ssh_command(self, command, timeout=30, combine=False, decodebytes=True):
@@ -203,19 +205,16 @@ class SSH(object):
         paramiko.util.logging.getLogger().setLevel(logging.CRITICAL)  # Keeping paramiko from logging errors to stdout
         if self.__alive():
             raise paramiko.SSHException("Connection is already established")
-        if self.keyfile is not None:
-            if self.username is not None:  # Key file with a custom username!
-                self._connection.connect(self.host, port=self.port, username=self.username, password=self.keypass,
-                                         key_filename=self.keyfile, timeout=self.timeout, look_for_keys=False)
-            else:
-                self._connection.connect(self.host, port=self.port, key_filename=self.keyfile, password=self.keypass,
-                                         timeout=self.timeout, look_for_keys=False)
-        else:  # Username and password combo
-            if self.username is None or self.password is None:
-                raise paramiko.SSHException("You must provide a username and password or supply an SSH key")
-            else:
-                self._connection.connect(self.host, port=self.port, username=self.username,
-                                         password=self.password, timeout=self.timeout, look_for_keys=False)
+        if not self.keyfile:
+            if len(paramiko.Agent().get_keys()) == 0:
+                if not all((self.username, self.password)):
+                    paramiko.SSHException('You must specify a username/password or keyfile')
+        if self.keyfile:
+            self._connection.connect(self.host, port=self.port, username=self.username, password=self.keypass,
+                                     key_filename=self.keyfile, timeout=self.timeout, look_for_keys=False)
+        else:
+            self._connection.connect(self.host, port=self.port, username=self.username, password=self.password,
+                                     timeout=self.timeout, look_for_keys=False)
         return True
 
     # Privatizing some of the functions so SSH can be subclassed

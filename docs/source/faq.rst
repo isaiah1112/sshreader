@@ -127,6 +127,15 @@ logger.
 
 To learn what levels can be set, check out the `logger module's documentation.`_
 
+
+SSH Agent
+~~~~~~~~~
+
+With version 4.1 and later (pydsh 2.4 and later), I have ensured that Paramiko's support for utilizing keys held in
+`SSH Agent`_ are available within the SSH class in sshreader.  To utilize them simply do not supply the SSH class with
+either an SSH Keyfile or Password.  If there are keys cached in the agent, they will be used.  SSH Agent keys are also
+now listed in the NamedTuple returned from the :code:`envvars()` method.
+
 Indices and tables
 ------------------
 
@@ -142,3 +151,4 @@ Indices and tables
 .. _multiprocessing.Lock(): https://docs.python.org/2/library/multiprocessing.html#synchronization-between-processes
 .. _stdout buffer: https://www.turnkeylinux.org/blog/unix-buffering
 .. _logger module's documentation.: https://docs.python.org/3/library/logging.html#levels
+.. _SSH Agent: https://en.wikipedia.org/wiki/Ssh-agent
