@@ -1,5 +1,14 @@
 # Changelog
 
+## Version 4.1
+ * Updating SSH.sftp\_get and SSH.sftp\_put methods to ensure sftp transport is closed regardless of whether an exception occurs. [d7a1ced]
+ * Moved enabling of debug logging higher in pydsh initialization. [60dc90c]
+ * Update logger variable. [219435c]
+ * Configuring SSH class to use SSH Agent for ssh private key discovery. [bd7ffa0]
+ * Updated pydsh to work with SSH Agent key detection. [e9a1f1f]
+ * Added some logging to pydsh. [d6b9950]
+ * Updated Requirements [693e0f5]
+
 ## Version 4.0.1
  * Fixing bitbucket-pipelines script. [163c513]
  * Fixing documentation formatting [6ae0153]
@@ -22,7 +31,7 @@
  * Updated requirements and version [6d0bd75]
 
 ## Version 3.7.4
- * Fixing bug when cpu_count() for a machine is 1 that causes cpusoftlimit() to return 0. [67133a4]
+ * Fixing bug when cpu\_count() for a machine is 1 that causes cpusoftlimit() to return 0. [67133a4]
 
 ## Version 3.7.3
  * Updated documentation hosting [ec1f6f9]
@@ -40,7 +49,7 @@
  * Expanded ability for running script files remotely. [5fb6172]
  * Catching errors in SFTP pre-hook. [5112dee]
  * Fixing Hook.run so that additional args/kwargs are appended to the existing ones. [158db6f]
- * Added is_alive check for ssh connection on sftp_put and sftp_get [d39a30d]
+ * Added is\_alive check for ssh connection on sftp\_put and sftp\_get [d39a30d]
  * Fixing bug when sftp exception occurs that sftp connection doesnt get closed. [7b716aa]
  * Changing ServerJob.print() to ServerJob.output() [e5d1f28]
  * Converting dict to named tuple for sshreader.ssh.envvars() method [46e0bba]
@@ -52,7 +61,7 @@
  * Updated Python versions SSHreader is tested against. [c6a108f]
  * Updating methodology for determining tcount dynamically.  Things should scale nicer now. [e03c3b8]
  * Can you say “code cleanup”?  This will make things better in the long run! [a95a6d8]
- * Changing ssh_public_key_path to ssh_key_path in unit tests for sshreader. [081aabe]
+ * Changing ssh\_public\_key\_path to ssh\_key\_path in unit tests for sshreader. [081aabe]
  * Added docs env to tox for testing documentation builds. [ae1fbc2]
  * Added support for ECDSA ssh key discovery in envvars method [b239dfd]
  * Renaming SSH.connection to SSH._connection. [7d0fad2]
@@ -76,7 +85,7 @@
  * Updated pydsh debug to enable logging level INFO [510e16b]
 
 ## Version 3.4.6
- * Adding pseudo terminal creation to ssh_command method. It already existed for when output is combined. Closes issue #11 [6d85e77]
+ * Adding pseudo terminal creation to ssh\_command method. It already existed for when output is combined. Closes issue #11 [6d85e77]
 
 ## Version 3.4.5
  * Changing default thread limit to 100 rather than 500 [211531d]
@@ -123,7 +132,7 @@
  * Bumping pydsh version to 1.3 [6ba7de7]
  * Testing cpusoftlimit and cpuhardlimit methods. [b701489]
  * Debug output can let you know how many sub-processes your system might use while running pydsh. [54374ce]
- * Updating print_results method to print [1028856]
+ * Updating print\_results method to print [1028856]
  * Updated deprecation messages. [007ece6]
  * Not looping over lines in default output. [49a347c]
  * Moving print statements to click wrapper [d0e9e7a]
@@ -137,12 +146,12 @@
  * Restructuring methodology for implementing thread limit when only using threads. [156c9a0]
  * Added warnings for exceeding threadlimit [808a5d4]
  * Adding documentation for getting started. [5ab175f]
- * Added envvars method which attempts to gather username and ssh_key info from OS. [6911582]
+ * Added envvars method which attempts to gather username and ssh\_key info from OS. [6911582]
 
 ## Version 3.1
  * Using os and getpass modules in conjunction when determining username. [1199c86]
- * Added decodebytes flag to ssh_command and shell_command for decoding byte-strings to unicode-strings. This can help with compatibility when using Python 3. [86a7ed0]
- * Using all unicode_literals because, well, because I said so! [7c247e9]
+ * Added decodebytes flag to ssh\_command and shell\_command for decoding byte-strings to unicode-strings. This can help with compatibility when using Python 3. [86a7ed0]
+ * Using all unicode\_literals because, well, because I said so! [7c247e9]
  * Added unicode strings FAQ. [3d76108]
  * Added timeout flag to pydsh cli so it can be overriden for long running commands. [2999e5c]
 
