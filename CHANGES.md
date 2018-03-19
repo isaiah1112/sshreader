@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 4.1.1
+ * Fixing bug where ServerJob doesn't detect SSH Agent Keys. [7298771]
+
 ## Version 4.1
  * Updating SSH.sftp\_get and SSH.sftp\_put methods to ensure sftp transport is closed regardless of whether an exception occurs. [d7a1ced]
  * Moved enabling of debug logging higher in pydsh initialization. [60dc90c]

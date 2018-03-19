@@ -172,8 +172,9 @@ class ServerJob(object):
             self.posthook = posthook
         if runlocal:
             self._conn = "localhost"
-        elif not keyfile and not all([username, password]):
-            raise paramiko.SSHException("You must enter a username and password or supply an SSH key")
+        elif not keyfile and len(paramiko.Agent().get_keys()) == 0:
+            if not all([username, password]):
+                raise paramiko.SSHException("You must enter a username and password or supply an SSH key")
 
     def run(self):
         """Run a ServerJob. SSH to server, run cmds, return result
