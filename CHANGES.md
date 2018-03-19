@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 4.1.2
+ * Fixing bug in pydsh when detecting SSH Agent keys [614d5e9]
+
 ## Version 4.1.1
  * Fixing bug where ServerJob doesn't detect SSH Agent Keys. [7298771]
 
