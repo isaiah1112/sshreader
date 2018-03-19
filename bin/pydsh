@@ -27,7 +27,7 @@ import sshreader
 import sys
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '2.4'
+__version__ = '2.4.1'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
@@ -204,7 +204,7 @@ def cli(**kwargs):
     # If you specify a password or prompt for one it overrides the ssh key
     if not kwargs['password']:
         if not kwargs['prompt']:
-            if not kwargs['keyfile']:
+            if not kwargs['keyfile'] and len(sshenv.agent_keys) == 0:
                 raise click.ClickException('Unable to find ssh key to use and password not supplied or prompt enabled.')
         else:
             kwargs['keyfile'] = None
