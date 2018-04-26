@@ -203,6 +203,17 @@ class SSH(object):
         :raises: SSHException
         """
         paramiko.util.logging.getLogger().setLevel(logging.CRITICAL)  # Keeping paramiko from logging errors to stdout
+
+        # Fail Fast for unreachable host:port
+        s = socket.socket()
+        s.settimeout(1)
+        try:
+            s.connect((self.host, self.port))
+        except socket.timeout:
+            raise paramiko.SSHException('ssh: connect to host %s port %d: Operation timed out' % (self.host, self.port))
+        finally:
+            s.close()
+
         if self.__alive():
             raise paramiko.SSHException("Connection is already established")
         if not self.keyfile:
