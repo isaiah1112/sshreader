@@ -224,7 +224,7 @@ class TestSshreader(unittest.TestCase):
         jobs = self.configure_serverjob_list(10)
         result = sshreader.sshread(jobs, tcount=0)
         for x in result:
-            self.assertEqual(x.status, 0)
+            self.assertEqual(x.status, 0, msg=x.results)
         pass
 
     def test_sshread_processes(self):
@@ -233,7 +233,7 @@ class TestSshreader(unittest.TestCase):
         jobs = self.configure_serverjob_list(10)
         result = sshreader.sshread(jobs, pcount=0)
         for x in result:
-            self.assertEqual(x.status, 0)
+            self.assertEqual(x.status, 0, msg=x.results)
         pass
 
     def test_sshread(self):
@@ -242,7 +242,7 @@ class TestSshreader(unittest.TestCase):
         jobs = self.configure_serverjob_list(20)
         result = sshreader.sshread(jobs, pcount=0, tcount=0)
         for x in result:
-            self.assertEqual(x.status, 0)
+            self.assertEqual(x.status, 0, msg=x.results)
         pass
 
     def test_cpulimits(self):
