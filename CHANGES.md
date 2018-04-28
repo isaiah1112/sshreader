@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 4.2
+ * Added socket open check to SSH.connect [8af9c6e]
+ * Added example of parallel-sftp.py [fc4acef]
+ * Code cleanup [6793a20]
+ * Bugs found and fixed.  Tests updated. [625b2ee]
+ * Updated requirements and version number [a3e622b]
+
 ## Version 4.1.2
  * Fixing bug in pydsh when detecting SSH Agent keys [614d5e9]
 
