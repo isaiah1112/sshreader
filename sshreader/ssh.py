@@ -196,7 +196,7 @@ class SSH(object):
         """
         return self.__connect()
 
-    def connect(self):
+    def connect(self, failfast=True):
         """Opens an SSH Connection
 
         :return: True
@@ -205,14 +205,15 @@ class SSH(object):
         if self.__alive():
             raise paramiko.SSHException("connection to % already established" % (self.host, ))
         # Fail Fast for unreachable host:port
-        s = socket.socket()
-        s.settimeout(1)
-        try:
-            s.connect((self.host, self.port))
-        except socket.timeout:
-            raise paramiko.SSHException('connect to host %s port %d: Operation timed out' % (self.host, self.port))
-        finally:
-            s.close()
+        if failfast:
+            try:
+                s = socket.socket()
+                s.settimeout(1)
+                s.connect((self.host, self.port))
+            except socket.timeout:
+                raise paramiko.SSHException('connect to host %s port %d: Operation timed out' % (self.host, self.port))
+            else:
+                s.close()
         paramiko.util.logging.getLogger().setLevel(logging.CRITICAL)  # Keeping paramiko from logging errors to stdout
         if not self.keyfile:
             if len(paramiko.Agent().get_keys()) == 0:
