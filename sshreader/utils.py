@@ -298,14 +298,11 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     """
     if tcount is None and pcount is None:
         raise ValueError('tcount or pcount must be an:' + str(int))
-    if tcount:
+    if tcount is not None:
         assert isinstance(tcount, int)
-    if pcount:
+    if pcount is not None:
         assert isinstance(pcount, int)
-    if isinstance(serverjobs, list):
-        islist = True
-    else:
-        islist = False
+    if not isinstance(serverjobs, list):
         serverjobs = [serverjobs]
     totaljobs = len(serverjobs)
 
@@ -380,10 +377,10 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
         completed_jobs.append(result_queue.get())
 
     # If we were passed a list then we will return a list
-    if islist:
+    if isinstance(serverjobs, list):
         return completed_jobs
     else:
-        return completed_jobs.pop()
+        return completed_jobs[0]
 
 
 def _sub_process_(task_queue, result_queue, item_counter, thread_count=None):
