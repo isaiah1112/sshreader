@@ -149,7 +149,7 @@ class TestSSH(unittest.TestCase):
         result = self.conn.ssh_command('sleep 5', timeout=2)
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 124)
-        self.assertIn('Command timed out', result.stderr)
+        self.assertIn('command timed out', result.stderr)
         pass
 
 
@@ -224,7 +224,7 @@ class TestSshreader(unittest.TestCase):
         jobs = self.configure_serverjob_list(10)
         result = sshreader.sshread(jobs, tcount=0)
         for x in result:
-            self.assertEqual(x.status, 0)
+            self.assertEqual(x.status, 0, msg=x.results)
         pass
 
     def test_sshread_processes(self):
@@ -233,7 +233,7 @@ class TestSshreader(unittest.TestCase):
         jobs = self.configure_serverjob_list(10)
         result = sshreader.sshread(jobs, pcount=0)
         for x in result:
-            self.assertEqual(x.status, 0)
+            self.assertEqual(x.status, 0, msg=x.results)
         pass
 
     def test_sshread(self):
@@ -242,7 +242,7 @@ class TestSshreader(unittest.TestCase):
         jobs = self.configure_serverjob_list(20)
         result = sshreader.sshread(jobs, pcount=0, tcount=0)
         for x in result:
-            self.assertEqual(x.status, 0)
+            self.assertEqual(x.status, 0, msg=x.results)
         pass
 
     def test_cpulimits(self):
