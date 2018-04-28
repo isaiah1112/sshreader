@@ -149,7 +149,7 @@ class TestSSH(unittest.TestCase):
         result = self.conn.ssh_command('sleep 5', timeout=2)
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 124)
-        self.assertIn('Command timed out', result.stderr)
+        self.assertIn('command timed out', result.stderr)
         pass
 
 

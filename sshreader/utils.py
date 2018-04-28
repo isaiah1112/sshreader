@@ -298,8 +298,10 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     """
     if tcount is None and pcount is None:
         raise ValueError('tcount or pcount must be an:' + str(int))
-    assert isinstance(tcount, int)
-    assert isinstance(pcount, int)
+    if tcount:
+        assert isinstance(tcount, int)
+    if pcount:
+        assert isinstance(pcount, int)
     if isinstance(serverjobs, list):
         islist = True
     else:
