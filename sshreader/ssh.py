@@ -75,7 +75,7 @@ class SSH(object):
         if not keyfile:
             if len(paramiko.Agent().get_keys()) == 0:
                 if not all((username, password)):
-                    paramiko.SSHException('You must specify a username/password or keyfile')
+                    paramiko.SSHException('username and password or keyfile not provided')
         self.host = fqdn
         self.username = username
         self.password = password
@@ -110,7 +110,7 @@ class SSH(object):
         :return: Result of paramiko.SFTPClient.put()
         """
         if self.__alive() is False:
-            raise paramiko.SSHException("Connection is not established")
+            raise paramiko.SSHException("connection to %s not established" % (self.host,))
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         try:
             result = sftp.put(os.path.expanduser(srcfile), os.path.expanduser(dstfile), confirm=True)
@@ -126,7 +126,7 @@ class SSH(object):
         :return: Result of paramiko.SFTPClient.get()
         """
         if self.__alive() is False:
-            raise paramiko.SSHException("Connection is not established")
+            raise paramiko.SSHException("connection to %s not established" % (self.host,))
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         try:
             result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
@@ -145,7 +145,7 @@ class SSH(object):
         :raises: SSHException
         """
         if self.__alive() is False:
-            raise paramiko.SSHException("Connection is not established")
+            raise paramiko.SSHException("connection to %s not established" % (self.host, ))
         if combine:
             try:
                 stdin, stdout, stderr = self._connection.exec_command(command, timeout=timeout, get_pty=True)
@@ -156,7 +156,7 @@ class SSH(object):
                     result = Command(cmd=command, stdout=stdout.read().strip(), stderr=None,
                                      return_code=stdout.channel.recv_exit_status())
             except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):
-                result = Command(cmd=command, stdout='Command timed out', stderr=None, return_code=124)
+                result = Command(cmd=command, stdout='command timed out', stderr=None, return_code=124)
         else:
             try:
                 stdin, stdout, stderr = self._connection.exec_command(command, timeout=timeout)
@@ -167,7 +167,7 @@ class SSH(object):
                     result = Command(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip(),
                                      return_code=stdout.channel.recv_exit_status())
             except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):
-                result = Command(cmd=command, stdout='', stderr='Command timed out', return_code=124)
+                result = Command(cmd=command, stdout='', stderr='command timed out', return_code=124)
         return result
 
     def close(self):
@@ -189,7 +189,7 @@ class SSH(object):
             if self._connection.get_transport().is_alive():
                 return True
             else:
-                raise paramiko.SSHException("Unable to determine state of ssh session")
+                raise paramiko.SSHException("unable to determine state of ssh connection")
 
     def reconnect(self):
         """Alias to connect
@@ -202,24 +202,22 @@ class SSH(object):
         :return: True
         :raises: SSHException
         """
-        paramiko.util.logging.getLogger().setLevel(logging.CRITICAL)  # Keeping paramiko from logging errors to stdout
-
+        if self.__alive():
+            raise paramiko.SSHException("connection to % already established" % (self.host, ))
         # Fail Fast for unreachable host:port
         s = socket.socket()
         s.settimeout(1)
         try:
             s.connect((self.host, self.port))
         except socket.timeout:
-            raise paramiko.SSHException('ssh: connect to host %s port %d: Operation timed out' % (self.host, self.port))
+            raise paramiko.SSHException('connect to host %s port %d: Operation timed out' % (self.host, self.port))
         finally:
             s.close()
-
-        if self.__alive():
-            raise paramiko.SSHException("Connection is already established")
+        paramiko.util.logging.getLogger().setLevel(logging.CRITICAL)  # Keeping paramiko from logging errors to stdout
         if not self.keyfile:
             if len(paramiko.Agent().get_keys()) == 0:
                 if not all((self.username, self.password)):
-                    paramiko.SSHException('You must specify a username/password or keyfile')
+                    paramiko.SSHException('username and password or keyfile not provided')
         if self.keyfile:
             self._connection.connect(self.host, port=self.port, username=self.username, password=self.keypass,
                                      key_filename=self.keyfile, timeout=self.timeout, look_for_keys=False)
