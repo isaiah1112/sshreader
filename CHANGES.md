@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 4.2.1
+ * Added failfast flag to SSH.connect [75ac26e]
+ * More code cleanup [a98bdc3]
+
 ## Version 4.2
  * Added socket open check to SSH.connect [8af9c6e]
  * Added example of parallel-sftp.py [fc4acef]
