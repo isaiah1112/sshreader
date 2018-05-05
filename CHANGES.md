@@ -1,5 +1,12 @@
 # Changelog
 
+## Version 4.3
+ * Updated pydsh to prefer threading by default [d512b97]
+ * Updated logic to actually update kwargs for sshreader.Hook class [1791486]
+ * Refactoring logging in sshreader.ServerJob class [a4fba76]
+ * Updated logic for waiting for threads/processes to close in sshreader.sshread method [edb257f]
+ * Allowing control over threadlimitfactor in sshreader. [eb6108c]
+
 ## Version 4.2.1
  * Added failfast flag to SSH.connect [75ac26e]
  * More code cleanup [a98bdc3]

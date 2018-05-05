@@ -60,7 +60,7 @@ Override ssh with a username/password combo (but prompt for the password):
 
     pydsh -u myuser -p -w myhost[1-100].example.com 'uname -r'
 
-Run pydsh faster: [3]_
+Run pydsh faster (uses multi-processing and multi-threading): [3]_
 
 .. code-block:: bash
 

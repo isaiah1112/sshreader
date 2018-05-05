@@ -27,7 +27,7 @@ import sshreader
 import sys
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '2.4.1'
+__version__ = '2.5'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
@@ -233,9 +233,9 @@ def cli(**kwargs):
 
     if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
         if kwargs['redline']:
-            sshreader.sshread(jobs, pcount=-1, tcount=0)
-        else:
             sshreader.sshread(jobs, pcount=0, tcount=0)
+        else:
+            sshreader.sshread(jobs, tcount=0)
     else:
         if kwargs['redline']:
             jobs_finished = sshreader.sshread(jobs, pcount=-1, tcount=0, progress_bar=True)

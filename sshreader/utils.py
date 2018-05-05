@@ -33,7 +33,8 @@ import time
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
-__cpuHardLimitFactor__ = 3
+__cpuhardlimitfactor__ = 3
+__threadlimitfactor__ = 2
 _printlock_ = multiprocessing.Lock()
 log = logging.getLogger('sshreader')
 
@@ -103,9 +104,9 @@ class Hook(object):
         :param kwargs: Append to/update kwargs
         :return: Result from target function
         """
-        args = self.args + list(args)
-        kwargs = dict(list(self.kwargs.items()) + list(kwargs.items()))
-        self.result = self.target(*args, **kwargs)
+        self.args.extend(list(args))
+        self.kwargs.update(kwargs)
+        self.result = self.target(*args, **self.kwargs)
         return self.result
 
     def __str__(self):
@@ -134,7 +135,7 @@ class ServerJob(object):
     """
     def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, keypass=None, timeout=(30, 30),
                  runlocal=False, prehook=None, posthook=None, combine_output=False):
-        self.name = fqdn
+        self.name = str(fqdn)
         self.results = list()
         self.username = username
         self.password = password
@@ -184,54 +185,53 @@ class ServerJob(object):
 
         :return: ServerJob.status
         """
-        log.info(str(self.name) + u': entering run')
+        log.info('%s: starting ServerJob' % (self.name,))
         if self.runlocal:
             if self.prehook:
-                log.debug(str(self.name) + u':running prehook')
+                log.debug('%s: running prehook' % (self.name,))
                 self.prehook.run(self)
             for cmd in self.cmds:
-                log.debug(str(self.name) + u': ' + str(cmd))
                 result = shell_command(cmd, combine=self.combine_output)
+                log.debug('%s: %s' % (self.name, str(result)))
                 self.results.append(result)
-                log.debug(str(self.name) + u': ' + str(cmd) + u': ' + str(result))
                 self.status += result.return_code
             if self.posthook:
-                log.debug(str(self.name) + u':running posthook')
+                log.debug('%s; running posthook' % (self.name,))
                 self.posthook.run(self)
         else:
             if self.prehook and self.prehook.ssh_established is False:
-                log.debug(str(self.name) + u':running prehook')
+                log.debug('%s: running prehook' % (self.name,))
                 self.prehook.run(self)
             try:
                 self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
                                  timeout=self.sshtimeout, port=self.ssh_port)
+                log.debug('%s: ssh connection established' % (self.name,))
             except Exception as errorMsg:
                 log.debug(str(errorMsg))
                 self.status = 255
                 self.results.append(str(errorMsg))
             else:
                 if self.prehook and self.prehook.ssh_established:
-                    log.debug(str(self.name) + u':running prehook')
+                    log.debug('%s: running prehook' % (self.name,))
                     self.prehook.run(self)
                 for cmd in self.cmds:
-                    log.debug(str(self.name) + u': ' + str(cmd))
                     result = self._conn.ssh_command(cmd, timeout=self.cmdtimeout, combine=self.combine_output)
+                    log.debug('%s: %s' % (self.name, str(result)))
                     self.results.append(result)
-                    log.debug(str(self.name) + u': ' + str(cmd) + u': ' + str(result))
                     self.status += result.return_code
                 if self.posthook and self.posthook.ssh_established:
-                    log.debug(str(self.name) + u':running posthook')
+                    log.debug('%s; running posthook' % (self.name,))
                     self.posthook.run(self)
                 self._conn.close()
                 self._conn = None  # So the ssh connection can be pickled!
             if self.posthook and self.posthook.ssh_established is False:
-                log.debug(str(self.name) + u':running posthook')
+                log.debug('%s; running posthook' % (self.name,))
                 self.posthook.run(self)
-        log.info(str(self.name) + u': exiting run')
+        log.info('%s: exiting ServerJob' % (self.name,))
         return self.status
 
     def __str__(self):
-        return self.__dict__
+        return str(self.__dict__)
 
     def __getitem__(self, item):
         return self.__dict__[item]
@@ -252,23 +252,25 @@ def cpusoftlimit():
 def cpuhardlimit():
     """ Return the maximum number of sub-processes your system is allowed to spawn.
 
-    cpusoftlimit() * __cpuHardLimitFactor__
+    cpusoftlimit() * __cpuhardlimitfactor__
 
     :return: Integer
     """
-    global __cpuHardLimitFactor__
-    assert isinstance(__cpuHardLimitFactor__, int)
-    return cpusoftlimit() * __cpuHardLimitFactor__
+    global __cpuhardlimitfactor__
+    assert isinstance(__cpuhardlimitfactor__, int)
+    return cpusoftlimit() * __cpuhardlimitfactor__
 
 
 def threadlimit():
     """ Return the maximum number of threads each process is allowed to spawn.  The idea here is to not overload a system.
 
-    cpu_count() * 2
+    cpu_count() * __threadlimitfactor__
 
     :return: Integer
     """
-    return multiprocessing.cpu_count() * 2
+    global __threadlimitfactor__
+    assert isinstance(__threadlimitfactor__, int)
+    return multiprocessing.cpu_count() * __threadlimitfactor__
 
 
 def echo(*args, **kwargs):
@@ -297,7 +299,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     :raises: ExceedCPULimit, TypeError, ValueError
     """
     if tcount is None and pcount is None:
-        raise ValueError('tcount or pcount must be an:' + str(int))
+        raise ValueError('tcount or pcount must be ' + str(int))
     if tcount is not None:
         assert isinstance(tcount, int)
     if pcount is not None:
@@ -322,6 +324,8 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     for job in serverjobs:
         task_queue.put(job)
 
+    subs = list()  # Keep a list of processes/threads so we can join them later
+
     if pcount is None:
         # Limit the number of threads to spawn
         if tcount == 0:
@@ -335,6 +339,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
             thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter))
             thread.daemon = True
             thread.start()
+            subs.append(thread)
     else:
         # Found this while digging around the multiprocessing API.
         # This might help some of the pickling errors when working with ssh
@@ -350,19 +355,21 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
         if pcount > cpuhardlimit():
             raise ValueError('CPUHardLimit exceeded: ' + str(pcount) + ' > ' + str(cpuhardlimit()))
 
-        if tcount is not None:
+        if tcount is None:
+            tcount = 0
+        else:
             if tcount == 0:
                 tcount = int(min(totaljobs // pcount, threadlimit()))
             if tcount < 2:
                 # If we don't have enough jobs to spawn more than 1 thread per process, then we won't spawn threads
-                tcount = None
+                tcount = 0
 
         log.info(u"spawning %d sub-processes" % (pcount, ))
         for pid in range(pcount):
-            pid = multiprocessing.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter),
-                                          kwargs={'thread_count': tcount})
+            pid = multiprocessing.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter, tcount))
             pid.daemon = True
             pid.start()
+            subs.append(pid)
 
     # Non blocking way to wait for threads/processes
     while result_queue.full() is False:
@@ -372,25 +379,28 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     if progress_bar:
         bar.finish()
 
-    completed_jobs = list()
-    while result_queue.empty() is False:
-        completed_jobs.append(result_queue.get())
+    log.debug('joining %d sub-processes/threads' % (len(subs),))
+    for sub in subs:
+        sub.join()
 
     # If we were passed a list then we will return a list
-    if isinstance(serverjobs, list):
-        return completed_jobs
+    if totaljobs > 0:
+        results = list()
+        while not result_queue.empty():
+            results.append(result_queue.get())
+        return results
     else:
-        return completed_jobs[0]
+        return result_queue.get()
 
 
-def _sub_process_(task_queue, result_queue, item_counter, thread_count=None):
+def _sub_process_(task_queue, result_queue, item_counter, thread_count):
     """ Private method for managing multi-processing and spawning thread pools.
 
     DO NOT USE THIS METHOD!
     """
     pid = os.getpid()
     log.debug(u"starting process: %d" % (pid,))
-    if thread_count is None:
+    if thread_count == 0:
         while task_queue.empty() is False:
             job = task_queue.get()
             job.run()
@@ -398,13 +408,16 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count=None):
             with item_counter.get_lock():
                 item_counter.value += 1
     else:
+        threads = list()
         log.debug(u"process: %d spawning: %d threads" % (pid, thread_count))
         for thread in range(thread_count):
             thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter))
             thread.daemon = True
             thread.start()
-        while threading.active_count() > 1:
-            time.sleep(1)
+            threads.append(thread)
+        log.debug(u"process: %d waiting for: %d threads" % (pid, len(threads)))
+        for thread in threads:
+            thread.join()
     log.debug(u"exiting process: %d" % (pid,))
     return None
 
@@ -421,5 +434,5 @@ def _sub_thread_(task_queue, result_queue, item_counter):
         result_queue.put(job)
         with item_counter.get_lock():
             item_counter.value += 1
-    log.debug('existing')
+    log.debug('existing thread')
     return None
