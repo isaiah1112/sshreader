@@ -33,7 +33,8 @@ import time
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
-__cpuHardLimitFactor__ = 3
+__cpuhardlimitfactor__ = 3
+__threadlimitfactor__ = 2
 _printlock_ = multiprocessing.Lock()
 log = logging.getLogger('sshreader')
 
@@ -251,23 +252,25 @@ def cpusoftlimit():
 def cpuhardlimit():
     """ Return the maximum number of sub-processes your system is allowed to spawn.
 
-    cpusoftlimit() * __cpuHardLimitFactor__
+    cpusoftlimit() * __cpuhardlimitfactor__
 
     :return: Integer
     """
-    global __cpuHardLimitFactor__
-    assert isinstance(__cpuHardLimitFactor__, int)
-    return cpusoftlimit() * __cpuHardLimitFactor__
+    global __cpuhardlimitfactor__
+    assert isinstance(__cpuhardlimitfactor__, int)
+    return cpusoftlimit() * __cpuhardlimitfactor__
 
 
 def threadlimit():
     """ Return the maximum number of threads each process is allowed to spawn.  The idea here is to not overload a system.
 
-    cpu_count() * 2
+    cpu_count() * __threadlimitfactor__
 
     :return: Integer
     """
-    return multiprocessing.cpu_count() * 2
+    global __threadlimitfactor__
+    assert isinstance(__threadlimitfactor__, int)
+    return multiprocessing.cpu_count() * __threadlimitfactor__
 
 
 def echo(*args, **kwargs):
