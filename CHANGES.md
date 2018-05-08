@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 4.3.1
+ * Ensuring pydsh prefers threads by default [70b9974]
+
 ## Version 4.3
  * Updated pydsh to prefer threading by default [d512b97]
  * Updated logic to actually update kwargs for sshreader.Hook class [1791486]
