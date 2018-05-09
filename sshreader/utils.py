@@ -104,9 +104,9 @@ class Hook(object):
         :param kwargs: Append to/update kwargs
         :return: Result from target function
         """
-        self.args.extend(list(args))
-        self.kwargs.update(kwargs)
-        self.result = self.target(*args, **self.kwargs)
+        args = self.args + list(args)
+        kwargs = dict(list(self.kwargs.items()) + list(kwargs.items()))
+        self.result = self.target(*args, **kwargs)
         return self.result
 
     def __str__(self):
