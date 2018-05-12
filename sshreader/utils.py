@@ -104,13 +104,15 @@ class Hook(object):
         :param kwargs: Append to/update kwargs
         :return: Result from target function
         """
+        # I perform the following actions this way specifically so I don't "update" the pre-defined args and kwargs
+        # in the Hook object.
         args = self.args + list(args)
         kwargs = dict(list(self.kwargs.items()) + list(kwargs.items()))
         self.result = self.target(*args, **kwargs)
         return self.result
 
     def __str__(self):
-        return self.__dict__
+        return str(self.__dict__)
 
 
 class ServerJob(object):
