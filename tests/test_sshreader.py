@@ -239,7 +239,7 @@ class TestSshreader(unittest.TestCase):
     def test_sshread(self):
         """ Test sshread method using threads and processes
         """
-        jobs = self.configure_serverjob_list(20)
+        jobs = self.configure_serverjob_list(10)
         result = sshreader.sshread(jobs, pcount=0, tcount=0)
         for x in result:
             self.assertEqual(x.status, 0, msg=x.results)
