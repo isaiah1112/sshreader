@@ -379,9 +379,10 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     if progress_bar:
         bar.finish()
 
-    log.debug('joining %d sub-processes/threads' % (len(subs),))
+    log.info('joining %d sub-processes/threads' % (len(subs),))
     for sub in subs:
-        sub.join()
+        if sub.is_alive():
+            sub.join(timeout=1)  # I don't care if this times out since by this time all work should be done!
 
     # If we were passed a list then we will return a list
     if totaljobs > 0:
