@@ -104,13 +104,15 @@ class Hook(object):
         :param kwargs: Append to/update kwargs
         :return: Result from target function
         """
+        # I perform the following actions this way specifically so I don't "update" the pre-defined args and kwargs
+        # in the Hook object.
         args = self.args + list(args)
         kwargs = dict(list(self.kwargs.items()) + list(kwargs.items()))
         self.result = self.target(*args, **kwargs)
         return self.result
 
     def __str__(self):
-        return self.__dict__
+        return str(self.__dict__)
 
 
 class ServerJob(object):
@@ -175,10 +177,10 @@ class ServerJob(object):
         else:
             self.posthook = posthook
         if runlocal:
-            self._conn = "localhost"
+            self._conn = 'localhost'
         elif not keyfile and len(paramiko.Agent().get_keys()) == 0:
             if not all([username, password]):
-                raise paramiko.SSHException("username and password or ssh key not provided")
+                raise paramiko.SSHException('username and password or ssh key not provided')
 
     def run(self):
         """Run a ServerJob. SSH to server, run cmds, return result
@@ -321,6 +323,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     task_queue = multiprocessing.Queue(maxsize=totaljobs)
     result_queue = multiprocessing.Queue(maxsize=totaljobs)
 
+    log.debug('filling input queue')
     for job in serverjobs:
         task_queue.put(job)
 
@@ -333,7 +336,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
         else:
             tcount = int(min(tcount, totaljobs))
 
-        log.info(u"spawning %d threads" % (tcount, ))
+        log.info(u'spawning %d threads' % (tcount, ))
         # Start a thread pool
         for thread in range(tcount):
             thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter))
@@ -364,7 +367,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
                 # If we don't have enough jobs to spawn more than 1 thread per process, then we won't spawn threads
                 tcount = 0
 
-        log.info(u"spawning %d sub-processes" % (pcount, ))
+        log.info(u'spawning %d sub-processes' % (pcount, ))
         for pid in range(pcount):
             pid = multiprocessing.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter, tcount))
             pid.daemon = True
@@ -372,6 +375,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
             subs.append(pid)
 
     # Non blocking way to wait for threads/processes
+    log.debug('main waiting for %d ServerJobs to finish' % (totaljobs,))
     while result_queue.full() is False:
         if progress_bar:
             bar.update(item_counter.value)
@@ -379,9 +383,10 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     if progress_bar:
         bar.finish()
 
-    log.debug('joining %d sub-processes/threads' % (len(subs),))
+    log.info('joining %d sub-processes/threads' % (len(subs),))
     for sub in subs:
-        sub.join()
+        if sub.is_alive():
+            sub.join(timeout=1)  # I don't care if this times out since by this time all work should be done!
 
     # If we were passed a list then we will return a list
     if totaljobs > 0:
@@ -399,7 +404,7 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count):
     DO NOT USE THIS METHOD!
     """
     pid = os.getpid()
-    log.debug(u"starting process: %d" % (pid,))
+    log.debug(u'starting process: %d' % (pid,))
     if thread_count == 0:
         while task_queue.empty() is False:
             job = task_queue.get()
@@ -409,16 +414,16 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count):
                 item_counter.value += 1
     else:
         threads = list()
-        log.debug(u"process: %d spawning: %d threads" % (pid, thread_count))
+        log.debug(u'process: %d spawning: %d threads' % (pid, thread_count))
         for thread in range(thread_count):
             thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter))
             thread.daemon = True
             thread.start()
             threads.append(thread)
-        log.debug(u"process: %d waiting for: %d threads" % (pid, len(threads)))
+        log.debug(u'process: %d waiting for: %d threads' % (pid, len(threads)))
         for thread in threads:
             thread.join()
-    log.debug(u"exiting process: %d" % (pid,))
+    log.debug(u'exiting process: %d' % (pid,))
     return None
 
 

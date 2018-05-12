@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 4.3.3
+ * Limiting number of ServerJob objects in integration tests [a3f18d3]
+ * Attempting to fix bug in Python 3.4 where join never completes for sub-processes [538a4d8]
+ * Fixing bug with Hook class when asking for __str__ method. [f78f51f]
+ * Cleaning up logging statements [2878e4d]
+
 ## Version 4.3.2
  * Revert "Updated logic to actually update kwargs for sshreader.Hook class" [491ee60]
 
