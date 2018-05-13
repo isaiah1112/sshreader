@@ -85,6 +85,11 @@ pipelines:
         caches:
           - pip
     - step:
+        name: Documentation Build
+        script:
+          - pip install -U tox
+          - tox -e docs
+    - step:
         name: Deploy To PyPi
         script:
           - bash -e deploy.bash
