@@ -3,12 +3,92 @@ image: python:3.6
 pipelines:
   default:
     - step:
-        name: Not Ready yet
+        name: Python2.7
+        image: python:2.7
         script:
-          - echo "Please run tox manually"
+          - pip install -U tox
+          - tox -e py27
+        services:
+        - sshd
+        caches:
+        - pip
+    - step:
+        name: Python3.4
+        image: python:3.4
+        script:
+          - pip install -U tox
+          - tox -e py34
+        services:
+          - sshd
+        caches:
+          - pip
+    - step:
+        name: Python3.5
+        image: python:3.5
+        script:
+          - pip install -U tox
+          - tox -e py35
+        services:
+          - sshd
+        caches:
+          - pip
+    - step:
+        name: Python3.6
+        image: python:3.6
+        script:
+          - pip install -U tox
+          - tox -e py36
+        services:
+          - sshd
+        caches:
+          - pip
   branches:
     master:
-      - step:
-          name: Deploy To PyPi
-          script:
-            - bash -e deploy.bash
+    - step:
+        name: Python2.7
+        image: python:2.7
+        script:
+          - pip install -U tox
+          - tox -e py27
+        services:
+          - sshd
+        caches:
+        - pip
+    - step:
+        name: Python3.4
+        image: python:3.4
+        script:
+          - pip install -U tox
+          - tox -e py34
+        services:
+          - sshd
+        caches:
+          - pip
+    - step:
+        name: Python3.5
+        image: python:3.5
+        script:
+          - pip install -U tox
+          - tox -e py35
+        services:
+          - sshd
+        caches:
+          - pip
+    - step:
+        name: Python3.6
+        image: python:3.6
+        script:
+          - pip install -U tox
+          - tox -e py36
+        services:
+          - sshd
+        caches:
+          - pip
+    - step:
+        name: Deploy To PyPi
+        script:
+          - bash -e deploy.bash
+definitions:
+  services:
+    sshd:
+      image: isaiah1112/sshreader:latest

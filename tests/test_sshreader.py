@@ -20,13 +20,9 @@ global ssh_data
 try:
     params_file = open(project_root + '/tests/test_params.json')
     ssh_data = json.load(params_file)
+    ssh_data['ssh_key_path'] = project_root + ssh_data['ssh_key_path']
 except IOError:
-    ssh_data = {'host_fqdn': None, 'ssh_user': None, 'ssh_password': None, 'ssh_key_path': None}
-if any(val is None for key, val in ssh_data.items()):
-    for key in ssh_data:
-        ssh_data[key] = click.prompt('Please enter value for (' + key + ')', type=str)
-    with open(project_root + '/tests/test_params.json', 'w') as params_file:
-        json.dump(ssh_data, params_file)
+    raise FileNotFoundError('Unable to load test_params.json file')
 
 
 class TestShellScript(unittest.TestCase):
@@ -94,8 +90,7 @@ class TestSSH(unittest.TestCase):
         """ Test an SSH connection using an ssh key
         """
         global ssh_data
-        conn = sshreader.SSH(ssh_data['host_fqdn'], username=ssh_data['ssh_user'],
-                             keyfile=ssh_data['ssh_key_path'])
+        conn = sshreader.SSH(ssh_data['host_fqdn'], username=ssh_data['ssh_user'], keyfile=ssh_data['ssh_key_path'])
         self.assertTrue(conn.alive(), msg='ssh connection using password failed to: ' + ssh_data['host_fqdn'])
         pass
 
@@ -185,8 +180,9 @@ class TestSshreader(unittest.TestCase):
         post = sshreader.Hook(my_hook, args=['post'])
         jobs = list()
         for x in range(size):
-            jobs.append(sshreader.ServerJob(ssh_data['host_fqdn'], ['sleep 1', 'echo done'], prehook=pre, posthook=post,
-                                            username=ssh_data['ssh_user'], password=ssh_data['ssh_password']))
+            x = sshreader.ServerJob(ssh_data['host_fqdn'], ['sleep 1', 'echo done'], prehook=pre, posthook=post,
+                                    username=ssh_data['ssh_user'], password=ssh_data['ssh_password'])
+            jobs.append(x)
         for x in range(size):
             jobs.append(sshreader.ServerJob('local-' + str(x), ['sleep 1', 'echo done'], runlocal=True))
         return jobs
@@ -221,7 +217,7 @@ class TestSshreader(unittest.TestCase):
     def test_sshread_threads(self):
         """ Test sshread method using threads
         """
-        jobs = self.configure_serverjob_list(10)
+        jobs = self.configure_serverjob_list(1)
         result = sshreader.sshread(jobs, tcount=0)
         for x in result:
             self.assertEqual(x.status, 0, msg=x.results)
@@ -230,7 +226,7 @@ class TestSshreader(unittest.TestCase):
     def test_sshread_processes(self):
         """ Test sshread method using processes
         """
-        jobs = self.configure_serverjob_list(10)
+        jobs = self.configure_serverjob_list(1)
         result = sshreader.sshread(jobs, pcount=0)
         for x in result:
             self.assertEqual(x.status, 0, msg=x.results)
@@ -239,7 +235,7 @@ class TestSshreader(unittest.TestCase):
     def test_sshread(self):
         """ Test sshread method using threads and processes
         """
-        jobs = self.configure_serverjob_list(10)
+        jobs = self.configure_serverjob_list(1)
         result = sshreader.sshread(jobs, pcount=0, tcount=0)
         for x in result:
             self.assertEqual(x.status, 0, msg=x.results)
@@ -250,6 +246,12 @@ class TestSshreader(unittest.TestCase):
         """
         self.assertIsInstance(sshreader.utils.cpusoftlimit(), int)
         self.assertIsInstance(sshreader.utils.cpuhardlimit(), int)
+        pass
+
+    def test_threadlimits(self):
+        """ Ensure the threadlimit method
+        """
+        self.assertIsInstance(sshreader.utils.threadlimit(), int)
         pass
 
 

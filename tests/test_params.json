@@ -1,0 +1,5 @@
+{"host_fqdn": "127.0.0.1",
+  "ssh_user": "sshreader",
+  "ssh_password": "sunshine",
+  "ssh_key_path": "/tests/keys/id_rsa"
+}
