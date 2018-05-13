@@ -18,11 +18,13 @@ import sshreader
 
 global ssh_data
 try:
+    # If you want to test locally simply create a test_params.json file like the dictionary below
     params_file = open(project_root + '/tests/test_params.json')
     ssh_data = json.load(params_file)
-    ssh_data['ssh_key_path'] = project_root + ssh_data['ssh_key_path']
 except IOError:
-    raise FileNotFoundError('Unable to load test_params.json file')
+    # Defaults for testing with Docker!
+    ssh_data = {"host_fqdn": "127.0.0.1", "ssh_user": "sshreader", "ssh_password": "sunshine",
+                "ssh_key_path": project_root + "/tests/keys/id_rsa"}
 
 
 class TestShellScript(unittest.TestCase):

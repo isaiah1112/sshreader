@@ -54,6 +54,7 @@ Topics
    getting_started
    faq
    pydsh
+   testing
 
 API Documentation
 -----------------
