@@ -199,6 +199,7 @@ class SSH(object):
     def connect(self, failfast=True):
         """Opens an SSH Connection
 
+        :param failfast: Test socket connection before attempting to connect
         :return: True
         :raises: SSHException
         """
