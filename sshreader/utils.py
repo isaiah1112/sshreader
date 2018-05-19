@@ -206,7 +206,8 @@ class ServerJob(object):
                 self.prehook.run(self)
             try:
                 self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
-                                 timeout=self.sshtimeout, port=self.ssh_port)
+                                 port=self.ssh_port, connect=False)
+                self._conn.connect(timeout=self.sshtimeout)
                 log.debug('%s: ssh connection established' % (self.name,))
             except Exception as errorMsg:
                 log.debug(str(errorMsg))
