@@ -157,7 +157,7 @@ class SSH(object):
                     result = Command(cmd=command, stdout=stdout.read().strip(), stderr=None,
                                      return_code=stdout.channel.recv_exit_status())
             except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):
-                result = Command(cmd=command, stdout='command timed out', stderr=None, return_code=504)
+                result = Command(cmd=command, stdout='command timed out', stderr=None, return_code=124)
         else:
             try:
                 stdin, stdout, stderr = self._connection.exec_command(command, timeout=timeout)
@@ -168,7 +168,7 @@ class SSH(object):
                     result = Command(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip(),
                                      return_code=stdout.channel.recv_exit_status())
             except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):
-                result = Command(cmd=command, stdout='', stderr='command timed out', return_code=504)
+                result = Command(cmd=command, stdout='', stderr='command timed out', return_code=124)
         return result
 
     def close(self):
