@@ -1,5 +1,16 @@
 # Changelog
 
+## Version 4.4
+ * Updating setup.py information [352834d]
+ * Bringing Python3.4 and Python 3.5 back into testing. [c5ffcc8]
+ * Automated testing with tox using Bitbucket Pipelines [91bfc28]
+ * Allowing local testing as well as testing with Bitbucket Pipelines [39803cf]
+ * Added step for building documentation on master branch pipelines [c966372]
+ * Added failfast param to docstring [212815b]
+ * Testing keyfile as str. Refactored ssh connection timeout. Updated cmd timeout error [9854f39]
+ * Updating integration tests to include new return codes. [e3879f6]
+ * Updated timeout code to 124 [7793407]
+
 ## Version 4.3.3
  * Limiting number of ServerJob objects in integration tests [a3f18d3]
  * Attempting to fix bug in Python 3.4 where join never completes for sub-processes [538a4d8]
