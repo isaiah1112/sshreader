@@ -20,6 +20,7 @@ shell_command function for running local shell scripts!
 from __future__ import print_function
 from collections import namedtuple, OrderedDict
 from getpass import getuser
+from past.builtins import basestring
 import logging
 import os
 import paramiko
@@ -66,12 +67,11 @@ class SSH(object):
     :param keyfile: SSH private key file
     :param keypass: SSH private key password
     :param port: SSH port
-    :param timeout: SSH connection timeout in seconds
     :param connect: Initiate the connect
     :return: SSH connection object
     :raises: SSHException
     """
-    def __init__(self, fqdn, username=None, password=None, keyfile=None, keypass=None, port=22, timeout=30, connect=True):
+    def __init__(self, fqdn, username=None, password=None, keyfile=None, keypass=None, port=22, connect=True):
         if not keyfile:
             if len(paramiko.Agent().get_keys()) == 0:
                 if not all((username, password)):
@@ -80,19 +80,20 @@ class SSH(object):
         self.username = username
         self.password = password
         if keyfile:
+            if not isinstance(keyfile, basestring):
+                raise TypeError('expected %s for keyfile, got %s' % (str(basestring), str(type(keyfile))))
             self.keyfile = os.path.abspath(os.path.expanduser(keyfile))
         else:
             self.keyfile = keyfile
         self.keypass = keypass
         self.port = port
-        self.timeout = timeout
         self._connection = paramiko.SSHClient()
         self._connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         if connect:
             self.__connect()
 
     def __str__(self):
-        return self.__dict__
+        return str(self.__dict__)
 
     def __enter__(self):
         if self.__alive() is False:
@@ -109,7 +110,7 @@ class SSH(object):
         :param dstfile: Path to the remote file
         :return: Result of paramiko.SFTPClient.put()
         """
-        if self.__alive() is False:
+        if not self.__alive():
             raise paramiko.SSHException("connection to %s not established" % (self.host,))
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         try:
@@ -125,7 +126,7 @@ class SSH(object):
         :param dstfile: Path to the local file
         :return: Result of paramiko.SFTPClient.get()
         """
-        if self.__alive() is False:
+        if not self.__alive():
             raise paramiko.SSHException("connection to %s not established" % (self.host,))
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         try:
@@ -196,9 +197,11 @@ class SSH(object):
         """
         return self.__connect()
 
-    def connect(self, failfast=True):
+    def connect(self, failfast=True, timeout=30):
         """Opens an SSH Connection
 
+        :param failfast: Test socket connection before attempting to connect
+        :param timeout: SSH connection timeout in seconds
         :return: True
         :raises: SSHException
         """
@@ -221,10 +224,10 @@ class SSH(object):
                     paramiko.SSHException('username and password or keyfile not provided')
         if self.keyfile:
             self._connection.connect(self.host, port=self.port, username=self.username, password=self.keypass,
-                                     key_filename=self.keyfile, timeout=self.timeout, look_for_keys=False)
+                                     key_filename=self.keyfile, timeout=timeout, look_for_keys=False)
         else:
             self._connection.connect(self.host, port=self.port, username=self.username, password=self.password,
-                                     timeout=self.timeout, look_for_keys=False)
+                                     timeout=timeout, look_for_keys=False)
         return True
 
     # Privatizing some of the functions so SSH can be subclassed

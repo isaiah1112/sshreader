@@ -1,4 +1,4 @@
-.. faq documentation master file, created by Jesse Almanrode
+.. getting started documentation master file, created by Jesse Almanrode
 
 Getting Started
 ===============
