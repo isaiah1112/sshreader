@@ -116,7 +116,7 @@
  * Changing ssh\_public\_key\_path to ssh\_key\_path in unit tests for sshreader. [081aabe]
  * Added docs env to tox for testing documentation builds. [ae1fbc2]
  * Added support for ECDSA ssh key discovery in envvars method [b239dfd]
- * Renaming SSH.connection to SSH._connection. [7d0fad2]
+ * Renaming SSH.connection to SSH.\_connection. [7d0fad2]
  * Updating unittests to increase speed. [aacb7c7]
 
 ## Version 3.5.1
