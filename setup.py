@@ -21,7 +21,7 @@ setup(name='sshreader',
                         'future>=0.16.0',
                         'paramiko>=2.4.1',
                         'progressbar2>=3.38.0',
-                        'python-hostlist>=1.17',
+                        'python-hostlist==1.18',
                         ],
       platforms=['Linux', 'Darwin'],
       classifiers=[
