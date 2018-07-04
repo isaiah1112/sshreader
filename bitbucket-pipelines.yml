@@ -1,4 +1,4 @@
-image: python:3.6
+image: python:latest
 
 pipelines:
   default:
@@ -13,31 +13,11 @@ pipelines:
         caches:
         - pip
     - step:
-        name: Python3.4
-        image: python:3.4
+        name: Python3.7
+        image: python:3.7
         script:
           - pip install -U tox
-          - tox -e py34
-        services:
-          - sshd
-        caches:
-          - pip
-    - step:
-        name: Python3.5
-        image: python:3.5
-        script:
-          - pip install -U tox
-          - tox -e py35
-        services:
-          - sshd
-        caches:
-          - pip
-    - step:
-        name: Python3.6
-        image: python:3.6
-        script:
-          - pip install -U tox
-          - tox -e py36
+          - tox -e py37
         services:
           - sshd
         caches:
@@ -80,6 +60,16 @@ pipelines:
         script:
           - pip install -U tox
           - tox -e py36
+        services:
+          - sshd
+        caches:
+          - pip
+    - step:
+        name: Python3.7
+        image: python:3.7
+        script:
+          - pip install -U tox
+          - tox -e py37
         services:
           - sshd
         caches:
