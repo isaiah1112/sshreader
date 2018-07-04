@@ -68,7 +68,14 @@ API Documentation
 Compatibility
 -------------
 
-As of version 4.0, sshreader is supported under Python 2.7, and 3.6.
+In order to maintain the widest range of compatibility, sshreader is currently tested using the following versions of
+Python:
+
+* Python2.7
+* Python3.4
+* Python3.5
+* Python3.6
+* Python3.7
 
 Indices and tables
 ------------------
