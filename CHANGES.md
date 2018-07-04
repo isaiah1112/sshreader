@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 4.4.1
+ * Adding Python3.7 to test suite [b64acd9]
+ * Updated requirements [7558423]
+ * Adding Python3.7 to supported python versions [2346828]
+
 ## Version 4.4
  * Updating setup.py information [352834d]
  * Bringing Python3.4 and Python 3.5 back into testing. [c5ffcc8]
