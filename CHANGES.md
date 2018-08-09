@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 4.4.2
+ * Ensuring that ssh.\_conn is always None when job exits [c6ebcb4]
+
 ## Version 4.4.1
  * Adding Python3.7 to test suite [b64acd9]
  * Updated requirements [7558423]

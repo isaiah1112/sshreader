@@ -226,6 +226,7 @@ class ServerJob(object):
                     log.debug('%s; running posthook' % (self.name,))
                     self.posthook.run(self)
                 self._conn.close()
+            finally:
                 self._conn = None  # So the ssh connection can be pickled!
             if self.posthook and self.posthook.ssh_established is False:
                 log.debug('%s; running posthook' % (self.name,))
