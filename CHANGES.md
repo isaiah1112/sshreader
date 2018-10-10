@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 4.4.4
+ * Fixing bug when ssh dies while command is running [81b2a88]
+
 ## Version 4.4.3
  * Wrapping ssh_command in try statement during multiprocessing/threading [4127792]
 

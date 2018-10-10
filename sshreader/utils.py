@@ -221,13 +221,10 @@ class ServerJob(object):
                     try:
                         result = self._conn.ssh_command(cmd, timeout=self.cmdtimeout, combine=self.combine_output)
                     except Exception as errorMsg:
-                        log.debug('%s: %s' % (self.name, str(errorMsg)))
-                        self.results.append(str(errorMsg))
-                        self.status += 54
-                    else:
-                        log.debug('%s: %s' % (self.name, str(result)))
-                        self.results.append(result)
-                        self.status += result.return_code
+                        result = Command(cmd, '', str(errorMsg), 54)
+                    log.debug('%s: %s' % (self.name, str(result)))
+                    self.results.append(result)
+                    self.status += result.return_code
                 if self.posthook and self.posthook.ssh_established:
                     log.debug('%s; running posthook' % (self.name,))
                     self.posthook.run(self)
