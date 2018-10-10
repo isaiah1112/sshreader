@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 4.4.3
+ * Wrapping ssh_command in try statement during multiprocessing/threading [4127792]
+
 ## Version 4.4.2
  * Ensuring that ssh.\_conn is always None when job exits [c6ebcb4]
 
