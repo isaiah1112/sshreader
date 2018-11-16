@@ -21,7 +21,7 @@ Then, simply specify the python version you would like to test with:
 
 .. code-block:: bash
 
-    tox -e py36  # Test Python3.7
+    tox -e py37  # Test Python3.7
     tox -e py36  # Test Python3.6
     tox -e py35  # Test Python3.5
     tox -e py34  # Test Python3.4
