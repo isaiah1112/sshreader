@@ -30,5 +30,9 @@ except DistributionNotFound:
     __version__ = 'UNKNOWN'
 __all__ = ['utils', 'ssh']
 
-logging.basicConfig()
-logging.getLogger(__name__).addHandler(logging.NullHandler())
+log = logging.getLogger(__name__)
+log_handler = logging.StreamHandler()
+log_handler.setFormatter(logging.Formatter('%(levelname)s:%(name)s.%(module)s.%(funcName)s:%(message)s'))
+log.addHandler(log_handler)
+log.setLevel(logging.WARNING)
+log.propagate = False  # Keeps our messages out of the root logger.
