@@ -9,8 +9,22 @@ can be used.
 
 .. warning::
 
-    With version 1.3 of pydsh I have moved away from uisng argparse in favor of the `Click`_ module.  Some of the cli
+    With :code:`pydsh v1.3` I have moved away from the argparse module in favor of the `Click`_ module.  Some of the cli
     flags have changed.
+
+Debugging
+---------
+
+In :code:`pydsh v2.6` I added better logging support for both the :code:`pydsh` script and the :code:`sshreader` module
+which powers it.  There are 4 levels of debugging available to you:
+
+* debug = pydsh:INFO
+* debug + verbose = pydsh:INFO + sshreader:INFO
+* debug + 2verbose = pydsh:DEBUG + sshreader:INFO
+* debug + 3verbose = pydsh:DEBUG + sshreader:DEBUG
+
+Keep in mind that most people will probably only ever need the INFO levels of debugging.  DEBUG levels may generate a lot
+of output and are generally used to find issues within the script/module.
 
 Examples
 --------

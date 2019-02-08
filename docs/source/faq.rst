@@ -30,7 +30,7 @@ Often times with multiprocessing print statements come out funky because multipl
 
 .. note::
 
-    After sshreader v3.2 you can also use the new :code:`sshreader.echo` method to automatically implement a
+    After :code:`sshreader v3.2` you can also use the new :code:`sshreader.echo` method to automatically implement a
     :code:`multiprocessing.Lock` on the fly.
 
 Where did my output go?
@@ -116,7 +116,7 @@ when sending an :code:`ssh_command`.
 Changing Logging
 ~~~~~~~~~~~~~~~~
 
-As of version 3.5 of sshreader you might have noticed that the :code:`debuglevel` option is no longer available on :code:`ServerJob`
+As of :code:`sshreader v3.5` you might have noticed that the :code:`debuglevel` option is no longer available on :code:`ServerJob`
 objects or the :code:`sshread` method.  To enable logging going forward you will want to change the level for the :code:`sshreader`
 logger.
 
@@ -131,7 +131,7 @@ To learn what levels can be set, check out the `logger module's documentation.`_
 SSH Agent
 ~~~~~~~~~
 
-With version 4.1 and later (pydsh 2.4 and later), I have ensured that Paramiko's support for utilizing keys held in
+With :code:`sshreaver v4.1` (:code:`pydsh v2.4`) and later, I have ensured that Paramiko's support for utilizing keys held in
 `SSH Agent`_ are available within the SSH class in sshreader.  To utilize them simply do not supply the SSH class with
 either an SSH Keyfile or Password.  If there are keys cached in the agent, they will be used.  SSH Agent keys are also
 now listed in the NamedTuple returned from the :code:`envvars()` method.
