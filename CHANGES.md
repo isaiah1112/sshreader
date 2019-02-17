@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 4.5
+ * Fixing tox command for py37 [ffbf342]
+ * Created custom configuration for sshreader logging. [31486dd]
+ * Added verbosity setting for debug logging in pydsh [f39254e]
+ * Updated requirements [b5f8ed6]
+
 ## Version 4.4.4
  * Fixing bug when ssh dies while command is running [81b2a88]
 
