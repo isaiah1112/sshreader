@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 4.5
+ * Fixing tox command for py37 [ffbf342]
+ * Created custom configuration for sshreader logging. [31486dd]
+ * Added verbosity setting for debug logging in pydsh [f39254e]
+ * Updated requirements [b5f8ed6]
+
 ## Version 4.4.4
  * Fixing bug when ssh dies while command is running [81b2a88]
 
@@ -125,7 +131,7 @@
  * Changing ssh\_public\_key\_path to ssh\_key\_path in unit tests for sshreader. [081aabe]
  * Added docs env to tox for testing documentation builds. [ae1fbc2]
  * Added support for ECDSA ssh key discovery in envvars method [b239dfd]
- * Renaming SSH.connection to SSH._connection. [7d0fad2]
+ * Renaming SSH.connection to SSH.\_connection. [7d0fad2]
  * Updating unittests to increase speed. [aacb7c7]
 
 ## Version 3.5.1
