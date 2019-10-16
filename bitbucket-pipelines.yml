@@ -13,11 +13,11 @@ pipelines:
         caches:
         - pip
     - step:
-        name: Python3.7
-        image: python:3.7
+        name: Python3.8
+        image: python:3.8
         script:
           - pip install -U tox
-          - tox -e py37
+          - tox -e py38
         services:
           - sshd
         caches:
@@ -70,6 +70,16 @@ pipelines:
         script:
           - pip install -U tox
           - tox -e py37
+        services:
+          - sshd
+        caches:
+          - pip
+    - step:
+        name: Python3.8
+        image: python:3.8
+        script:
+          - pip install -U tox
+          - tox -e py38
         services:
           - sshd
         caches:
