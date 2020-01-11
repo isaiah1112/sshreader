@@ -361,7 +361,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
         pcount = int(min(pcount, totaljobs))
 
         if pcount > cpuhardlimit():
-            raise ValueError('CPUHardLimit exceeded: ' + str(pcount) + ' > ' + str(cpuhardlimit()))
+            raise ValueError('CPUHardLimit exceeded: %d > %d' % (pcount, cpuhardlimit()))
 
         if tcount is None:
             tcount = 0
