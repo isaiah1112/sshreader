@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 4.5.2
+ * Removed Python3.4 Support [e427ee2]
+
 ## Version 4.5.1
  * Updated paramiko to 2.6.0 to remove cryptography warnings [c0828ae]
 
