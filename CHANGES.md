@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 4.5.1
+ * Updated paramiko to 2.6.0 to remove cryptography warnings [c0828ae]
+
 ## Version 4.5
  * Fixing tox command for py37 [ffbf342]
  * Created custom configuration for sshreader logging. [31486dd]
