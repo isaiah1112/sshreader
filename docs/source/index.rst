@@ -72,7 +72,6 @@ In order to maintain the widest range of compatibility, sshreader is currently t
 Python:
 
 * Python2.7
-* Python3.4
 * Python3.5
 * Python3.6
 * Python3.7
