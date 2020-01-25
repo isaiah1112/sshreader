@@ -15,16 +15,6 @@ pipelines:
   branches:
     master:
     - step:
-        name: Python3.4
-        image: python:3.4
-        script:
-          - pip install -U tox
-          - tox -e py34
-        services:
-          - sshd
-        caches:
-          - pip
-    - step:
         name: Python3.5
         image: python:3.5
         script:

@@ -71,7 +71,6 @@ Compatibility
 In order to maintain the widest range of compatibility, sshreader is currently tested using the following versions of
 Python:
 
-* Python3.4
 * Python3.5
 * Python3.6
 * Python3.7
