@@ -319,10 +319,11 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
         log.info('logging enabled: disabling progress bar')
         progress_bar = False
 
-    item_counter = mpctx.Value('L', 0)
     if progress_bar:
+        item_counter = mpctx.Value('L', 0)
         bar = ProgressBar(max_value=totaljobs)
     else:
+        item_counter = None
         bar = None
 
     task_queue = mpctx.Queue(maxsize=totaljobs)
@@ -348,7 +349,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
         log.info(u'spawning %d threads' % (tcount, ))
         # Start a thread pool
         for thread in range(tcount):
-            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter))
+            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar))
             thread.daemon = True
             thread.start()
             subs.append(thread)
@@ -378,7 +379,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
 
         log.info(u'spawning %d sub-processes' % (pcount, ))
         for pid in range(pcount):
-            pid = mpctx.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter, tcount))
+            pid = mpctx.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter, tcount, progress_bar))
             pid.daemon = True
             pid.start()
             subs.append(pid)
@@ -407,7 +408,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
         return result_queue.get()
 
 
-def _sub_process_(task_queue, result_queue, item_counter, thread_count):
+def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress_bar):
     """ Private method for managing multi-processing and spawning thread pools.
 
     DO NOT USE THIS METHOD!
@@ -419,13 +420,14 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count):
             job = task_queue.get()
             job.run()
             result_queue.put(job)
-            with item_counter.get_lock():
-                item_counter.value += 1
+            if progress_bar:
+                with item_counter.get_lock():
+                    item_counter.value += 1
     else:
         threads = list()
         log.debug(u'process: %d spawning: %d threads' % (pid, thread_count))
         for thread in range(thread_count):
-            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter))
+            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar))
             thread.daemon = True
             thread.start()
             threads.append(thread)
@@ -436,7 +438,7 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count):
     return None
 
 
-def _sub_thread_(task_queue, result_queue, item_counter):
+def _sub_thread_(task_queue, result_queue, item_counter, progress_bar):
     """ Private method for managing multi-processing and spawning thread pools.
 
     DO NOT USE THIS METHOD!
@@ -446,7 +448,8 @@ def _sub_thread_(task_queue, result_queue, item_counter):
         job = task_queue.get()
         job.run()
         result_queue.put(job)
-        with item_counter.get_lock():
-            item_counter.value += 1
+        if progress_bar:
+            with item_counter.get_lock():
+                item_counter.value += 1
     log.debug('existing thread')
     return None
