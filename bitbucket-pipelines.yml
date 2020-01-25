@@ -3,16 +3,6 @@ image: python:latest
 pipelines:
   default:
     - step:
-        name: Python2.7
-        image: python:2.7
-        script:
-          - pip install -U tox
-          - tox -e py27
-        services:
-        - sshd
-        caches:
-        - pip
-    - step:
         name: Python3.8
         image: python:3.8
         script:
@@ -24,16 +14,6 @@ pipelines:
           - pip
   branches:
     master:
-    - step:
-        name: Python2.7
-        image: python:2.7
-        script:
-          - pip install -U tox
-          - tox -e py27
-        services:
-          - sshd
-        caches:
-        - pip
     - step:
         name: Python3.4
         image: python:3.4

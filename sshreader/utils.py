@@ -33,6 +33,9 @@ import time
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
+if sys.version_info[0] < 3:
+    raise Exception('Only Python 3.x is supported in this version of sshreader')
+
 mpctx = multiprocessing.get_context('spawn')
 __cpuhardlimitfactor__ = 3
 __threadlimitfactor__ = 2

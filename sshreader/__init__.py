@@ -22,6 +22,10 @@ from pkg_resources import get_distribution, DistributionNotFound
 from sshreader.ssh import SSH, envvars
 from sshreader.utils import ServerJob, Hook, sshread, echo, cpusoftlimit, cpuhardlimit, threadlimit, shell_command
 import logging
+import sys
+
+if sys.version_info[0] < 3:
+    raise Exception('Only Python 3.x is supported in this version of sshreader')
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 try:

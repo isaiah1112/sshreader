@@ -42,6 +42,9 @@ log.addHandler(log_handler)
 log.setLevel(logging.WARNING)
 log.propagate = False  # Keeps our messages out of the root logger.
 
+if sys.version_info[0] < 3:
+    log.critical('Only Python 3.x is supported in this version of sshreader')
+    sys.exit(-1)
 
 def copy_script(scriptfile, job):
     """ Copy script to remote host using SFTP connection

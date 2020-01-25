@@ -26,7 +26,6 @@ Then, simply specify the python version you would like to test with:
     tox -e py36  # Test Python3.6
     tox -e py35  # Test Python3.5
     tox -e py34  # Test Python3.4
-    tox -e py27  # Test Python2.7
 
 Or to test all the above versions:
 
