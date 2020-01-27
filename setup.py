@@ -5,7 +5,7 @@
 from setuptools import setup
 
 setup(name='sshreader',
-      version='4.5.2',
+      version='4.5.3',
       description='Multi-threading/processing wrapper for Paramiko',
       author='Jesse Almanrode',
       author_email='jesse@almanrode.com',
@@ -21,7 +21,7 @@ setup(name='sshreader',
                         'future>=0.17.1',
                         'paramiko>=2.4.2',
                         'progressbar2>=3.39.2',
-                        'python-hostlist==1.18',
+                        'python-hostlist>=1.18',
                         ],
       platforms=['Linux', 'Darwin'],
       classifiers=[

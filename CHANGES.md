@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 4.5.3
+ * Updated python-hostlist requirement in setup.py [dcb6004]
+
 ## Version 4.5.2
  * Removed Python3.4 Support [e427ee2]
 
