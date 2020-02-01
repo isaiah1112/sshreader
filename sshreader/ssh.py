@@ -31,7 +31,9 @@ import sys
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
 if sys.version_info[0] < 3:
-    raise Exception('Only Python 3.x is supported in this version of sshreader')
+    raise Exception('Python2.x is no longer supported in this version of sshreader')
+elif sys.version_info[1] < 4:
+    raise Exception('Only Python 3.5 and later is supported in this version of sshreader')
 
 # Globals
 Command = namedtuple('Command', ['cmd', 'stdout', 'stderr', 'return_code'])
