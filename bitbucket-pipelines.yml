@@ -2,7 +2,7 @@ image: python:latest
 
 pipelines:
   default:
-    - step:
+    - step: &latest
         name: Python3.8
         image: python:3.8
         script:
@@ -44,16 +44,7 @@ pipelines:
           - sshd
         caches:
           - pip
-    - step:
-        name: Python3.8
-        image: python:3.8
-        script:
-          - pip install -U tox
-          - tox -e py38
-        services:
-          - sshd
-        caches:
-          - pip
+    - step: *latest
     - step:
         name: Documentation Build
         script:
