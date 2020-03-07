@@ -1,5 +1,17 @@
 # Changelog
 
+## Version 4.6
+ * Updated paramiko to 2.6.0 to remove cryptography warnings [93311e7]
+ * Added python 3.8 to testing suite [02d507f]
+ * Code cleanup in pydsh [c68aba3]
+ * Updated error string [97abf50]
+ * Fixed bug when task_queue is not full when sub-process or thread is spawned. [4533f4d]
+ * Fixed multiprocessing issue when using 'fork' to spawn child processes [96d69a6]
+ * Disabled item_counter semaphore if not using progress bar [26b6e20]
+ * Removed support for Python2.7 [1fc8b09]
+ * Testing yaml anchors in bitbucket-pipelines.yml [1165b33]
+ * Updated version compatibility checking across module. [6aaa365]
+
 ## Version 4.5.3
  * Updated python-hostlist requirement in setup.py [dcb6004]
 
