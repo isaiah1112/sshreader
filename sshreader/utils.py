@@ -1,7 +1,7 @@
 # coding=utf-8
 """ All the classes and functions that make sshreader tick
 """
-# Copyright (C) 2015-2019 Jesse Almanrode
+# Copyright (C) 2015-2020 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -33,11 +33,16 @@ import time
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
+if sys.version_info[0] < 3:
+    raise Exception('Python2.x is no longer supported in this version of sshreader')
+elif sys.version_info[1] < 4:
+    raise Exception('Only Python 3.5 and later is supported in this version of sshreader')
+
+mpctx = multiprocessing.get_context('spawn')
 __cpuhardlimitfactor__ = 3
 __threadlimitfactor__ = 2
-_printlock_ = multiprocessing.Lock()
+_printlock_ = mpctx.Lock()
 log = logging.getLogger('sshreader')
-
 
 # Globals
 Command = namedtuple('Command', ['cmd', 'stdout', 'stderr', 'return_code'])
@@ -249,7 +254,7 @@ def cpusoftlimit():
 
     :return: Integer
     """
-    cpu_count = multiprocessing.cpu_count()
+    cpu_count = mpctx.cpu_count()
     if cpu_count > 1:
         return cpu_count - 1
     else:
@@ -277,7 +282,7 @@ def threadlimit():
     """
     global __threadlimitfactor__
     assert isinstance(__threadlimitfactor__, int)
-    return multiprocessing.cpu_count() * __threadlimitfactor__
+    return mpctx.cpu_count() * __threadlimitfactor__
 
 
 def echo(*args, **kwargs):
@@ -319,18 +324,23 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
         log.info('logging enabled: disabling progress bar')
         progress_bar = False
 
-    item_counter = multiprocessing.Value('L', 0)
     if progress_bar:
+        item_counter = mpctx.Value('L', 0)
         bar = ProgressBar(max_value=totaljobs)
     else:
+        item_counter = None
         bar = None
 
-    task_queue = multiprocessing.Queue(maxsize=totaljobs)
-    result_queue = multiprocessing.Queue(maxsize=totaljobs)
+    task_queue = mpctx.Queue(maxsize=totaljobs)
+    result_queue = mpctx.Queue(maxsize=totaljobs)
 
-    log.debug('filling input queue')
+    log.debug('filling task_queue')
     for job in serverjobs:
         task_queue.put(job)
+
+    while task_queue.empty():
+        log.debug('Waiting for task_queue to fill')
+        time.sleep(1)
 
     subs = list()  # Keep a list of processes/threads so we can join them later
 
@@ -344,14 +354,14 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
         log.info(u'spawning %d threads' % (tcount, ))
         # Start a thread pool
         for thread in range(tcount):
-            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter))
+            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar))
             thread.daemon = True
             thread.start()
             subs.append(thread)
     else:
         # Found this while digging around the multiprocessing API.
         # This might help some of the pickling errors when working with ssh
-        multiprocessing.allow_connection_pickling()
+        mpctx.allow_connection_pickling()
 
         # Adjust number of sub-processes to spawn.
         if pcount == 0:
@@ -361,7 +371,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
         pcount = int(min(pcount, totaljobs))
 
         if pcount > cpuhardlimit():
-            raise ValueError('CPUHardLimit exceeded: ' + str(pcount) + ' > ' + str(cpuhardlimit()))
+            raise ValueError('CPUHardLimit exceeded: %d > %d' % (pcount, cpuhardlimit()))
 
         if tcount is None:
             tcount = 0
@@ -374,7 +384,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
 
         log.info(u'spawning %d sub-processes' % (pcount, ))
         for pid in range(pcount):
-            pid = multiprocessing.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter, tcount))
+            pid = mpctx.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter, tcount, progress_bar))
             pid.daemon = True
             pid.start()
             subs.append(pid)
@@ -403,7 +413,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
         return result_queue.get()
 
 
-def _sub_process_(task_queue, result_queue, item_counter, thread_count):
+def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress_bar):
     """ Private method for managing multi-processing and spawning thread pools.
 
     DO NOT USE THIS METHOD!
@@ -415,13 +425,14 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count):
             job = task_queue.get()
             job.run()
             result_queue.put(job)
-            with item_counter.get_lock():
-                item_counter.value += 1
+            if progress_bar:
+                with item_counter.get_lock():
+                    item_counter.value += 1
     else:
         threads = list()
         log.debug(u'process: %d spawning: %d threads' % (pid, thread_count))
         for thread in range(thread_count):
-            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter))
+            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar))
             thread.daemon = True
             thread.start()
             threads.append(thread)
@@ -432,7 +443,7 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count):
     return None
 
 
-def _sub_thread_(task_queue, result_queue, item_counter):
+def _sub_thread_(task_queue, result_queue, item_counter, progress_bar):
     """ Private method for managing multi-processing and spawning thread pools.
 
     DO NOT USE THIS METHOD!
@@ -442,7 +453,8 @@ def _sub_thread_(task_queue, result_queue, item_counter):
         job = task_queue.get()
         job.run()
         result_queue.put(job)
-        with item_counter.get_lock():
-            item_counter.value += 1
+        if progress_bar:
+            with item_counter.get_lock():
+                item_counter.value += 1
     log.debug('existing thread')
     return None

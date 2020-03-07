@@ -71,10 +71,16 @@ Compatibility
 In order to maintain the widest range of compatibility, sshreader is currently tested using the following versions of
 Python:
 
-* Python2.7
 * Python3.5
 * Python3.6
 * Python3.7
+* Python3.8
+
+.. note::
+
+    As of version 5.0 of sshreader, Python2.7 is no longer supported in conjunction with
+    the discontinuation of support for Python2.7 on January 1, 2020.  The last version
+    to support Python2.7 is sshreader 4.5.
 
 Indices and tables
 ------------------

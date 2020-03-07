@@ -1,7 +1,7 @@
 # coding=utf-8
 """A Python Package for parallelizing ssh connections via multi-threading and multi-processing.
 """
-# Copyright (C) 2015-2019 Jesse Almanrode
+# Copyright (C) 2015-2020 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -22,6 +22,12 @@ from pkg_resources import get_distribution, DistributionNotFound
 from sshreader.ssh import SSH, envvars
 from sshreader.utils import ServerJob, Hook, sshread, echo, cpusoftlimit, cpuhardlimit, threadlimit, shell_command
 import logging
+import sys
+
+if sys.version_info[0] < 3:
+    raise Exception('Python2.x is no longer supported in this version of sshreader')
+elif sys.version_info[1] < 4:
+    raise Exception('Only Python 3.5 and later is supported in this version of sshreader')
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 try:
