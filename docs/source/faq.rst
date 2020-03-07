@@ -131,7 +131,7 @@ To learn what levels can be set, check out the `logger module's documentation.`_
 SSH Agent
 ~~~~~~~~~
 
-With :code:`sshreaver v4.1` (:code:`pydsh v2.4`) and later, I have ensured that Paramiko's support for utilizing keys held in
+With :code:`sshreader v4.1` (:code:`pydsh v2.4`) and later, I have ensured that Paramiko's support for utilizing keys held in
 `SSH Agent`_ are available within the SSH class in sshreader.  To utilize them simply do not supply the SSH class with
 either an SSH Keyfile or Password.  If there are keys cached in the agent, they will be used.  SSH Agent keys are also
 now listed in the NamedTuple returned from the :code:`envvars()` method.
