@@ -17,10 +17,8 @@ shell_command function for running local shell scripts!
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import print_function
 from collections import namedtuple, OrderedDict
 from getpass import getuser
-from past.builtins import basestring
 import logging
 import os
 import paramiko
@@ -86,8 +84,8 @@ class SSH(object):
         self.username = username
         self.password = password
         if keyfile:
-            if not isinstance(keyfile, basestring):
-                raise TypeError('expected %s for keyfile, got %s' % (str(basestring), str(type(keyfile))))
+            if not isinstance(keyfile, str):
+                raise TypeError('expected %s for keyfile, got %s' % (str(str), str(type(keyfile))))
             self.keyfile = os.path.abspath(os.path.expanduser(keyfile))
         else:
             self.keyfile = keyfile

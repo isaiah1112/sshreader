@@ -15,8 +15,6 @@
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from __future__ import absolute_import, print_function, division
-from builtins import range  # Replaces xrange in Python2
 from collections import namedtuple
 from progressbar import ProgressBar
 from sshreader.ssh import SSH
@@ -38,10 +36,10 @@ if sys.version_info[0] < 3:
 elif sys.version_info[1] < 4:
     raise Exception('Only Python 3.5 and later is supported in this version of sshreader')
 
-mpctx = multiprocessing.get_context('spawn')
+mpctx = multiprocessing.get_context('spawn')  # Forcing the forking type to spawn in older versions of Python3
 __cpuhardlimitfactor__ = 3
 __threadlimitfactor__ = 2
-_printlock_ = mpctx.Lock()
+printlock = mpctx.Lock()
 log = logging.getLogger('sshreader')
 
 # Globals
@@ -293,8 +291,8 @@ def echo(*args, **kwargs):
     :param kwargs: Passthrough to print function
     :return: None
     """
-    global _printlock_
-    with _printlock_:
+    global printlock
+    with printlock:
         print(*args, **kwargs)
         sys.stdout.flush()
     return None
