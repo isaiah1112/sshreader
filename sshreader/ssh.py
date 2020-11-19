@@ -3,7 +3,7 @@
 """A wrapper for Paramiko that attempts to make ssh sessions easier to work with.  It also contains the
 shell_command function for running local shell scripts!
 """
-# Copyright (C) 2015-2020 Jesse Almanrode
+# Copyright (C) 2015-2021 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
