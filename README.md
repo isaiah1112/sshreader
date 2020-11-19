@@ -12,6 +12,7 @@ Python:
 * Python3.6
 * Python3.7
 * Python3.8
+* Python3.9
 
 ## License
 
@@ -40,7 +41,7 @@ To ensure all development requirements are met. This will allow you to build the
 
 ## Documentation
 
-The documentation for sshreader can be found at http://sshreader.readthedocs.io/
+The documentation for sshreader can be found [here](https://sshreader.readthedocs.io)
 
 ### Building Docs
 
