@@ -78,7 +78,7 @@ Python:
 
 .. note::
 
-    As of version 5.0 of sshreader, Python2.7 is no longer supported in conjunction with
+    As of version 4.6 of sshreader, Python2.7 is no longer supported in conjunction with
     the discontinuation of support for Python2.7 on January 1, 2020.  The last version
     to support Python2.7 is sshreader 4.5.
 

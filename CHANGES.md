@@ -1,5 +1,11 @@
 # Changelog
 
+## Version 4.7
+ * Removing Python2 code [481422f]
+ * Added Python3.9 to testing [ca50dc7]
+ * Added Makefile with commands for building/pushing docker image. [7be1fb3]
+ * Not returning value for sftp.get since it returns nothing. [fd576b1]
+
 ## Version 4.6
  * Updated paramiko to 2.6.0 to remove cryptography warnings [93311e7]
  * Added python 3.8 to testing suite [02d507f]

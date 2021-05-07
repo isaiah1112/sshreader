@@ -2,9 +2,6 @@
 # coding=utf-8
 """ Integration and Unit tests for sshreader Python Package
 """
-from __future__ import print_function
-from builtins import range, str
-import click
 import json
 import os
 import sys

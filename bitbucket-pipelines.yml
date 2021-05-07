@@ -3,11 +3,11 @@ image: python:latest
 pipelines:
   default:
     - step: &latest
-        name: Python3.8
-        image: python:3.8
+        name: Python3.9
+        image: python:3.9
         script:
           - pip install -U tox
-          - tox -e py38
+          - tox -e py39
         services:
           - sshd
         caches:
@@ -40,6 +40,16 @@ pipelines:
         script:
           - pip install -U tox
           - tox -e py37
+        services:
+          - sshd
+        caches:
+          - pip
+    - step:
+        name: Python3.8
+        image: python:3.8
+        script:
+          - pip install -U tox
+          - tox -e py38
         services:
           - sshd
         caches:

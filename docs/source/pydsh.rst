@@ -37,7 +37,7 @@ Simplest form of pydsh [1]_.  Run a command and show the output of the commands 
 
 .. note::
 
-    When using the :code:`--dshbak` or :code:`coalesce` options, a progress bar will be shown to the user as jobs
+    When using the :code:`--dshbak` or :code:`--coalesce` options, a progress bar will be shown to the user as jobs
     are processing.
 
 Run a script file rather than a simple command on remote hosts:
@@ -91,7 +91,7 @@ Indices and tables
 * `JA Computing`_
 
 .. _JA Computing: http://www.jacomputing.net
-.. _pdsh: https://computing.llnl.gov/linux/pdsh.html
+.. _pdsh: https://github.com/chaos/pdsh
 .. _hostlist expressions: https://www.nsc.liu.se/~kent/python-hostlist/
 .. _Click: http://click.pocoo.org/6/
 .. [1] Pydsh supports `hostlist expressions`_ to make listing hosts easier.
