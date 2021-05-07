@@ -134,10 +134,9 @@ class SSH(object):
             raise paramiko.SSHException("connection to %s not established" % (self.host,))
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         try:
-            result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
+            sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
         finally:
             sftp.close()
-        return result
 
     def ssh_command(self, command, timeout=30, combine=False, decodebytes=True):
         """Run a command over an ssh connection
