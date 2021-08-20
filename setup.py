@@ -4,6 +4,9 @@
 
 from setuptools import setup
 
+with open('requirements.txt') as r:
+    requirements = [x.strip() for x in r.readlines()]
+
 setup(name='sshreader',
       version='4.7',
       description='Multi-threading/processing wrapper for Paramiko',
@@ -16,13 +19,7 @@ setup(name='sshreader',
       packages=['sshreader'],
       include_package_data=True,
       scripts=['bin/pydsh'],
-      install_requires=['click>=7.0',
-                        'colorama>=0.4.1',
-                        'future>=0.17.1',
-                        'paramiko>=2.4.2',
-                        'progressbar2>=3.39.2',
-                        'python-hostlist>=1.18',
-                        ],
+      install_requires=requirements,
       platforms=['Linux', 'Darwin'],
       classifiers=[
           'Programming Language :: Python',
