@@ -4,8 +4,6 @@
 
 from setuptools import setup
 
-with open('requirements.txt') as r:
-    requirements = [x.strip() for x in r.readlines()]
 
 setup(name='sshreader',
       version='4.7',
@@ -19,7 +17,12 @@ setup(name='sshreader',
       packages=['sshreader'],
       include_package_data=True,
       scripts=['bin/pydsh'],
-      install_requires=requirements,
+      install_requires=['click>=8.0.1',
+                        'colorama>=0.4.4',
+                        'paramiko>=2.7.2',
+                        'progressbar2>=3.53.1',
+                        'python-hostlist>=1.21',
+                        ],
       platforms=['Linux', 'Darwin'],
       classifiers=[
           'Programming Language :: Python',
