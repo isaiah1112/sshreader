@@ -1,7 +1,7 @@
 .PHONY: docker docker-push test test-clean test-init
 
 DOCKER_TAG = isaiah1112/sshreader:latest
-TOX_ENV = $(shell grep -o 'py[0-9][0-9]' $(PWD)/tox.ini | tail -1)
+TOX_ENV = $(shell grep -o 'py[0-9]+' $(PWD)/tox.ini | tail -1)
 
 docker:
 	@docker build -t $(DOCKER_TAG) .
