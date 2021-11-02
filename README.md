@@ -13,6 +13,7 @@ Python:
 * Python3.7
 * Python3.8
 * Python3.9
+* Python3.10
 
 ## License
 

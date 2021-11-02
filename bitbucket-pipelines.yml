@@ -3,11 +3,11 @@ image: python:latest
 pipelines:
   default:
     - step: &latest
-        name: Python3.9
-        image: python:3.9
+        name: Python3.10
+        image: python:3.10
         script:
           - pip install -U tox
-          - tox -e py39
+          - tox -e py310
         services:
           - sshd
         caches:
@@ -54,6 +54,16 @@ pipelines:
           - sshd
         caches:
           - pip
+    - step:
+        name: Python3.9
+        image: python:3.9
+        script:
+          - pip install -U tox
+          - tox -e py39
+        services:
+          - sshd
+        caches:
+          - pip
     - step: *latest
     - step:
         name: Documentation Build
@@ -63,6 +73,7 @@ pipelines:
     - step:
         name: Deploy To PyPi
         script:
+          - pip install twine
           - bash -e deploy.bash
 definitions:
   services:

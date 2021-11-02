@@ -4,8 +4,9 @@
 
 from setuptools import setup
 
+
 setup(name='sshreader',
-      version='4.7',
+      version='4.8.0',
       description='Multi-threading/processing wrapper for Paramiko',
       author='Jesse Almanrode',
       author_email='jesse@almanrode.com',
@@ -16,12 +17,11 @@ setup(name='sshreader',
       packages=['sshreader'],
       include_package_data=True,
       scripts=['bin/pydsh'],
-      install_requires=['click>=7.0',
-                        'colorama>=0.4.1',
-                        'future>=0.17.1',
-                        'paramiko>=2.4.2',
-                        'progressbar2>=3.39.2',
-                        'python-hostlist>=1.18',
+      install_requires=['click>=8.0.3',
+                        'colorama>=0.4.4',
+                        'paramiko>=2.8.0',
+                        'progressbar2>=3.55.0',
+                        'python-hostlist>=1.21',
                         ],
       platforms=['Linux', 'Darwin'],
       classifiers=[
@@ -35,7 +35,8 @@ setup(name='sshreader',
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
-          'Programming Language :: Python :: 3.9',
+          'Programming Language :: Python :: 3.9'
+          'Programming Language :: Python :: 3.10',
           'Topic :: Software Development :: Libraries',
           'Topic :: Software Development :: Libraries :: Python Modules',
           ],
