@@ -1,12 +1,17 @@
 # Changelog
 
-## Version 4.7
+## Release v4.8.0
+ * Using twine to upload to PyPI. [290baa2]
+ * Adding Python3.10 to testing [47128ab]
+ * Updated requirements and documentation version [2f18080]
+
+## Release v4.7.0
  * Removing Python2 code [481422f]
  * Added Python3.9 to testing [ca50dc7]
  * Added Makefile with commands for building/pushing docker image. [7be1fb3]
  * Not returning value for sftp.get since it returns nothing. [fd576b1]
 
-## Version 4.6
+## Release v4.6.0
  * Updated paramiko to 2.6.0 to remove cryptography warnings [93311e7]
  * Added python 3.8 to testing suite [02d507f]
  * Code cleanup in pydsh [c68aba3]
@@ -18,36 +23,36 @@
  * Testing yaml anchors in bitbucket-pipelines.yml [1165b33]
  * Updated version compatibility checking across module. [6aaa365]
 
-## Version 4.5.3
+## Release v4.5.3
  * Updated python-hostlist requirement in setup.py [dcb6004]
 
-## Version 4.5.2
+## Release v4.5.2
  * Removed Python3.4 Support [e427ee2]
 
-## Version 4.5.1
+## Release v4.5.1
  * Updated paramiko to 2.6.0 to remove cryptography warnings [c0828ae]
 
-## Version 4.5
+## Release v4.5.0
  * Fixing tox command for py37 [ffbf342]
  * Created custom configuration for sshreader logging. [31486dd]
  * Added verbosity setting for debug logging in pydsh [f39254e]
  * Updated requirements [b5f8ed6]
 
-## Version 4.4.4
+## Release v4.4.4
  * Fixing bug when ssh dies while command is running [81b2a88]
 
-## Version 4.4.3
+## Release v4.4.3
  * Wrapping ssh_command in try statement during multiprocessing/threading [4127792]
 
-## Version 4.4.2
+## Release v4.4.2
  * Ensuring that ssh.\_conn is always None when job exits [c6ebcb4]
 
-## Version 4.4.1
+## Release v4.4.1
  * Adding Python3.7 to test suite [b64acd9]
  * Updated requirements [7558423]
  * Adding Python3.7 to supported python versions [2346828]
 
-## Version 4.4
+## Release v4.4.0
  * Updating setup.py information [352834d]
  * Bringing Python3.4 and Python 3.5 back into testing. [c5ffcc8]
  * Automated testing with tox using Bitbucket Pipelines [91bfc28]
@@ -58,43 +63,43 @@
  * Updating integration tests to include new return codes. [e3879f6]
  * Updated timeout code to 124 [7793407]
 
-## Version 4.3.3
+## Release v4.3.3
  * Limiting number of ServerJob objects in integration tests [a3f18d3]
  * Attempting to fix bug in Python 3.4 where join never completes for sub-processes [538a4d8]
  * Fixing bug with Hook class when asking for __str__ method. [f78f51f]
  * Cleaning up logging statements [2878e4d]
 
-## Version 4.3.2
+## Release v4.3.2
  * Revert "Updated logic to actually update kwargs for sshreader.Hook class" [491ee60]
 
-## Version 4.3.1
+## Release v4.3.1
  * Ensuring pydsh prefers threads by default [70b9974]
 
-## Version 4.3
+## Release v4.3.0
  * Updated pydsh to prefer threading by default [d512b97]
  * Updated logic to actually update kwargs for sshreader.Hook class [1791486]
  * Refactoring logging in sshreader.ServerJob class [a4fba76]
  * Updated logic for waiting for threads/processes to close in sshreader.sshread method [edb257f]
  * Allowing control over threadlimitfactor in sshreader. [eb6108c]
 
-## Version 4.2.1
+## Release v4.2.1
  * Added failfast flag to SSH.connect [75ac26e]
  * More code cleanup [a98bdc3]
 
-## Version 4.2
+## Release v4.2.0
  * Added socket open check to SSH.connect [8af9c6e]
  * Added example of parallel-sftp.py [fc4acef]
  * Code cleanup [6793a20]
  * Bugs found and fixed.  Tests updated. [625b2ee]
  * Updated requirements and version number [a3e622b]
 
-## Version 4.1.2
+## Release v4.1.2
  * Fixing bug in pydsh when detecting SSH Agent keys [614d5e9]
 
-## Version 4.1.1
+## Release v4.1.1
  * Fixing bug where ServerJob doesn't detect SSH Agent Keys. [7298771]
 
-## Version 4.1
+## Release v4.1.0
  * Updating SSH.sftp\_get and SSH.sftp\_put methods to ensure sftp transport is closed regardless of whether an exception occurs. [d7a1ced]
  * Moved enabling of debug logging higher in pydsh initialization. [60dc90c]
  * Update logger variable. [219435c]
@@ -103,14 +108,14 @@
  * Added some logging to pydsh. [d6b9950]
  * Updated Requirements [693e0f5]
 
-## Version 4.0.1
+## Release v4.0.1
  * Fixing bitbucket-pipelines script. [163c513]
  * Fixing documentation formatting [6ae0153]
  * Fixing typo in CHANGES.md [0ea4ee1]
  * Added ability to specify SSH port when using pydsh. [8df2365]
  * Updated Requirements [b8555b1]
 
-## Version 4.0
+## Release v4.0.0
  * Refactor work for package. [f612acc]
  * Setting up objects to have proper __str__ function [89682ca]
  * Rewriting logic in ServerJob class functions. [d18e37a]
@@ -124,19 +129,19 @@
  * Setting up bitbucket pipelines. [592d090]
  * Updated requirements and version [6d0bd75]
 
-## Version 3.7.4
+## Release v3.7.4
  * Fixing bug when cpu\_count() for a machine is 1 that causes cpusoftlimit() to return 0. [67133a4]
 
-## Version 3.7.3
+## Release v3.7.3
  * Updated documentation hosting [ec1f6f9]
 
-## Version 3.7.2
+## Release v3.7.2
  * Fixing bug in pydsh if script file is empty [b075256]
 
-## Version 3.7.1
+## Release v3.7.1
  * Fixing bug in sshreader.ssh.envvars() method [d24fe51]
 
-## Version 3.7
+## Release v3.7.0
  * Added ability to run script file via pydsh. [9bd476e]
  * Increasing threadlimit [1e07336]
  * Updated redline help in pydsh. [7bd1f82]
@@ -149,7 +154,7 @@
  * Converting dict to named tuple for sshreader.ssh.envvars() method [46e0bba]
  * Updated Requirements and Version [4381413]
 
-## Version 3.6
+## Release v3.6.0
  * Automating testing with tox [0be301e]
  * Adding creation of .ssh directory for copy-ssh-key example script. [eedc862]
  * Updated Python versions SSHreader is tested against. [c6a108f]
@@ -161,14 +166,14 @@
  * Renaming SSH.connection to SSH.\_connection. [7d0fad2]
  * Updating unittests to increase speed. [aacb7c7]
 
-## Version 3.5.1
+## Release v3.5.1
  * Updated SSH.ssh_command to capture timeouts properly and return errors gracefully. [fdfba44]
  * Increased Timeout to 10 Minutes [858f048]
  * Fixing small bug with assignment of NamedTuple [2d82fa1]
  * Updating unit/integration tests to prompt for params initially and save them for future runs. [abd8c34]
  * Fixing bugs in tests in Python2.7 [d5ff0b7]
 
-## Version 3.5
+## Release v3.5.0
  * Updated pydsh so that commands that do not return any output are not displayed.  Closes issue #12 [48d376c]
  * Pydsh 2.0.  Works more like pdsh but now includes ability to perform dshbak grouping and coalescing within the tool! [3277bb5]
  * Adding example script for copying ssh key to remote hosts. Created new examples directory! [86323da]
@@ -178,27 +183,27 @@
  * Moving to Python logging module for INFO and DEBUG statements [caafc6f]
  * Updated pydsh debug to enable logging level INFO [510e16b]
 
-## Version 3.4.6
+## Release v3.4.6
  * Adding pseudo terminal creation to ssh\_command method. It already existed for when output is combined. Closes issue #11 [6d85e77]
 
-## Version 3.4.5
+## Release v3.4.5
  * Changing default thread limit to 100 rather than 500 [211531d]
  * Fixing bug with ServerJob.print() method [084b377]
 
-## Version 3.4.4
+## Release v3.4.4
  * Updated echo method to flush stdout after every print.  This will allow for better access to unbuffered output. Closes issue #10 [604e6e7]
 
-## Version 3.4.3
+## Release v3.4.3
  * Fixing mixed tabs. [086d94f]
  * Refactoring debuglevels and making ssh connection errors more apparent. Closes issue #9 [7f2e79b]
  * Updating requirements! [c694370]
 
-## Version 3.4.2
+## Release v3.4.2
  * Not documenting private members. [0d91962]
  * Updated examples in Getting Started [7ac82bb]
  * Added validate_expr callback for click to expand hostlist expressions. [8f2e37b]
 
-## Version 3.4
+## Release v3.4.0
  * Updated FAQ for byte string vs unicode string to include new default behavior for sshreader. [009258e]
  * Beginning to add sftp commands to SSH class for extended abilities within sshreader. [2ede38b]
  * Updated requirements for sshreader. [fabc179]
@@ -215,7 +220,7 @@
  * Updated Requirements. [6874fc5]
  * dirty hack, have a better idea ? [66b8902]
 
-## Version 3.3
+## Release v3.3.0
  * Added --redline option to run sshreader at hardCPULimit [b9f4530]
  * Rewrote pydsh to use Click library for argument parsing.  Some flags have changed! [80d8e2c]
  * Removing sort option and cleaning up logic. [dbdfe90]
@@ -233,7 +238,7 @@
  * Changing timeout for SSH commands to default at 300 seconds [5a649b6]
  * Changed decode bytes option to True by default [13a2b2a]
 
-## Version 3.2
+## Release v3.2.0
  * Added echo method that implements a multiprocessing.Lock object for print. [7216411]
  * Implementing a thread limit when using pcount and tcount in conjuction when tcount == 0.  This limits each process to automatically launching 500 each. [ac0c413]
  * Limiting threads to 500 when tcount=0 and pcount=None. [c5ef02c]
@@ -242,7 +247,7 @@
  * Adding documentation for getting started. [5ab175f]
  * Added envvars method which attempts to gather username and ssh\_key info from OS. [6911582]
 
-## Version 3.1
+## Release v3.1.0
  * Using os and getpass modules in conjunction when determining username. [1199c86]
  * Added decodebytes flag to ssh\_command and shell\_command for decoding byte-strings to unicode-strings. This can help with compatibility when using Python 3. [86a7ed0]
  * Using all unicode\_literals because, well, because I said so! [7c247e9]
@@ -253,7 +258,7 @@
  * Fixed typo in ssh docstring [328bb5c]
  * SSH class can now be used with Python 'with' statement [f54ac3d]
 
-# Version 3.0
+# Version 3.0.0
  * Now works with Python2.7 and Python3.5!
  * Added pydsh script (installs in /usr/local/bin) (Python implemenation of pdsh that uses sshreader) [1cbf65a]
  * Now using progressbar2 module for progress bar in sshread method! [e9431e0]
@@ -273,7 +278,7 @@
  * Renamed ServerJob.ssh\_con to ServerJob.\_conn [c4fe4b5]
  * Added FAQ to docs for including helpful hints. [f7139c6]
 
-# Version 2.3
+# Version 2.3.0
  * Importing \_\_future\_\_ statements for print\_function and division
  * Moved into Python Package
  * Split SSH and do\_shell\_script into new ssh module
@@ -284,7 +289,7 @@
 # Version 2.2.1
  * Publishing as Open Source (Thank you to [Level 3 Communications](http://www.level3.com) for giving me the approval to do this!)
 
-# Version 2.2
+# Version 2.2.0
  * Updated pre and post hooks to dictionaries as data structure
  * Added tprint function for attempt at thread-safe printing
 
@@ -296,15 +301,15 @@
  * Attempting to fix bug when SSH session exits dirty, causing thread to hang
  * Updating tcp transport window size for Paramiko (per https://github.com/Paramiko/Paramiko/issues/175)
 
-# Version 2.1
+# Version 2.1.0
  * Imposing limits on number of serverjobs and sub-processes so you don't make a system unusable
  * Added ability to set pcount to -1 for maximum performance mode
  * Fixed bug when sshread method is called multiple times with progressbar enabled
 
-# Version 2.0
+# Version 2.0.0
  * SSHreader supports both multi-threading and multi-processing or a combination of both
 
-# Version 1.6
+# Version 1.6.0
  * Fixed bugs with pre and post hook statuses
  * Fixed bug if serverjob command is not in list form
  * Fixed bug when using SSH key with custom username
@@ -312,7 +317,7 @@
  * Increased verbosity with debuglevel > 2
  * Changed to multiprocessing instead of threads
 
-# Version 1.5
+# Version 1.5.0
  * Improved individual SSH command statuses
  * Added ability for sshread method to accept single job (in non-list form)
  * Added ability to combine stdout and stderr from commands
@@ -324,26 +329,26 @@
  * Fixed bug where Paramiko was searching user SSH keys (we require a manually specified key location)
  * Added shorter-style progress bar
 
-# Version 1.4
+# Version 1.4.0
  * Added progressbar support during job processing
  * Added pre and post hooks for threads
  * SSH results now returned as tuple
  * Added ability to reconnect to a closed SSH connection
  * Added is_alive method for SSH connections
 
-# Version 1.3
+# Version 1.3.0
  * Added support for spawning non-threaded SSH sessions
  * Added support for running local shell commands (do\_shell\_script function)
 
-# Version 1.2
+# Version 1.2.0
  * Added support for limiting number of threads to spawn
 
-# Version 1.1
+# Version 1.1.0
  * Fixed bug when specifying username/password for SSH
  * Added debug levels for sshreader
  * Added more exception handling
  * Fixed bug with thread status
 
-# Version 1.0
+# Version 1.0.0
  * Initial Version of sshreader
  * Very simple threading and control of threads
