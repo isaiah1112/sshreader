@@ -1,5 +1,8 @@
 # Changelog
 
+## Release v4.8.1
+ * Removing support for Python3.5 [c9f5f89]
+
 ## Release v4.8.0
  * Using twine to upload to PyPI. [290baa2]
  * Adding Python3.10 to testing [47128ab]
