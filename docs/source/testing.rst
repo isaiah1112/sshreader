@@ -26,13 +26,12 @@ Then, simply specify the python version you would like to test with:
     tox -e py38  # Test Python3.8
     tox -e py37  # Test Python3.7
     tox -e py36  # Test Python3.6
-    tox -e py35  # Test Python3.5
 
 Or to test all the above versions:
 
 .. code-block:: bash
 
-    tox  # Will test py35, py36, py37, py38, py39, py310
+    tox  # Will test py36, py37, py38, py39, py310
 
 Bitbucket Pipelines
 -------------------
