@@ -38,8 +38,8 @@ Examples:
 if sys.version_info[0] < 3:
     print('Python2.x is no longer supported in this version of sshreader')
     sys.exit(-1)
-elif sys.version_info[1] < 4:
-    print('Only Python 3.5 and later is supported in this version of sshreader')
+elif sys.version_info[1] < 5:
+    print('Only Python 3.6 and later is supported in this version of sshreader')
     sys.exit(-1)
 
 log = logging.getLogger(__name__)
