@@ -1,8 +1,8 @@
 click>=8.0.3
 colorama>=0.4.4
-paramiko>=2.8.0
+paramiko>=2.9.1
 progressbar2>=3.55.0
 python-hostlist>=1.21
-Sphinx>=4.2.0
-tox>=3.24.4
-virtualenv>=20.10.0
+Sphinx>=4.3.2
+tox>=3.24.5
+virtualenv>=20.13.0

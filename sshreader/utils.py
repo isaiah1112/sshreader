@@ -1,7 +1,7 @@
 # coding=utf-8
 """ All the classes and functions that make sshreader tick
 """
-# Copyright (C) 2015-2021 Jesse Almanrode
+# Copyright (C) 2015-2022 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -33,7 +33,7 @@ __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 
 if sys.version_info[0] < 3:
     raise Exception('Python2.x is no longer supported in this version of sshreader')
-elif sys.version_info[1] < 5:
+elif sys.version_info[1] < 6:
     raise Exception('Only Python 3.6 and later is supported in this version of sshreader')
 
 mpctx = multiprocessing.get_context('spawn')  # Forcing the forking type to spawn in older versions of Python3
