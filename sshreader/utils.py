@@ -1,7 +1,7 @@
 # coding=utf-8
 """ All the classes and functions that make sshreader tick
 """
-# Copyright (C) 2015-2021 Jesse Almanrode
+# Copyright (C) 2015-2022 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
