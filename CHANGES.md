@@ -1,5 +1,11 @@
 # Changelog
 
+## Release v4.8.2
+ * Updating classifier [4529041]
+ * Updated check for Python3.6 or later [4a4702c]
+ * Updated copyright [5dded5b]
+ * Updated requirements [123b2eb]
+
 ## Release v4.8.1
  * Removing support for Python3.5 [c9f5f89]
 
