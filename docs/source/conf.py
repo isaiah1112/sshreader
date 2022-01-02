@@ -53,7 +53,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'sshreader'
-copyright = u'2015-2021, Jesse Almanrode'
+copyright = u'2015-2022, Jesse Almanrode'
 author = u'Jesse Almanrode'
 
 # The version info for the project you're documenting, acts as replacement for
