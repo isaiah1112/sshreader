@@ -1,5 +1,9 @@
 # Changelog
 
+## Release v4.9.1
+ * Revert "Updated requirements" [25d2481]
+ * This will be the last version to support Python3.6
+
 ## Release v4.9.0
  * Updated log levels for ssh key messages in pydsh [ec9639e]
  * Added support for enabling RSA SHA2 algorithms via Paramiko's methodology [50ceaac]
