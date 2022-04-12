@@ -26,7 +26,7 @@ import sshreader
 import sys
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '2.6.2'
+__version__ = '2.6.3'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
@@ -194,14 +194,16 @@ def cli(**kwargs):
 
     # By default, we prefer ssh keys
     if not kwargs['keyfile']:
-        log.info('Using SSH Private Key')
         if any((sshenv.rsa_key, sshenv.dsa_key, sshenv.ecdsa_key)):
             if sshenv.rsa_key:
                 kwargs['keyfile'] = sshenv.rsa_key
+                log.info('Using RSA private key file')
             elif sshenv.ecdsa_key:
                 kwargs['keyfile'] = sshenv.ecdsa_key
+                log.info('Using ECDSA private key file')
             else:
                 kwargs['keyfile'] = sshenv.dsa_key
+                log.info('Using DSA private key file')
         else:
             if len(sshenv.agent_keys) == 0:
                 if not all((kwargs['username'], kwargs['password'])):
