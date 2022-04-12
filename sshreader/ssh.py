@@ -89,6 +89,7 @@ class SSH(object):
             self.keyfile = os.path.abspath(os.path.expanduser(keyfile))
         else:
             self.keyfile = keyfile
+        self.rsa_sha2 = False  # Enable RSA w/SHA2 hashes (OpenSSH 8.8 and later)
         self.keypass = keypass
         self.port = port
         self._connection = paramiko.SSHClient()
@@ -226,8 +227,15 @@ class SSH(object):
                 if not all((self.username, self.password)):
                     paramiko.SSHException('username and password or keyfile not provided')
         if self.keyfile:
-            self._connection.connect(self.host, port=self.port, username=self.username, password=self.keypass,
-                                     key_filename=self.keyfile, timeout=timeout, look_for_keys=False)
+            if self.rsa_sha2:
+                self._connection.connect(self.host, port=self.port, username=self.username, password=self.keypass,
+                                        key_filename=self.keyfile, timeout=timeout, look_for_keys=False)
+            else:
+                # While this is more insecure, it is required for pre-OpenSSH 8.8 servers
+                # For more info, visit: https://www.paramiko.org/changelog.html#2.9.0
+                self._connection.connect(self.host, port=self.port, username=self.username, password=self.keypass,
+                                        key_filename=self.keyfile, timeout=timeout, look_for_keys=False, 
+                                        disabled_algorithms={'pubkeys': ['rsa-sha2-256', 'rsa-sha2-512']})
         else:
             self._connection.connect(self.host, port=self.port, username=self.username, password=self.password,
                                      timeout=timeout, look_for_keys=False)

@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 # coding=utf-8
 """Setup file for sshreader module"""
 
@@ -6,7 +6,7 @@ from setuptools import setup
 
 
 setup(name='sshreader',
-      version='4.8.2',
+      version='4.9.0',
       description='Multi-threading/processing wrapper for Paramiko',
       author='Jesse Almanrode',
       author_email='jesse@almanrode.com',
@@ -17,10 +17,10 @@ setup(name='sshreader',
       packages=['sshreader'],
       include_package_data=True,
       scripts=['bin/pydsh'],
-      install_requires=['click>=8.0.3',
+      install_requires=['click>=8.1.2',
                         'colorama>=0.4.4',
-                        'paramiko>=2.9.1',
-                        'progressbar2>=3.55.0',
+                        'paramiko>=2.10.3',
+                        'progressbar2>=4.0.0',
                         'python-hostlist>=1.21',
                         ],
       platforms=['Linux', 'Darwin'],

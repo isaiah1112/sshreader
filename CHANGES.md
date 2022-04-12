@@ -1,5 +1,9 @@
 # Changelog
 
+## Release v4.9.0
+ * Updated log levels for ssh key messages in pydsh [ec9639e]
+ * Added support for enabling RSA SHA2 algorithms via Paramiko's methodology [50ceaac]
+ 
 ## Release v4.8.2
  * Updating classifier [4529041]
  * Updated check for Python3.6 or later [4a4702c]
