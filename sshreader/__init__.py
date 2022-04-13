@@ -26,8 +26,8 @@ import sys
 
 if sys.version_info[0] < 3:
     raise Exception('Python2.x is no longer supported in this version of sshreader')
-elif sys.version_info[1] < 6:
-    raise Exception('Only Python 3.6 and later is supported in this version of sshreader')
+elif sys.version_info[1] < 7:
+    raise Exception('Only Python 3.7 and later is supported in this version of sshreader')
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 try:
