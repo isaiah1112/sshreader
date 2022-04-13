@@ -195,12 +195,12 @@ def cli(**kwargs):
     # By default, we prefer ssh keys
     if not kwargs['keyfile']:
         if any((sshenv.rsa_key, sshenv.dsa_key, sshenv.ecdsa_key)):
-            if sshenv.rsa_key:
-                kwargs['keyfile'] = sshenv.rsa_key
-                log.info('Using RSA private key file')
-            elif sshenv.ecdsa_key:
+            if sshenv.ecdsa_key:
                 kwargs['keyfile'] = sshenv.ecdsa_key
                 log.info('Using ECDSA private key file')
+            elif sshenv.rsa_key:
+                kwargs['keyfile'] = sshenv.rsa_key
+                log.info('Using RSA private key file')
             else:
                 kwargs['keyfile'] = sshenv.dsa_key
                 log.info('Using DSA private key file')
