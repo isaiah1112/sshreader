@@ -157,7 +157,7 @@ class ServerJob(object):
     :property results: List of namedtuples (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
     :property status: Sum of return codes for entire job (255 = ssh did not connect)
     """
-    def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, keypass=None, timeout=(30, 30),
+    def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, keypass=None, timeout=(0.5, 30),
                  runlocal=False, prehook=None, posthook=None, combine_output=False):
         self.name = str(fqdn)
         self.results = list()
@@ -175,13 +175,13 @@ class ServerJob(object):
             self.cmds = [cmds]
         if isinstance(timeout, (tuple, list)):
             if len(timeout) != 2:
-                raise ValueError('<timeout> requires two integer values')
-            assert isinstance(timeout[0], int)
-            assert isinstance(timeout[1], int)
+                raise ValueError('<timeout> requires two integer or float values')
+            assert isinstance(timeout[0], (int, float))
+            assert isinstance(timeout[1], (int, float))
             self.sshtimeout = timeout[0]
             self.cmdtimeout = timeout[1]
         else:
-            assert isinstance(timeout, int)
+            assert isinstance(timeout, (int, float))
             self.sshtimeout = timeout
             self.cmdtimeout = timeout
         if prehook:
