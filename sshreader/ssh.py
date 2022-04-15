@@ -44,6 +44,7 @@ def envvars():
     This method also checks for any private keys loaded into the SSH Agent.
 
     :return: NamedTuple of (username, agent_keys, rsa_key, dsa_key, ecdsa_key)
+    :rtype: :class:`namedtuple`
     """
     env = OrderedDict(username=None, agent_keys=None, rsa_key=None, dsa_key=None, ecdsa_key=None)
     EnvVars = namedtuple('EnvVars', env.keys())
@@ -63,19 +64,29 @@ def envvars():
 
 
 class SSH(object):
-    """SSH Session object
+    """SSH Session class which can be used to send commands to a remote server.  It also supports basic SFTP commands
+    and can be used to push/pull files from a remote system.
 
     :param fqdn: Fully qualified domain name or IP address
+    :type fqdn: str, required
     :param username: SSH username
+    :type username: str, optional
     :param password: SSH password
-    :param keyfile: SSH private key file
+    :type password: str, optional
+    :param keyfile: Path to SSH Private Key File
+    :type keyfile: str, optional
     :param keypass: SSH private key password
-    :param port: SSH port
-    :param connect: Initiate the connect
-    :return: SSH connection object
-    :raises: SSHException
+    :type keypass: str, optional
+    :param port: SSH port (defaults to 22)
+    :type port: int, optional
+    :param connect: Initiate the connect on object initialization (defaults to True)
+    :type connect: bool, optional
+    :param rsa_sha2: Enable/Disable RSA w/SHA2 hashes (defaults to True)
+    :type rsa_sha2: bool, optional
+    :raises: :class:`paramiko.SSHException`
     """
-    def __init__(self, fqdn, username=None, password=None, keyfile=None, keypass=None, port=22, connect=True):
+    def __init__(self, fqdn, username=None, password=None, keyfile=None, keypass=None, port=22, connect=True,
+                 rsa_sha2=True):
         if not keyfile:
             if len(paramiko.Agent().get_keys()) == 0:
                 if not all((username, password)):
@@ -89,7 +100,7 @@ class SSH(object):
             self.keyfile = os.path.abspath(os.path.expanduser(keyfile))
         else:
             self.keyfile = keyfile
-        self.rsa_sha2 = False  # Enable RSA w/SHA2 hashes (OpenSSH 8.8 and later)
+        self.rsa_sha2 = rsa_sha2
         self.keypass = keypass
         self.port = port
         self._connection = paramiko.SSHClient()
@@ -112,8 +123,10 @@ class SSH(object):
         """ Use the SFTP subsystem of OpenSSH to copy a local file to a remote host
 
         :param srcfile: Path to the local file
+        :type srcfile: str, required
         :param dstfile: Path to the remote file
-        :return: Result of paramiko.SFTPClient.put()
+        :type dstfile: str, required
+        :return: Result of :meth:`paramiko.SFTPClient.put()`
         """
         if not self.__alive():
             raise paramiko.SSHException("connection to %s not established" % (self.host,))
@@ -128,8 +141,10 @@ class SSH(object):
         """ Use the SFTP subsystem of OpenSSH to copy a remote file to the localhost
 
         :param srcfile: Path to the remote file
+        :type srcfile: str, required
         :param dstfile: Path to the local file
-        :return: Result of paramiko.SFTPClient.get()
+        :type dstfile: str, required
+        :return: Result of :meth:`paramiko.SFTPClient.get()`
         """
         if not self.__alive():
             raise paramiko.SSHException("connection to %s not established" % (self.host,))
@@ -143,11 +158,16 @@ class SSH(object):
         """Run a command over an ssh connection
 
         :param command: The command to run
-        :param timeout: Timeout for the command
-        :param combine: Combine stderr and stdout (pseudo TTY)
-        :param decodebytes: Decode bytes objects to unicode strings
+        :type command: str, required
+        :param timeout: Timeout for blocking commands in seconds (defaults to 30)
+        :type timeout: int/float, optional
+        :param combine: Combine stderr and stdout using a pseudo TTY (defaults to False)
+        :type combine: bool, optional
+        :param decodebytes: Decode bytes objects to unicode strings in Python3 (defaults to True)
+        :type decodebytes: bool, optional
         :return: Namedtuple of (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
-        :raises: SSHException
+        :rtype: :class:`namedtuple`
+        :raises: :class:`paramiko.SSHException`
         """
         if self.__alive() is False:
             raise paramiko.SSHException("connection to %s not established" % (self.host, ))
@@ -186,7 +206,8 @@ class SSH(object):
         """Is an SSH connection alive
 
         :return: True or False
-        :raises: SSHException
+        :rtype: bool
+        :raises: :class:`paramiko.SSHException`
         """
         if self._connection.get_transport() is None:
             return False

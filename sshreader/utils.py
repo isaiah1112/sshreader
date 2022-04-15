@@ -49,10 +49,15 @@ Command = namedtuple('Command', ['cmd', 'stdout', 'stderr', 'return_code'])
 def shell_command(command, combine=False, decodebytes=True):
     """Run a command in the shell on localhost and return the output
 
-    :param command: String containing the shell script to run
-    :param combine: Direct stderr to stdout
-    :param decodebytes: Decode bytes objects to unicode strings
+    :param command: The shell script to run
+    :type command: str, required
+    :param combine: Direct stderr to stdout (defaults to False)
+    :type combine: bool, optional
+    :param decodebytes: Decode bytes objects to unicode strings (defaults to True)
+    :type decodebypes: bool, optional
     :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
+    :rtype: :class:`namedtuple`
+    :raises: None
     """
     if combine:
         pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
@@ -77,10 +82,13 @@ class Hook(object):
     """ Custom class for pre and post hooks
 
     :param target: Function to call when using the hook
-    :param args: List of args to pass to target
-    :param kwargs: Dictionary of kwargs to pass to target
-    :param ssh_established: Should the ssh connection be established when the hook is run
-    :return: Hook
+    :type target: func, required
+    :param args: List of args to pass to target function
+    :type args: list, optional
+    :param kwargs: Dictionary of keyword arguments to pass to target function
+    :type kwargs: dict, optional
+    :param ssh_established: Should the ssh connection be established when the hook is run (default is False)
+    :type ssh_established: bool, optional
     :raises: TypeError
     """
 
@@ -104,8 +112,10 @@ class Hook(object):
         """ Run the Hook.  You can add additional args or kwargs at this time!
 
         :param args: Append to args
+        :type args: list, optional
         :param kwargs: Append to/update kwargs
-        :return: Result from target function
+        :type kwargs: dict, optional
+        :return: Result from :obj:`target` function
         """
         # I perform the following actions this way specifically so I don't "update" the pre-defined args and kwargs
         # in the Hook object.
@@ -122,18 +132,27 @@ class ServerJob(object):
     """ Custom class for holding all the info needed to run ssh commands or shell commands in sub-processes or threads
 
     :param fqdn: Fully qualified domain name or IP address
+    :type fqdn: str, required
     :param cmds: List of commands to run (in the order you want them run)
+    :type cmds: list, required
     :param username: Username for SSH
+    :type username: str, optional
     :param password: Password for SSH
-    :param keyfile: Path to ssh key (can be used instead of password)
+    :type password: str, optional
+    :param keyfile: Path to ssh private key
+    :type keyfile: str, optional
     :param keypass: Password for private ssh key file
-    :param timeout: Tuple of timeouts in seconds (sshtimeout, cmdtimeout)
-    :param runlocal: Run job on localhost (skips ssh to localhost)
-    :param prehook: Optional Hook object
-    :param posthook: Optional Hook object
-    :param combine_output: Combine stdout and stderr
-    :return: ServerJob Object
-    :raises: ValueError, TypeError
+    :type keypass: str, optional
+    :param timeout: Tuple of timeouts in seconds (TCP timeout, SSH Timeout)
+    :type timeout: tuple, optional
+    :param runlocal: Run job on localhost without opening SSH connection (defaults to False)
+    :type runlocal: bool, optional
+    :param prehook: Hook object
+    :type prehook: :class:`Hook`, optional
+    :param posthook: Hook object
+    :type posthook: :class:`Hook`, optional
+    :param combine_output: Combine stdout and stderr (defaults to False)
+    :type combine_output: bool, optional
 
     :property results: List of namedtuples (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
     :property status: Sum of return codes for entire job (255 = ssh did not connect)
@@ -188,7 +207,7 @@ class ServerJob(object):
     def run(self):
         """Run a ServerJob. SSH to server, run cmds, return result
 
-        :return: ServerJob.status
+        :return: :obj:`ServerJob.status`
         """
         log.info('%s: starting ServerJob' % (self.name,))
         if self.runlocal:
@@ -248,9 +267,10 @@ class ServerJob(object):
 
 
 def cpusoftlimit():
-    """ Return the default number of sub-processes your system is allowed to spawn
+    """ Using the cpu count, determine number of processes the script is allowed to spawn
 
-    :return: Integer
+    :return: Result of :meth:`mpctx.cpu_count()` or 1, whichever is greater
+    :rtype: int
     """
     cpu_count = mpctx.cpu_count()
     if cpu_count > 1:
@@ -262,9 +282,8 @@ def cpusoftlimit():
 def cpuhardlimit():
     """ Return the maximum number of sub-processes your system is allowed to spawn.
 
-    cpusoftlimit() * __cpuhardlimitfactor__
-
-    :return: Integer
+    :return: cpusoftlimit() * __cpuhardlimitfactor__
+    :rtype: int
     """
     global __cpuhardlimitfactor__
     assert isinstance(__cpuhardlimitfactor__, int)
@@ -274,9 +293,8 @@ def cpuhardlimit():
 def threadlimit():
     """ Return the maximum number of threads each process is allowed to spawn.  The idea here is to not overload a system.
 
-    cpu_count() * __threadlimitfactor__
-
-    :return: Integer
+    :return: cpu_count() * __threadlimitfactor__
+    :rtype: int
     """
     global __threadlimitfactor__
     assert isinstance(__threadlimitfactor__, int)
@@ -284,12 +302,11 @@ def threadlimit():
 
 
 def echo(*args, **kwargs):
-    """ Wrapper for print that implements a multiprocessing.Lock object as well as uses unbuffered output
-    to sys.stdout.
+    """ Wrapper for print that implements a :class:`multiprocessing.Lock` object as well as uses unbuffered output
+    to :class:`sys.stdout`.
 
     :param args: Passthrough to print function
     :param kwargs: Passthrough to print function
-    :return: None
     """
     global printlock
     with printlock:
@@ -302,10 +319,15 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     """Takes a list of ServerJob objects and puts them into threads/sub-processes and runs them
 
     :param serverjobs: List of ServerJob objects (A list of 1 job is acceptable)
+    :type serverjobs: list, required
     :param pcount: Number of sub-processes to spawn (None = off, 0 = cpusoftlimit, -1 = cpuhardlimit)
+    :type pcount: int, required
     :param tcount: Number of threads to spawn (None = off, 0 = threadlimit)
-    :param progress_bar: Print a progress bar
-    :return: List with completed ServerJob objects (single object returned if 1 job was passed)
+    :type tcount: int, required
+    :param progress_bar: Print a progress bar (default is False)
+    :type progress_bar: bool, optional
+    :return: List of completed ServerJob objects (single object returned if 1 job was passed)
+    :rtype: list
     :raises: ExceedCPULimit, TypeError, ValueError
     """
     if tcount is None and pcount is None:
