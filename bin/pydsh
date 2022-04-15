@@ -149,7 +149,6 @@ def validate_hostlist(ctx, param, value):
 @click.option('--keypass', '-K', is_flag=True, help='Prompt for private key password')
 @click.option('--prompt', '-p', is_flag=True, help='Prompt for ssh password')
 @click.option('--password', '-P', help='Supply ssh password')
-@click.option('--timeout', '-T', default=600, help='Timeout for ssh commands')
 @click.option('--dshbak', '-D', is_flag=True, help='Group output by host')
 @click.option('--coalesce', '-C', is_flag=True, help='Coalesce similar output from hosts')
 @click.option('--file', '-F', is_flag=True, help='Treat CMD as a script file')
@@ -238,10 +237,10 @@ def cli(**kwargs):
     for host in kwargs['hostlist']:
         if kwargs['keyfile']:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
-                                      keypass=kwargs['keypass'], timeout=kwargs['timeout'], combine_output=True)
+                                      keypass=kwargs['keypass'], combine_output=True)
         else:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
-                                      timeout=kwargs['timeout'], combine_output=True)
+                                      combine_output=True)
         job.ssh_port = kwargs['port']
         if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
             job.posthook = posthook
