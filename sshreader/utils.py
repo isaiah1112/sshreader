@@ -358,10 +358,6 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     for job in serverjobs:
         task_queue.put(job)
 
-    while task_queue.empty():
-        log.debug('Waiting for task_queue to fill')
-        time.sleep(1)
-
     subs = list()  # Keep a list of processes/threads so we can join them later
 
     if pcount is None:
