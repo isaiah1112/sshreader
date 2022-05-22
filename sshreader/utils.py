@@ -18,12 +18,12 @@
 from collections import namedtuple
 from progressbar import ProgressBar
 from sshreader.ssh import SSH
-from subprocess import Popen, PIPE, STDOUT
 from types import FunctionType
 import logging
 import multiprocessing
 import os
 import paramiko
+import subprocess
 import sys
 import threading
 import time
@@ -59,22 +59,23 @@ def shell_command(command, combine=False, decodebytes=True):
     :rtype: :class:`namedtuple`
     :raises: None
     """
+    global log
+    log.warning('%s is being deprecated, please use %s instead' % (str(shell_command), str(subprocess.run)))
     if combine:
-        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=STDOUT)
-        stdout, stderr = pipeout.communicate()
-        assert stderr is None
+        sp_output = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if decodebytes:
-            result = Command(cmd=command, stdout=stdout.decode().strip(), stderr=None, return_code=pipeout.returncode)
+            result = Command(cmd=command, stdout=sp_output.stdout.decode(), stderr=None,
+                             return_code=sp_output.returncode)
         else:
-            result = Command(cmd=command, stdout=stdout.strip(), stderr=None, return_code=pipeout.returncode)
+            result = Command(cmd=command, stdout=sp_output.stdout, stderr=None, return_code=sp_output.returncode)
     else:
-        pipeout = Popen(command, shell=True, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = pipeout.communicate()
+        sp_output = subprocess.run(command, shell=True, capture_output=True)
         if decodebytes:
-            result = Command(cmd=command, stdout=stdout.decode().strip(), stderr=stderr.decode().strip(),
-                             return_code=pipeout.returncode)
+            result = Command(cmd=command, stdout=sp_output.stdout.decode(), stderr=sp_output.stderr.decode(),
+                             return_code=sp_output.returncode)
         else:
-            result = Command(cmd=command, stdout=stdout.strip(), stderr=stderr.strip(), return_code=pipeout.returncode)
+            result = Command(cmd=command, stdout=sp_output.stdout, stderr=sp_output.stderr.decode(),
+                             return_code=sp_output.returncode)
     return result
 
 
