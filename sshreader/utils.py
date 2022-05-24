@@ -419,6 +419,8 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     for sub in subs:
         if sub.is_alive():
             sub.join(timeout=1)  # I don't care if this times out since by this time all work should be done!
+            if pcount:
+                sub.close()
 
     # If we were passed a list then we will return a list
     if totaljobs > 0:
