@@ -109,7 +109,7 @@ class TestSSH(unittest.TestCase):
         result = self.conn.ssh_command('echo foo')
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stdout, 'foo')
+        self.assertIn('foo', result.stdout)
         pass
 
     def test_command_stderr(self):
@@ -120,7 +120,7 @@ class TestSSH(unittest.TestCase):
         result = self.conn.ssh_command('echo bar 1>&2')
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stderr, 'bar')
+        self.assertIn('bar', result.stderr)
         pass
 
     def test_combine_output(self):
@@ -131,7 +131,8 @@ class TestSSH(unittest.TestCase):
         result = self.conn.ssh_command('echo foo; echo bar 1>&2;', combine=True)
         self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stdout, 'foo\r\nbar')
+        self.assertIn('foo', result.stdout)
+        self.assertIn('bar', result.stdout)
         pass
 
     def test_cmd_timeout(self):
