@@ -32,9 +32,8 @@ class TestShellScript(unittest.TestCase):
         """ Test shell_command method
         """
         result = sshreader.shell_command('echo "foo"')
-        self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stdout, 'foo')
+        self.assertIn('foo', result.stdout)
         self.assertEqual(len(result.stderr), 0)
         pass
 
@@ -42,16 +41,17 @@ class TestShellScript(unittest.TestCase):
         """ Test combining stdout and stderr of shell_command method
         """
         result = sshreader.shell_command('echo "foo"; echo "bar" 1>&2', combine=True)
-        self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
+        self.assertIn('foo', result.stdout)
+        self.assertIn('bar', result.stderr)
         pass
 
     def test_shell_command_stderr(self):
         """ Test stderr of shell_command method
         """
         result = sshreader.shell_command('echo "bar" 1>&2')
-        self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
+        self.assertEqual(len(result.stdout), 0)
         self.assertEqual(result.stderr, 'bar')
         pass
 
@@ -59,6 +59,7 @@ class TestShellScript(unittest.TestCase):
         """ Test to ensure that result is a unicode string type
         """
         result = sshreader.shell_command('uname -a', decodebytes=True)
+        self.assertEqual(result.return_code, 0)
         self.assertIsInstance(result.stdout, str)
         pass
 
@@ -107,9 +108,9 @@ class TestSSH(unittest.TestCase):
         self.assertFalse(self.conn.alive())
         self.conn.connect()
         result = self.conn.ssh_command('echo foo')
-        self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
         self.assertIn('foo', result.stdout)
+        self.assertEqual(len(result.stderr), 0)
         pass
 
     def test_command_stderr(self):
@@ -118,8 +119,8 @@ class TestSSH(unittest.TestCase):
         self.assertFalse(self.conn.alive())
         self.conn.connect()
         result = self.conn.ssh_command('echo bar 1>&2')
-        self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
+        self.assertEqual(len(result.stdout), 0)
         self.assertIn('bar', result.stderr)
         pass
 
@@ -142,8 +143,8 @@ class TestSSH(unittest.TestCase):
             self.conn.connect()
         self.assertTrue(self.conn.alive())
         result = self.conn.ssh_command('sleep 5', timeout=2)
-        self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 124)
+        self.assertEqual(len(result.stdout), 0)
         self.assertIn('command timed out', result.stderr)
         pass
 
