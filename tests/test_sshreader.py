@@ -43,7 +43,8 @@ class TestShellScript(unittest.TestCase):
         result = sshreader.shell_command('echo "foo"; echo "bar" 1>&2', combine=True)
         self.assertEqual(result.return_code, 0)
         self.assertIn('foo', result.stdout)
-        self.assertIn('bar', result.stderr)
+        self.assertIn('bar', result.stdout)
+        self.assertEqual(result.stderr, None)
         pass
 
     def test_shell_command_stderr(self):
@@ -52,7 +53,7 @@ class TestShellScript(unittest.TestCase):
         result = sshreader.shell_command('echo "bar" 1>&2')
         self.assertEqual(result.return_code, 0)
         self.assertEqual(len(result.stdout), 0)
-        self.assertEqual(result.stderr, 'bar')
+        self.assertIn('bar', result.stderr)
         pass
 
     def test_decode_bytes(self):
