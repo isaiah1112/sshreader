@@ -39,12 +39,12 @@ elif sys.version_info[1] < 7:
 mpctx = multiprocessing.get_context('spawn')  # Forcing the forking type to spawn in older versions of Python3
 __cpuhardlimitfactor__ = 3
 __threadlimitfactor__ = 2
-printlock = mpctx.Lock()
 log = logging.getLogger('sshreader')
+
 
 # Globals
 Command = namedtuple('Command', ['cmd', 'stdout', 'stderr', 'return_code'])
-
+lockobj = None
 
 def shell_command(command, combine=False, decodebytes=True):
     """Run a command in the shell on localhost and return the output
@@ -308,15 +308,20 @@ def echo(*args, **kwargs):
 
     :param args: Passthrough to print function
     :param kwargs: Passthrough to print function
+    :return: None
+    :rtype: None
     """
-    global printlock
-    with printlock:
+    global lockobj
+    if lockobj:
+        with lockobj:
+            print(*args, **kwargs)
+    else:
         print(*args, **kwargs)
-        sys.stdout.flush()
+    sys.stdout.flush()
     return None
 
 
-def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
+def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False, print_lock=True):
     """Takes a list of ServerJob objects and puts them into threads/sub-processes and runs them
 
     :param serverjobs: List of ServerJob objects (A list of 1 job is acceptable)
@@ -327,10 +332,12 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     :type tcount: int, required
     :param progress_bar: Print a progress bar (default is False)
     :type progress_bar: bool, optional
+    :param print_lock: Create a :class:multiprocessing.Lock for use with :meth:`sshreader.echo()`
     :return: List of completed ServerJob objects (single object returned if 1 job was passed)
     :rtype: list
     :raises: ExceedCPULimit, TypeError, ValueError
     """
+    global lockobj
     if tcount is None and pcount is None:
         raise ValueError('tcount or pcount must be ' + str(int))
     if tcount is not None:
@@ -351,6 +358,9 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     else:
         item_counter = None
         bar = None
+
+    if print_lock:
+        lockobj = mpctx.Lock()
 
     task_queue = mpctx.Queue(maxsize=totaljobs)
     result_queue = mpctx.Queue(maxsize=totaljobs)
