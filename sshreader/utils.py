@@ -39,7 +39,7 @@ elif sys.version_info[1] < 6:
 mpctx = multiprocessing.get_context('spawn')  # Forcing the forking type to spawn in older versions of Python3
 __cpuhardlimitfactor__ = 3
 __threadlimitfactor__ = 2
-printlock = mpctx.Lock()
+printlock = None
 log = logging.getLogger('sshreader')
 
 # Globals
@@ -308,6 +308,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     :return: List with completed ServerJob objects (single object returned if 1 job was passed)
     :raises: ExceedCPULimit, TypeError, ValueError
     """
+    global printlock
     if tcount is None and pcount is None:
         raise ValueError('tcount or pcount must be ' + str(int))
     if tcount is not None:
@@ -317,7 +318,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False):
     if not isinstance(serverjobs, list):
         serverjobs = [serverjobs]
     totaljobs = len(serverjobs)
-
+    printlock = mpctx.Lock()
     if logging.getLogger('sshreader').getEffectiveLevel() < 30 and progress_bar:
         log.info('logging enabled: disabling progress bar')
         progress_bar = False
