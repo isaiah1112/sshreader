@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # coding=utf-8
 """A wrapper for Paramiko that attempts to make ssh sessions easier to work with.  It also contains the
 shell_command function for running local shell scripts!
@@ -19,6 +18,7 @@ shell_command function for running local shell scripts!
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from collections import namedtuple, OrderedDict
 from getpass import getuser
+from sshreader.types import Command, EnvVars
 import logging
 import os
 import paramiko
@@ -33,9 +33,6 @@ if sys.version_info[0] < 3:
 elif sys.version_info[1] < 7:
     raise Exception('Only Python 3.7 and later is supported in this version of sshreader')
 
-# Globals
-Command = namedtuple('Command', ['cmd', 'stdout', 'stderr', 'return_code'])
-
 
 def envvars():
     """ Attempt to determine the current username and location of any ssh private keys.
@@ -44,10 +41,9 @@ def envvars():
     This method also checks for any private keys loaded into the SSH Agent.
 
     :return: NamedTuple of (username, agent_keys, rsa_key, dsa_key, ecdsa_key)
-    :rtype: :class:`namedtuple`
+    :rtype: :class:`typing.NamedTuple`
     """
-    env = OrderedDict(username=None, agent_keys=None, rsa_key=None, dsa_key=None, ecdsa_key=None)
-    EnvVars = namedtuple('EnvVars', env.keys())
+    env = dict(username=None, agent_keys=None, rsa_key=None, dsa_key=None, ecdsa_key=None)
     if os.getlogin() == getuser():
         env['username'] = getuser()
     userhome = os.path.expanduser('~')
