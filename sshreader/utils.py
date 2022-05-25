@@ -368,7 +368,8 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False, print_lock
     for job in serverjobs:
         task_queue.put(job)
 
-    subs = list()  # Keep a list of processes/threads so we can join them later
+    threads = list()  # Keep track of threads so we can join them later
+    pids = list()  # Keep track of process-ids so we can join/close them later
 
     if pcount is None:
         # Limit the number of threads to spawn
@@ -383,7 +384,7 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False, print_lock
             thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar),
                                       daemon=True)
             thread.start()
-            subs.append(thread)
+            threads.append(thread)
     else:
         # Found this while digging around the multiprocessing API.
         # This might help some of the pickling errors when working with ssh
@@ -408,12 +409,12 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False, print_lock
                 # If we don't have enough jobs to spawn more than 1 thread per process, then we won't spawn threads
                 tcount = 0
 
-        log.info(u'spawning %d sub-processes' % (pcount, ))
+        log.info(u'spawning %d processes' % (pcount, ))
         for pid in range(pcount):
             pid = mpctx.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter, tcount, progress_bar),
                                 daemon=True)
             pid.start()
-            subs.append(pid)
+            pids.append(pid)
 
     # Non blocking way to wait for threads/processes
     log.debug('main waiting for %d ServerJobs to finish' % (totaljobs,))
@@ -424,12 +425,17 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False, print_lock
     if progress_bar:
         bar.finish()
 
-    log.info('joining %d sub-processes/threads' % (len(subs),))
-    for sub in subs:
-        if sub.is_alive():
-            sub.join(timeout=1)  # I don't care if this times out since by this time all work should be done!
-            if pcount:
-                sub.close()
+    if len(threads) > 0:
+        log.info('joining %d threads' % (len(threads),))
+        for t in threads:
+            if t.is_alive():
+                t.join(timeout=1)
+    elif len(pids) > 0:
+        log.info('joining %d processes' % (len(pids),))
+        for p in pids:
+            if p.is_alive():
+                p.join(timeout=1)
+            p.close()
 
     # Extract items from the queue and return a list, just as we were passed
     results = list()
