@@ -381,8 +381,8 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False, print_lock
         log.info(u'spawning %d threads' % (tcount, ))
         # Start a thread pool
         for thread in range(tcount):
-            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar))
-            thread.daemon = True
+            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar),
+                                      daemon=True)
             thread.start()
             subs.append(thread)
     else:
@@ -411,8 +411,8 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False, print_lock
 
         log.info(u'spawning %d sub-processes' % (pcount, ))
         for pid in range(pcount):
-            pid = mpctx.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter, tcount, progress_bar))
-            pid.daemon = True
+            pid = mpctx.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter, tcount, progress_bar),
+                                daemon=True)
             pid.start()
             subs.append(pid)
 
@@ -461,8 +461,8 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress
         threads = list()
         log.debug(u'process: %d spawning: %d threads' % (pid, thread_count))
         for thread in range(thread_count):
-            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar))
-            thread.daemon = True
+            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar),
+                                      daemon=True)
             thread.start()
             threads.append(thread)
         log.debug(u'process: %d waiting for: %d threads' % (pid, len(threads)))
