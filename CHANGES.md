@@ -1,5 +1,9 @@
 # Changelog
 
+## Release 4.9.2
+ * Fixed bug with leaking semaphores for echo method [bc9422b]
+ * Updated paramiko requirement to remove blowfish depreciation warnings [cf0d3d7]
+
 ## Release v4.9.1
  * Revert "Updated requirements" [25d2481]
  * This will be the last version to support Python3.6
