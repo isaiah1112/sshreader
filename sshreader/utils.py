@@ -324,7 +324,7 @@ def echo(*args, **kwargs):
 def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False, print_lock=True):
     """Takes a list of ServerJob objects and puts them into threads/sub-processes and runs them
 
-    :param serverjobs: List of ServerJob objects (A list of 1 job is acceptable)
+    :param serverjobs: List of ServerJob objects
     :type serverjobs: list, required
     :param pcount: Number of sub-processes to spawn (None = off, 0 = cpusoftlimit, -1 = cpuhardlimit)
     :type pcount: int, required
@@ -338,14 +338,13 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False, print_lock
     :raises: ExceedCPULimit, TypeError, ValueError
     """
     global lockobj
+    assert isinstance(serverjobs, list)
     if tcount is None and pcount is None:
         raise ValueError('tcount or pcount must be ' + str(int))
     if tcount is not None:
         assert isinstance(tcount, int)
     if pcount is not None:
         assert isinstance(pcount, int)
-    if not isinstance(serverjobs, list):
-        serverjobs = [serverjobs]
     totaljobs = len(serverjobs)
 
     if logging.getLogger('sshreader').getEffectiveLevel() < 30 and progress_bar:
@@ -432,14 +431,13 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False, print_lock
             if pcount:
                 sub.close()
 
-    # If we were passed a list then we will return a list
-    if totaljobs > 0:
-        results = list()
-        while not result_queue.empty():
-            results.append(result_queue.get())
-        return results
-    else:
-        return result_queue.get()
+    # Extract items from the queue and return a list, just as we were passed
+    results = list()
+    while not result_queue.empty():
+        results.append(result_queue.get())
+    task_queue.close()
+    result_queue.close()
+    return results
 
 
 def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress_bar):
