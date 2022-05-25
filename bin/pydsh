@@ -250,9 +250,9 @@ def cli(**kwargs):
 
     if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
         if kwargs['redline']:
-            sshreader.sshread(jobs, pcount=0, tcount=0)
+            sshreader.sshread(jobs, pcount=0, tcount=0, print_lock=True)
         else:
-            sshreader.sshread(jobs, tcount=0)
+            sshreader.sshread(jobs, tcount=0, print_lock=True)
     else:
         if kwargs['redline']:
             jobs_finished = sshreader.sshread(jobs, pcount=0, tcount=0, progress_bar=True)
