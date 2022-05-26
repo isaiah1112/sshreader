@@ -18,8 +18,9 @@
 from collections import namedtuple
 from progressbar import ProgressBar
 from sshreader.ssh import SSH
-from sshreader.types import Command
+from sshreader.types import Command, TimeoutTuple
 from types import FunctionType
+from typing import Any, Callable, Optional, Union
 import logging
 import multiprocessing
 import os
@@ -34,6 +35,7 @@ if sys.version_info[0] < 3:
 elif sys.version_info[1] < 7:
     raise Exception('Only Python 3.7 and later is supported in this version of sshreader')
 
+
 # Globals
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 mpctx = multiprocessing.get_context('spawn')  # Forcing the forking type to spawn in older versions of Python3
@@ -42,17 +44,17 @@ __threadlimitfactor__ = 2
 log = logging.getLogger('sshreader')
 lockobj = None
 
-def shell_command(command, combine=False, decodebytes=True):
+def shell_command(command: str, combine: bool = False, decodebytes: bool = True) -> Command:
     """Run a command in the shell on localhost and return the output
 
     :param command: The shell script to run
     :type command: str, required
-    :param combine: Direct stderr to stdout (defaults to False)
+    :param combine: Direct stderr to stdout (Default: False)
     :type combine: bool, optional
-    :param decodebytes: Decode bytes objects to unicode strings (defaults to True)
+    :param decodebytes: Decode bytes objects to unicode strings (Default: True)
     :type decodebypes: bool, optional
     :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
-    :rtype: :class:`namedtuple`
+    :rtype: Command
     :raises: None
     """
     global log
@@ -84,12 +86,13 @@ class Hook(object):
     :type args: list, optional
     :param kwargs: Dictionary of keyword arguments to pass to target function
     :type kwargs: dict, optional
-    :param ssh_established: Should the ssh connection be established when the hook is run (default is False)
+    :param ssh_established: Should the ssh connection be established when the hook is run (Default: False)
     :type ssh_established: bool, optional
     :raises: TypeError
     """
 
-    def __init__(self, target, args=None, kwargs=None, ssh_established=False):
+    def __init__(self, target: Callable, args: Optional[list] = None, kwargs: Optional[dict] = None,
+                 ssh_established: bool = False) -> None:
         assert isinstance(target, FunctionType)
         self.target = target
         self.ssh_established = ssh_established
@@ -105,7 +108,7 @@ class Hook(object):
             self.kwargs = kwargs
         self.result = None
 
-    def run(self, *args, **kwargs):
+    def run(self, *args, **kwargs) -> Any:
         """ Run the Hook.  You can add additional args or kwargs at this time!
 
         :param args: Append to args
@@ -121,7 +124,7 @@ class Hook(object):
         self.result = self.target(*args, **kwargs)
         return self.result
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.__dict__)
 
 
@@ -142,20 +145,23 @@ class ServerJob(object):
     :type keypass: str, optional
     :param timeout: Tuple of timeouts in seconds (TCP timeout, SSH Timeout)
     :type timeout: tuple, optional
-    :param runlocal: Run job on localhost without opening SSH connection (defaults to False)
+    :param runlocal: Run job on localhost without opening SSH connection (Default: False)
     :type runlocal: bool, optional
     :param prehook: Hook object
     :type prehook: :class:`Hook`, optional
     :param posthook: Hook object
     :type posthook: :class:`Hook`, optional
-    :param combine_output: Combine stdout and stderr (defaults to False)
+    :param combine_output: Combine stdout and stderr (Default: False)
     :type combine_output: bool, optional
 
     :property results: List of namedtuples (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
     :property status: Sum of return codes for entire job (255 = ssh did not connect)
     """
-    def __init__(self, fqdn, cmds, username=None, password=None, keyfile=None, keypass=None, timeout=(0.5, 30),
-                 runlocal=False, prehook=None, posthook=None, combine_output=False):
+    def __init__(self, fqdn: str, cmds: Union[list, tuple, str], username: Optional[str] = None,
+                 password: Optional[str] = None, keyfile: Optional[str] = None, keypass: Optional[str] = None,
+                 timeout: Optional[TimeoutTuple] = (0.5, 30), runlocal: bool = False,
+                 prehook: Optional[Callable] = None, posthook: Optional[Callable] = None,
+                 combine_output: bool = False) -> None:
         self.name = str(fqdn)
         self.results = list()
         self.username = username
@@ -201,10 +207,11 @@ class ServerJob(object):
             if not all([username, password]):
                 raise paramiko.SSHException('username and password or ssh key not provided')
 
-    def run(self):
+    def run(self) -> int:
         """Run a ServerJob. SSH to server, run cmds, return result
 
-        :return: :obj:`ServerJob.status`
+        :return: Sum of return codes for each command executed
+        :rtype: int
         """
         log.info('%s: starting ServerJob' % (self.name,))
         if self.runlocal:
@@ -256,14 +263,14 @@ class ServerJob(object):
         log.info('%s: exiting ServerJob' % (self.name,))
         return self.status
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.__dict__)
 
     def __getitem__(self, item):
         return self.__dict__[item]
 
 
-def cpusoftlimit():
+def cpusoftlimit() -> int:
     """ Using the cpu count, determine number of processes the script is allowed to spawn
 
     :return: Result of :meth:`mpctx.cpu_count()` or 1, whichever is greater
@@ -276,7 +283,7 @@ def cpusoftlimit():
         return cpu_count
 
 
-def cpuhardlimit():
+def cpuhardlimit() -> int:
     """ Return the maximum number of sub-processes your system is allowed to spawn.
 
     :return: cpusoftlimit() * __cpuhardlimitfactor__
@@ -287,7 +294,7 @@ def cpuhardlimit():
     return cpusoftlimit() * __cpuhardlimitfactor__
 
 
-def threadlimit():
+def threadlimit() -> int:
     """ Return the maximum number of threads each process is allowed to spawn.  The idea here is to not overload a system.
 
     :return: cpu_count() * __threadlimitfactor__
@@ -298,7 +305,7 @@ def threadlimit():
     return mpctx.cpu_count() * __threadlimitfactor__
 
 
-def echo(*args, **kwargs):
+def echo(*args, **kwargs) -> None:
     """ Wrapper for print that implements a :class:`multiprocessing.Lock` object as well as uses unbuffered output
     to :class:`sys.stdout`.
 
@@ -317,7 +324,8 @@ def echo(*args, **kwargs):
     return None
 
 
-def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False, print_lock=True):
+def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int] = None,
+            progress_bar: bool = False, print_lock: bool = True) -> list:
     """Takes a list of ServerJob objects and puts them into threads/sub-processes and runs them
 
     :param serverjobs: List of ServerJob objects
@@ -326,9 +334,10 @@ def sshread(serverjobs, pcount=None, tcount=None, progress_bar=False, print_lock
     :type pcount: int, required
     :param tcount: Number of threads to spawn (None = off, 0 = threadlimit)
     :type tcount: int, required
-    :param progress_bar: Print a progress bar (default is False)
+    :param progress_bar: Print a progress bar (Default: False)
     :type progress_bar: bool, optional
     :param print_lock: Create a :class:multiprocessing.Lock for use with :meth:`sshreader.echo()`
+    :type print_lock: bool, optional
     :return: List of completed ServerJob objects (single object returned if 1 job was passed)
     :rtype: list
     :raises: ExceedCPULimit, TypeError, ValueError

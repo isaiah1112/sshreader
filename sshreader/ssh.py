@@ -18,7 +18,8 @@ shell_command function for running local shell scripts!
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from collections import namedtuple, OrderedDict
 from getpass import getuser
-from sshreader.types import Command, EnvVars
+from sshreader.types import Command, EnvVars, Timeout
+from typing import Any, Optional, Union
 import logging
 import os
 import paramiko
@@ -34,7 +35,7 @@ elif sys.version_info[1] < 7:
     raise Exception('Only Python 3.7 and later is supported in this version of sshreader')
 
 
-def envvars():
+def envvars() -> EnvVars:
     """ Attempt to determine the current username and location of any ssh private keys.
     If any value is unable to be determined it is returned as 'None'.
 
@@ -66,23 +67,23 @@ class SSH(object):
     :param fqdn: Fully qualified domain name or IP address
     :type fqdn: str, required
     :param username: SSH username
-    :type username: str, optional
+    :type username: str, required
     :param password: SSH password
     :type password: str, optional
     :param keyfile: Path to SSH Private Key File
     :type keyfile: str, optional
     :param keypass: SSH private key password
     :type keypass: str, optional
-    :param port: SSH port (defaults to 22)
+    :param port: SSH port (Default: 22)
     :type port: int, optional
-    :param connect: Initiate the connect on object initialization (defaults to True)
+    :param connect: Initiate the connect on object initialization (Default: True)
     :type connect: bool, optional
-    :param rsa_sha2: Enable/Disable RSA w/SHA2 hashes (defaults to True)
+    :param rsa_sha2: Enable/Disable RSA w/SHA2 hashes (Default: True)
     :type rsa_sha2: bool, optional
     :raises: :class:`paramiko.SSHException`
     """
-    def __init__(self, fqdn, username=None, password=None, keyfile=None, keypass=None, port=22, connect=True,
-                 rsa_sha2=True):
+    def __init__(self, fqdn: str, username: str, password: Optional[str] = None, keyfile: Optional[str] = None,
+                 keypass: Optional[str] = None, port: int = 22, connect: bool = True, rsa_sha2: bool = True) -> None:
         if not keyfile:
             if len(paramiko.Agent().get_keys()) == 0:
                 if not all((username, password)):
@@ -104,7 +105,7 @@ class SSH(object):
         if connect:
             self.__connect()
 
-    def __str__(self):
+    def __str__(self) -> str:
         return str(self.__dict__)
 
     def __enter__(self):
@@ -115,7 +116,7 @@ class SSH(object):
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.__close()
 
-    def sftp_put(self, srcfile, dstfile):
+    def sftp_put(self, srcfile: str, dstfile: str) -> Any:
         """ Use the SFTP subsystem of OpenSSH to copy a local file to a remote host
 
         :param srcfile: Path to the local file
@@ -133,7 +134,7 @@ class SSH(object):
             sftp.close()
         return result
 
-    def sftp_get(self, srcfile, dstfile):
+    def sftp_get(self, srcfile: str, dstfile: str) -> Any:
         """ Use the SFTP subsystem of OpenSSH to copy a remote file to the localhost
 
         :param srcfile: Path to the remote file
@@ -146,20 +147,22 @@ class SSH(object):
             raise paramiko.SSHException("connection to %s not established" % (self.host,))
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         try:
-            sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
+            result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
         finally:
             sftp.close()
+        return result
 
-    def ssh_command(self, command, timeout=30, combine=False, decodebytes=True):
+    def ssh_command(self, command: str, timeout: Timeout = 30, combine: bool = False,
+                    decodebytes: bool = True) -> Command:
         """Run a command over an ssh connection
 
         :param command: The command to run
         :type command: str, required
-        :param timeout: Timeout for blocking commands in seconds (defaults to 30)
-        :type timeout: int/float, optional
-        :param combine: Combine stderr and stdout using a pseudo TTY (defaults to False)
+        :param timeout: Timeout for blocking commands in seconds (Default: 30)
+        :type timeout: int or float, optional
+        :param combine: Combine stderr and stdout using a pseudo TTY (Default: False)
         :type combine: bool, optional
-        :param decodebytes: Decode bytes objects to unicode strings in Python3 (defaults to True)
+        :param decodebytes: Decode bytes objects to unicode strings in Python3 (Default: True)
         :type decodebytes: bool, optional
         :return: Namedtuple of (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
         :rtype: :class:`namedtuple`
@@ -218,11 +221,11 @@ class SSH(object):
         """
         return self.__connect()
 
-    def connect(self, timeout=0.5):
+    def connect(self, timeout: Timeout = 0.5) -> bool:
         """Opens an SSH Connection
 
-        :param timeout: TCP Timeout in seconds (defaults to 0.5)
-        :type timeout: int/float, optional
+        :param timeout: TCP Timeout in seconds (Defualt: 0.5)
+        :type timeout: int or float, optional
         :return: True
         :rtype: bool
         :raises: :class:`paramiko.SSHException`
