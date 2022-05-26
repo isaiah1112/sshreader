@@ -15,12 +15,6 @@
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from collections import namedtuple
-from progressbar import ProgressBar
-from sshreader.ssh import SSH
-from sshreader.types import Command, TimeoutTuple
-from types import FunctionType
-from typing import Any, Callable, Optional, Union
 import logging
 import multiprocessing
 import os
@@ -29,15 +23,15 @@ import subprocess
 import sys
 import threading
 import time
+from progressbar import ProgressBar
+from types import FunctionType
+from typing import Any, Callable, Optional, Union
 
-if sys.version_info[0] < 3:
-    raise Exception('Python2.x is no longer supported in this version of sshreader')
-elif sys.version_info[1] < 7:
-    raise Exception('Only Python 3.7 and later is supported in this version of sshreader')
 
+from .ssh import SSH
+from .types import Command, TimeoutTuple
 
 # Globals
-__author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 mpctx = multiprocessing.get_context('spawn')  # Forcing the forking type to spawn in older versions of Python3
 __cpuhardlimitfactor__ = 3
 __threadlimitfactor__ = 2

@@ -1,6 +1,5 @@
 # coding=utf-8
-"""A wrapper for Paramiko that attempts to make ssh sessions easier to work with.  It also contains the
-shell_command function for running local shell scripts!
+"""A wrapper for Paramiko that attempts to make ssh sessions easier to work with.
 """
 # Copyright (C) 2015-2022 Jesse Almanrode
 #
@@ -16,23 +15,14 @@ shell_command function for running local shell scripts!
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from collections import namedtuple, OrderedDict
-from getpass import getuser
-from sshreader.types import Command, EnvVars, Timeout
-from typing import Any, Optional, Union
 import logging
 import os
 import paramiko
 import socket
-import sys
+from getpass import getuser
+from typing import Any, Optional, Union
 
-# Privates
-__author__ = 'Jesse Almanrode (jesse@almanrode.com)'
-
-if sys.version_info[0] < 3:
-    raise Exception('Python2.x is no longer supported in this version of sshreader')
-elif sys.version_info[1] < 7:
-    raise Exception('Only Python 3.7 and later is supported in this version of sshreader')
+from .types import Command, EnvVars, Timeout
 
 
 def envvars() -> EnvVars:
