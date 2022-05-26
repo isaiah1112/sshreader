@@ -2,10 +2,10 @@
 
 ## Overview
 
-[sshreader][] is a Python Module for multi-processing/threading ssh connections in order to make ssh operations
+[SSHreader][] is a Python Module for multi-processing/threading ssh connections in order to make ssh operations
 across multiple servers parallel.  It utilizes the [Paramiko](http://www.paramiko.org/) module for its ssh client.
 
-In order to maintain the widest range of compatibility, sshreader is currently tested using the following versions of
+In order to maintain the widest range of compatibility, [SSHreader][] is currently tested using the following versions of
 Python:
 
 * Python3.7
@@ -15,12 +15,12 @@ Python:
 
 ## License
 
-[sshreader][] is released under the [GNU Lesser General Public License v3.0][],
+[SSHreader][] is released under the [GNU Lesser General Public License v3.0][],
 see the file LICENSE and LICESE.lesser for the license text.
 
 ## Installation
 
-The most straightforward way to get the sshreader module working for you is:
+The most straightforward way to get the [SSHreader][] module working for you is:
 
 > pip install sshreader
 
@@ -32,19 +32,19 @@ This will ensure that all the requirements are met.
 
 ### Development Installation
 
-If you are wanting to work on development of sshreader perform the following:
+If you are wanting to work on development of [SSHreader][] perform the following:
 
 > pip install -U -r requirements.txt
 
-To ensure all development requirements are met. This will allow you to build the Sphinx Documentation for sshreader!
+To ensure all development requirements are met. This will allow you to build the Sphinx Documentation for [SSHreader][]!
 
 ## Documentation
 
-The documentation for sshreader can be found [here](https://sshreader.readthedocs.io)
+The documentation for [SSHreader][] can be found [here](https://sshreader.readthedocs.io)
 
 ### Building Docs
 
-If you have installed the requirements for sshreader you can build its Sphinx Documentation simply by:
+If you have installed the requirements for [SSHreader][] you can build its Sphinx Documentation simply by:
 
 > cd docs;
 > make html
@@ -76,4 +76,4 @@ to process.
 
 [GNU Lesser General Public License v3.0]: http://choosealicense.com/licenses/lgpl-3.0/ "LGPL v3"
 
-[sshreader]: https://bitbucket.org/isaiah1112/sshreader "sshreader Module"
+[sshreader]: https://bitbucket.org/isaiah1112/sshreader "SSHreader Package"
