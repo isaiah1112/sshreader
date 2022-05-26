@@ -56,8 +56,9 @@ pipelines:
       - step:
           name: Deploy To PyPi
           script:
-            - pip install twine
-            - bash -e deploy.bash
+            - pip install bulid twine
+            - python -m build
+            - twine upload --non-interactive --username __token__ --password ${PYPI_PASSWORD} dist/*;
 definitions:
   services:
     sshd:
