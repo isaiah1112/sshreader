@@ -155,7 +155,7 @@ class SSH(object):
         :param decodebytes: Decode bytes objects to unicode strings in Python3 (Default: True)
         :type decodebytes: bool, optional
         :return: Namedtuple of (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
-        :rtype: :class:`namedtuple`
+        :rtype: Command
         :raises: :class:`paramiko.SSHException`
         """
         if self.__alive() is False:
