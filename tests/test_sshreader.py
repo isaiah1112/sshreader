@@ -65,85 +65,56 @@ class TestSSH(unittest.TestCase):
     """ Test cases for the SSH class
     """
 
-    def setUp(self):
-        """ Setup SSH connection
-        :return: Connection state conn.is_alive()
-        """
-        global ssh_data
-        self.conn = sshreader.SSH(ssh_data['host_fqdn'], port=ssh_data['host_port'], username=ssh_data['ssh_user'],
-                                  password=ssh_data['ssh_password'], connect=False)
-        return self.conn.alive()
-
     def test_password(self):
         """ Test an SSH connection using a password
         """
-        self.conn.connect()
-        self.conn.alive()
-        self.assertTrue(self.conn.alive(), msg='ssh connection using password failed to: ' + ssh_data['host_fqdn'])
-        self.conn.close()
+        global ssh_data
+        with sshreader.SSH(ssh_data['host_fqdn'], port=ssh_data['host_port'], username=ssh_data['ssh_user'],
+                           password=ssh_data['ssh_password']) as conn:
+            self.assertTrue(conn.alive())
+            self.assertEqual(conn.ssh_command('uname').stdout, 'Linux')
         pass
 
     def test_keyfile(self):
         """ Test an SSH connection using an ssh key
         """
         global ssh_data
-        conn = sshreader.SSH(ssh_data['host_fqdn'], port=ssh_data['host_port'],
-                             username=ssh_data['ssh_user'], keyfile=ssh_data['ssh_key_path'])
-        self.assertTrue(conn.alive(), msg='ssh connection using password failed to: ' + ssh_data['host_fqdn'])
+        with sshreader.SSH(ssh_data['host_fqdn'], port=ssh_data['host_port'], username=ssh_data['ssh_user'],
+                           keyfile=ssh_data['ssh_key_path']) as conn:
+            self.assertTrue(conn.alive())
+            self.assertEqual(conn.ssh_command('uname').stdout, 'Linux')
         pass
 
     def test_reconnect(self):
         """ Test re-opening an SSH connection
         """
-        self.assertFalse(self.conn.alive())
-        self.conn.reconnect()
-        self.assertTrue(self.conn.alive())
+        global ssh_data
+        conn = sshreader.SSH(ssh_data['host_fqdn'], port=ssh_data['host_port'], username=ssh_data['ssh_user'],
+                           password=ssh_data['ssh_password'], connect=False)
+        self.assertFalse(conn.alive())
+        conn.reconnect()
+        self.assertTrue(conn.alive())
+        conn.close()
         pass
 
     def test_command(self):
-        """ Test an ssh_command
+        """ Test commands over ssh
         """
-        self.assertFalse(self.conn.alive())
-        self.conn.connect()
-        result = self.conn.ssh_command('echo foo')
-        self.assertEqual(result.return_code, 0)
-        self.assertIn('foo', result.stdout)
-        self.assertEqual(len(result.stderr), 0)
-        pass
-
-    def test_command_stderr(self):
-        """ Test an ssh_command
-        """
-        self.assertFalse(self.conn.alive())
-        self.conn.connect()
-        result = self.conn.ssh_command('echo bar 1>&2')
-        self.assertEqual(result.return_code, 0)
-        self.assertEqual(len(result.stdout), 0)
-        self.assertIn('bar', result.stderr)
-        pass
-
-    def test_combine_output(self):
-        """ Test combining stdout and stderr of ssh_command
-        """
-        self.assertFalse(self.conn.alive())
-        self.conn.connect()
-        result = self.conn.ssh_command('echo foo; echo bar 1>&2;', combine=True)
-        self.assertIsInstance(result, tuple)
-        self.assertEqual(result.return_code, 0)
-        self.assertIn('foo', result.stdout)
-        self.assertIn('bar', result.stdout)
-        pass
-
-    def test_cmd_timeout(self):
-        """ Test handling of cmd timeout via SSH
-        """
-        if self.conn.alive() is False:
-            self.conn.connect()
-        self.assertTrue(self.conn.alive())
-        result = self.conn.ssh_command('sleep 5', timeout=2)
-        self.assertEqual(result.return_code, 124)
-        self.assertEqual(len(result.stdout), 0)
-        self.assertIn('command timed out', result.stderr)
+        with sshreader.SSH(ssh_data['host_fqdn'], port=ssh_data['host_port'], username=ssh_data['ssh_user'],
+                           password=ssh_data['ssh_password']) as conn:
+            cmd = conn.ssh_command('uname')
+            self.assertEqual(cmd.stdout, 'Linux')
+            self.assertEqual(cmd.stderr, '')
+            cmd = conn.ssh_command('uname 1>&2')
+            self.assertEqual(cmd.stderr, 'Linux')
+            self.assertEqual(cmd.stdout, '')
+            cmd = conn.ssh_command('echo foo; echo bar 1>&2;', combine=True)
+            self.assertIn('foo', cmd.stdout)
+            self.assertIn('bar', cmd.stdout)
+            self.assertIsNone(cmd.stderr)
+            cmd = conn.ssh_command('sleep 5', timeout=2)
+            self.assertEqual(cmd.return_code, 124)
+            self.assertIn('command timed out', cmd.stderr)
         pass
 
 
