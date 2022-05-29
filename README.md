@@ -22,11 +22,9 @@ see the file LICENSE and LICESE.lesser for the license text.
 
 The most straightforward way to get the [SSHreader][] module working for you is:
 
-> pip install sshreader
-
-or
-
-> python setup.py install
+```commandline
+pip install sshreader
+```
 
 This will ensure that all the requirements are met.
 
@@ -34,9 +32,12 @@ This will ensure that all the requirements are met.
 
 If you are wanting to work on development of [SSHreader][] perform the following:
 
-> pip install -U -r requirements.txt
+```commandline
+make install
+```
 
-To ensure all development requirements are met. This will allow you to build the Sphinx Documentation for [SSHreader][]!
+To ensure all development requirements are met. This will allow you to build the Sphinx Documentation for [SSHreader][]
+or run the unit/integration tests!
 
 ## Documentation
 
@@ -46,10 +47,11 @@ The documentation for [SSHreader][] can be found [here](https://sshreader.readth
 
 If you have installed the requirements for [SSHreader][] you can build its Sphinx Documentation simply by:
 
-> cd docs;
-> make html
+```commandline
+make docs
+```
 
-Then simply open **docs/build/html/index.html** in your browser.
+Then simply open `docs/build/html/index.html` in your browser.
 
 ## Contributing
 

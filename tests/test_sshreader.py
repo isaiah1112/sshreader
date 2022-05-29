@@ -14,14 +14,10 @@ sys.path.append(project_root)
 import sshreader
 
 global ssh_data
-try:
-    # If you want to test locally simply create a test_params.json file like the dictionary below
-    params_file = open(project_root + '/tests/test_params.json')
-    ssh_data = json.load(params_file)
-except IOError:
-    # Defaults for testing with Docker!
-    ssh_data = {"host_fqdn": "127.0.0.1", "ssh_user": "sshreader", "ssh_password": "sunshine",
-                "ssh_key_path": project_root + "/tests/keys/id_rsa"}
+# Defaults for testing with Docker!
+ssh_data = {"host_fqdn": "127.0.0.1", "host_port": os.getenv('SSH_PORT', 22),
+            "ssh_user": "sshreader", "ssh_password": "sunshine",
+            "ssh_key_path": project_root + "/tests/keys/id_rsa"}
 
 
 class TestShellScript(unittest.TestCase):
@@ -74,7 +70,7 @@ class TestSSH(unittest.TestCase):
         :return: Connection state conn.is_alive()
         """
         global ssh_data
-        self.conn = sshreader.SSH(ssh_data['host_fqdn'], username=ssh_data['ssh_user'],
+        self.conn = sshreader.SSH(ssh_data['host_fqdn'], port=ssh_data['host_port'], username=ssh_data['ssh_user'],
                                   password=ssh_data['ssh_password'], connect=False)
         return self.conn.alive()
 
@@ -91,7 +87,8 @@ class TestSSH(unittest.TestCase):
         """ Test an SSH connection using an ssh key
         """
         global ssh_data
-        conn = sshreader.SSH(ssh_data['host_fqdn'], username=ssh_data['ssh_user'], keyfile=ssh_data['ssh_key_path'])
+        conn = sshreader.SSH(ssh_data['host_fqdn'], port=ssh_data['host_port'],
+                             username=ssh_data['ssh_user'], keyfile=ssh_data['ssh_key_path'])
         self.assertTrue(conn.alive(), msg='ssh connection using password failed to: ' + ssh_data['host_fqdn'])
         pass
 
@@ -183,7 +180,8 @@ class TestSshreader(unittest.TestCase):
         jobs = list()
         for x in range(size):
             x = sshreader.ServerJob(ssh_data['host_fqdn'], ['sleep 1', 'echo done'], prehook=pre, posthook=post,
-                                    username=ssh_data['ssh_user'], password=ssh_data['ssh_password'])
+                                    username=ssh_data['ssh_user'], password=ssh_data['ssh_password'],
+                                    ssh_port=ssh_data['host_port'])
             jobs.append(x)
         for x in range(size):
             jobs.append(sshreader.ServerJob('local-' + str(x), ['sleep 1', 'echo done'], runlocal=True))
@@ -200,7 +198,7 @@ class TestSshreader(unittest.TestCase):
         """ Test valid ServerJob creation
         """
         global ssh_data
-        job = sshreader.ServerJob(ssh_data['host_fqdn'], 'echo foo',
+        job = sshreader.ServerJob(ssh_data['host_fqdn'], 'echo foo', ssh_port=ssh_data['host_port'],
                                   username=ssh_data['ssh_user'], password=ssh_data['ssh_password'])
         self.assertIsInstance(job, sshreader.ServerJob)
         pass
@@ -212,7 +210,8 @@ class TestSshreader(unittest.TestCase):
         pre = sshreader.Hook(my_hook, args=['pre'])
         post = sshreader.Hook(my_hook, args=['post'])
         job = sshreader.ServerJob(ssh_data['host_fqdn'], 'echo foo', prehook=pre, posthook=post,
-                                  username=ssh_data['ssh_user'], password=ssh_data['ssh_password'])
+                                  username=ssh_data['ssh_user'], password=ssh_data['ssh_password'],
+                                  ssh_port=ssh_data['host_port'])
         self.assertIsInstance(job, sshreader.ServerJob)
         pass
 

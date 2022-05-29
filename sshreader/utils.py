@@ -137,6 +137,8 @@ class ServerJob(object):
     :type keyfile: str, optional
     :param keypass: Password for private ssh key file
     :type keypass: str, optional
+    :param ssh_port: Integer of SSH Port to use (Default: 22)
+    :type ssh_port: int
     :param timeout: Tuple of timeouts in seconds (TCP timeout, SSH Timeout)
     :type timeout: tuple, optional
     :param runlocal: Run job on localhost without opening SSH connection (Default: False)
@@ -155,7 +157,7 @@ class ServerJob(object):
                  password: Optional[str] = None, keyfile: Optional[str] = None, keypass: Optional[str] = None,
                  timeout: Optional[TimeoutTuple] = (0.5, 30), runlocal: bool = False,
                  prehook: Optional[Callable] = None, posthook: Optional[Callable] = None,
-                 combine_output: bool = False) -> None:
+                 combine_output: bool = False, ssh_port: int = 22) -> None:
         self.name = str(fqdn)
         self.results = list()
         self.username = username
@@ -165,7 +167,7 @@ class ServerJob(object):
         self.status = 0
         self.combine_output = combine_output
         self.runlocal = runlocal
-        self.ssh_port = 22
+        self.ssh_port = ssh_port
         if isinstance(cmds, (list, tuple)):
             self.cmds = cmds
         else:

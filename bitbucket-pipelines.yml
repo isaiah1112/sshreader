@@ -3,60 +3,74 @@ image: python:latest
 pipelines:
   default:
     - step: &py37
-        name: Python3.7
+        name: Python 3.7 Tests
         image: python:3.7
         script:
-          - pip install -U tox
-          - tox -e py37
+          - python -m pip install -U -r requirements.txt
+          - coverage run -m unittest discover tests/
         services:
           - sshd
         caches:
           - pip
     - step: &py38
-        name: Python3.8
+        name: Python 3.8 Tests
         image: python:3.8
         script:
-          - pip install -U tox
-          - tox -e py38
+          - python -m pip install -U -r requirements.txt
+          - coverage run -m unittest discover tests/
         services:
           - sshd
         caches:
           - pip
     - step: &py39
-        name: Python3.9
+        name: Python 3.9 Tests
         image: python:3.9
         script:
-          - pip install -U tox
-          - tox -e py39
+          - python -m pip install -U -r requirements.txt
+          - coverage run -m unittest discover tests/
         services:
           - sshd
         caches:
           - pip
     - step: &py310
-        name: Python3.10
+        name: Python 3.10 Tests
         image: python:3.10
         script:
-          - pip install -U tox
-          - tox -e py310
+          - python -m pip install -U -r requirements.txt
+          - coverage run -m unittest discover tests/
         services:
           - sshd
         caches:
           - pip
   branches:
+    release/*:
+      - step: *py37
+      - step: *py38
+      - step: *py39
+      - step: *py310
+      - step:
+          name: Build Documentation
+          script:
+            - python -m pip install Sphinx
+            - sphinx-build -b html docs/source/ docs/build/html/
+          caches:
+            - pip
+      - step:
+          name: Deploy To Test PyPi
+          trigger: manual
+          script:
+            - pip install build twine
+            - python -m build
+            - twine upload --repository testpypi --non-interactive --username __token__ --password ${TEST_PYPI_PASSWORD} dist/*;
     master:
       - step: *py37
       - step: *py38
       - step: *py39
       - step: *py310
       - step:
-          name: Documentation Build
-          script:
-            - pip install -U tox
-            - tox -e docs
-      - step:
           name: Deploy To PyPi
           script:
-            - pip install bulid twine
+            - pip install build twine
             - python -m build
             - twine upload --non-interactive --username __token__ --password ${PYPI_PASSWORD} dist/*;
 definitions:
