@@ -152,7 +152,7 @@ class ServerJob(object):
     def __init__(self, fqdn: str, cmds: Union[list, tuple, str], username: Optional[str] = None,
                  password: Optional[str] = None, keyfile: Optional[str] = None, keypass: Optional[str] = None,
                  timeout: Optional[TimeoutTuple] = (0.5, 30), runlocal: bool = False,
-                 prehook: Optional[Callable] = None, posthook: Optional[Callable] = None,
+                 prehook: Optional[Hook] = None, posthook: Optional[Hook] = None,
                  combine_output: bool = False, ssh_port: int = 22) -> None:
         self.name = str(fqdn)
         self.results = list()
