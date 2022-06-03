@@ -7,7 +7,7 @@ pipelines:
         image: python:3.7
         script:
           - python -m pip install -U -r requirements.txt
-          - coverage run -m unittest discover tests/
+          - python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -17,7 +17,7 @@ pipelines:
         image: python:3.8
         script:
           - python -m pip install -U -r requirements.txt
-          - coverage run -m unittest discover tests/
+          - python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -27,7 +27,7 @@ pipelines:
         image: python:3.9
         script:
           - python -m pip install -U -r requirements.txt
-          - coverage run -m unittest discover tests/
+          - python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -37,7 +37,7 @@ pipelines:
         image: python:3.10
         script:
           - python -m pip install -U -r requirements.txt
-          - coverage run -m unittest discover tests/
+          - python -m unittest discover tests/
         services:
           - sshd
         caches:
