@@ -2,7 +2,6 @@
 # coding=utf-8
 """ Integration and Unit tests for sshreader Python Package
 """
-import json
 import os
 import sys
 import unittest
@@ -20,9 +19,15 @@ ssh_data = {"host_fqdn": "127.0.0.1", "host_port": os.getenv('SSH_PORT', 22),
             "ssh_key_path": project_root + "/tests/keys/id_rsa"}
 
 
-class TestShellScript(unittest.TestCase):
-    """ Test Cases for the shell script portion of SSH module
+class TestMisc(unittest.TestCase):
+    """ Test Cases for miscellaneous functions of SSH module
     """
+
+    def test_env_variables(self):
+        """ Test envvars method"""
+        ssh_env = sshreader.envvars()
+        print(ssh_env)
+        pass
 
     def test_shell_command(self):
         """ Test shell_command method
@@ -55,9 +60,20 @@ class TestShellScript(unittest.TestCase):
     def test_decode_bytes(self):
         """ Test to ensure that result is a unicode string type
         """
-        result = sshreader.shell_command('uname -a', decodebytes=True)
+        result = sshreader.shell_command('uname -a')
         self.assertEqual(result.return_code, 0)
         self.assertIsInstance(result.stdout, str)
+        pass
+
+    def test_bytes(self):
+        """ Test to ensure that result is a bytes string type
+        """
+        result = sshreader.shell_command('uname -a', decodebytes=False)
+        self.assertEqual(result.return_code, 0)
+        self.assertIsInstance(result.stdout, bytes)
+        result = sshreader.shell_command('uname -a', combine=True, decodebytes=False)
+        self.assertEqual(result.return_code, 0)
+        self.assertIsInstance(result.stdout, bytes)
         pass
 
 
