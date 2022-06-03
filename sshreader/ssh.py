@@ -20,10 +20,10 @@ import os
 import paramiko
 import socket
 from getpass import getuser
-from typing import Any, Optional, Union
+from typing import Any, Optional
 
 from .types import Command, EnvVars, Timeout
-
+log = logging.getLogger('sshreader')
 
 def envvars() -> EnvVars:
     """ Attempt to determine the current username and location of any ssh private keys.
@@ -34,18 +34,26 @@ def envvars() -> EnvVars:
     :return: NamedTuple of (username, agent_keys, rsa_key, dsa_key, ecdsa_key)
     :rtype: :class:`typing.NamedTuple`
     """
+    global log
     env = dict(username=None, agent_keys=None, rsa_key=None, dsa_key=None, ecdsa_key=None)
-    if os.getlogin() == getuser():
-        env['username'] = getuser()
-    userhome = os.path.expanduser('~')
-    if os.path.exists(userhome + "/.ssh"):
-        keyfiles = os.listdir(userhome + "/.ssh")
+    user_home = os.getenv('HOME', '~')
+    if user_home == '~':
+        user_home = os.path.expanduser('~')
+    try:
+        if os.getlogin() == getuser():
+            env['username'] = getuser()
+        else:
+            log.warning('Unable to reliably determine logged in user.')
+    except OSError:  # Running in a container or inside an IDE, let's take our best guess based on your $HOME
+        env['username'] = user_home.split('/').pop()
+    if os.path.exists(user_home + "/.ssh"):
+        keyfiles = os.listdir(user_home + "/.ssh")
         if "id_rsa" in keyfiles:
-            env['rsa_key'] = userhome + "/.ssh/id_rsa"
+            env['rsa_key'] = user_home + "/.ssh/id_rsa"
         if "id_dsa" in keyfiles:
-            env['dsa_key'] = userhome + "/.ssh/id_dsa"
+            env['dsa_key'] = user_home + "/.ssh/id_dsa"
         if 'id_ecdsa' in keyfiles:
-            env['ecdsa_key'] = userhome + '/.ssh/id_ecdsa'
+            env['ecdsa_key'] = user_home + '/.ssh/id_ecdsa'
     env['agent_keys'] = paramiko.Agent().get_keys()
     return EnvVars(**env)
 

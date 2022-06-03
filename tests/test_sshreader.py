@@ -26,7 +26,7 @@ class TestMisc(unittest.TestCase):
     def test_env_variables(self):
         """ Test envvars method"""
         ssh_env = sshreader.envvars()
-        print(ssh_env)
+        self.assertIsNotNone(ssh_env.username)
         pass
 
     def test_shell_command(self):
