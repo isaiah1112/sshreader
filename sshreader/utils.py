@@ -24,7 +24,6 @@ import sys
 import threading
 import time
 from progressbar import ProgressBar
-from types import FunctionType
 from typing import Any, Callable, Optional, Union
 
 
@@ -38,15 +37,17 @@ __threadlimitfactor__ = 2
 log = logging.getLogger('sshreader')
 lockobj = None
 
+
 def shell_command(command: str, combine: bool = False, decodebytes: bool = True) -> Command:
-    """Run a command in the shell on localhost and return the output
+    """Run a command in the shell on localhost and return the output.  This attempts to be a simplified wrapper
+    for subprocess.run
 
     :param command: The shell script to run
     :type command: str, required
     :param combine: Direct stderr to stdout (Default: False)
     :type combine: bool, optional
     :param decodebytes: Decode bytes objects to unicode strings (Default: True)
-    :type decodebypes: bool, optional
+    :type decodebytes: bool, optional
     :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
     :rtype: Command
     :raises: None

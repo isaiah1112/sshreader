@@ -15,14 +15,15 @@
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from types import FunctionType
-from typing import NamedTuple, NewType, Optional, Union, Tuple
+from typing import NamedTuple, Optional, Union, Tuple
+
 
 class Command(NamedTuple):
     cmd: str
-    stdout: Optional[str]
-    stderr: Optional[str]
+    stdout: Optional[Union[str, bytes]]
+    stderr: Optional[Union[str, bytes]]
     return_code: int
+
 
 class EnvVars(NamedTuple):
     username: Optional[str]
@@ -30,6 +31,7 @@ class EnvVars(NamedTuple):
     dsa_key: Optional[str]
     ecdsa_key: Optional[str]
     rsa_key: Optional[str]
+
 
 Timeout = Union[int, float]
 TimeoutTuple = Tuple[Timeout]
