@@ -52,8 +52,6 @@ def shell_command(command: str, combine: bool = False, decodebytes: bool = True)
     :rtype: Command
     :raises: None
     """
-    global log
-    log.warning('%s is being deprecated, please use %s instead' % ('sshreader.shell_command()', 'subprocess.run()'))
     if combine:
         sp_output = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if decodebytes:
