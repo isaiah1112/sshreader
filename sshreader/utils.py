@@ -86,18 +86,15 @@ class Hook(object):
 
     def __init__(self, target: Callable, args: Optional[list] = None, kwargs: Optional[dict] = None,
                  ssh_established: bool = False) -> None:
-        assert isinstance(target, FunctionType)
         self.target = target
         self.ssh_established = ssh_established
         if args is None:
             self.args = list()
         else:
-            assert isinstance(args, list)
             self.args = args
         if kwargs is None:
             self.kwargs = dict()
         else:
-            assert isinstance(kwargs, dict)
             self.kwargs = kwargs
         self.result = None
 
@@ -174,12 +171,9 @@ class ServerJob(object):
         if isinstance(timeout, (tuple, list)):
             if len(timeout) != 2:
                 raise ValueError('<timeout> requires two integer or float values')
-            assert isinstance(timeout[0], (int, float))
-            assert isinstance(timeout[1], (int, float))
             self.sshtimeout = timeout[0]
             self.cmdtimeout = timeout[1]
         else:
-            assert isinstance(timeout, (int, float))
             self.sshtimeout = timeout
             self.cmdtimeout = timeout
         if prehook:
@@ -285,7 +279,6 @@ def cpuhardlimit() -> int:
     :rtype: int
     """
     global __cpuhardlimitfactor__
-    assert isinstance(__cpuhardlimitfactor__, int)
     return cpusoftlimit() * __cpuhardlimitfactor__
 
 
@@ -296,7 +289,6 @@ def threadlimit() -> int:
     :rtype: int
     """
     global __threadlimitfactor__
-    assert isinstance(__threadlimitfactor__, int)
     return mpctx.cpu_count() * __threadlimitfactor__
 
 
