@@ -35,13 +35,6 @@ Examples:
     pydsh -F -w host[01-10] myscript.sh
 """
 
-if sys.version_info[0] < 3:
-    print('Python2.x is no longer supported in this version of sshreader')
-    sys.exit(-1)
-elif sys.version_info[1] < 7:
-    print('Only Python 3.7 and later is supported in this version of sshreader')
-    sys.exit(-1)
-
 log = logging.getLogger(__name__)
 log_handler = logging.StreamHandler()
 log_handler.setFormatter(logging.Formatter('%(levelname)s:%(funcName)s:%(message)s'))
@@ -266,4 +259,5 @@ def cli(**kwargs):
 
 
 if __name__ == "__main__":
-    cli()
+    print('Please install pydsh by running: pip install sshreader')
+    sys.exit(1)
