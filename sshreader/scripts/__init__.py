@@ -1,5 +1,5 @@
 # coding=utf-8
-"""A Python Package for parallelizing ssh connections via threading and multiprocessing.
+""" Scripts portion of sshreader package
 """
 # Copyright (C) 2015-2022 Jesse Almanrode
 #
@@ -16,11 +16,5 @@
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-# For backwards compatibility
-from .ssh import SSH, envvars
-from .types import Command, EnvVars, Timeout, TimeoutTuple
-from .utils import ServerJob, Hook, sshread, echo, cpusoftlimit, cpuhardlimit, threadlimit, shell_command
-import logging
-
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
-__all__ = ['pydsh.py']
+__all__ = ['pydsh']
