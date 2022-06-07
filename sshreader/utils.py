@@ -359,6 +359,11 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
     log.debug('filling task_queue')
     for job in serverjobs:
         task_queue.put(job)
+    else:
+        # I put this here because if you have 1 ServerJob the buffer is often not flushed in time for a thread to use
+        # the `get` method.
+        while task_queue.empty():
+            time.sleep(1)
 
     threads = list()  # Keep track of threads so we can join them later
     pids = list()  # Keep track of process-ids so we can join/close them later
