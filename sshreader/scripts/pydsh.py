@@ -1,4 +1,3 @@
-#!/usr/bin/env python -u
 # coding=utf-8
 """ A Pythonic implementation of pdsh powered by sshreader
 """
@@ -138,7 +137,7 @@ def validate_hostlist(ctx, param, value):
 @click.option('--hostlist', '-w', metavar='EXPR', required=True, callback=validate_hostlist,
               help='Hostlist expression')
 @click.option('--username', '-u', help='Override ssh username')
-@click.option('--keyfile', '-k', type=click.Path(exists=True, dir_okay=False), help='Override ssh key')
+@click.option('--keyfile', '-k', type=click.Path(exists=True, dir_okay=False), help='Private key file')
 @click.option('--keypass', '-K', is_flag=True, help='Prompt for private key password')
 @click.option('--prompt', '-p', is_flag=True, help='Prompt for ssh password')
 @click.option('--password', '-P', help='Supply ssh password')
@@ -149,7 +148,7 @@ def validate_hostlist(ctx, param, value):
 @click.option('--verbose', '-v', count=True, help='Increase debug verbosity')
 @click.option('--redline', is_flag=True, help='Run pydsh faster')
 @click.option('--port', default=22, help='SSH Port')
-@click.argument('cmd', nargs=1, required=True)
+@click.argument('cmd', nargs=1)
 def cli(**kwargs):
     """  Run ssh commands in parallel across hosts
     """
