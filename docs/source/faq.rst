@@ -1,5 +1,3 @@
-.. faq documentation master file, created by Jesse Almanrode
-
 FAQ
 ===
 

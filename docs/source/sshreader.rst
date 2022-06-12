@@ -1,5 +1,3 @@
-.. sshreader documentation master file, created by Jesse Almanrode
-
 sshreader API
 =============
 

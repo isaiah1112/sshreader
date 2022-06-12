@@ -1,5 +1,3 @@
-.. getting started documentation master file, created by Jesse Almanrode
-
 Getting Started
 ===============
 

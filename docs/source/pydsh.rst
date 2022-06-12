@@ -1,5 +1,3 @@
-.. pydsh documentation master file, created by Jesse Almanrode
-
 pydsh
 =====
 
