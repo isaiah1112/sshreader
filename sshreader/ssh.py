@@ -36,7 +36,7 @@ def envvars() -> EnvVars:
     :rtype: :class:`typing.NamedTuple`
     """
     global log
-    env = {'username': None, 'id_rsa': None, 'id_dsa': None, 'id_ecdsa': None, 'agent_keys': None}
+    env = {'username': None, 'rsa_key': None, 'dsa_key': None, 'ecdsa_key': None, 'agent_keys': None}
     user_home = os.getenv('HOME', '~')
     if user_home == '~':
         user_home = os.path.expanduser('~')
