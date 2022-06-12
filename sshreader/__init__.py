@@ -19,7 +19,7 @@
 # For backwards compatibility
 from .ssh import SSH, envvars
 from .types import Command, EnvVars, Timeout, TimeoutTuple
-from .utils import ServerJob, Hook, sshread, echo, cpusoftlimit, cpuhardlimit, threadlimit, shell_command
+from .utils import ServerJob, Hook, sshread, echo, cpu_limit, shell_command
 import logging
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
