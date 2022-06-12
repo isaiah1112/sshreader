@@ -36,7 +36,7 @@ log = logging.getLogger('sshreader')
 lockobj = None
 
 
-def shell_command(command: str, combine: bool = False, decodebytes: bool = True) -> Command:
+def shell_command(command: str, combine: bool = False, decode_bytes: bool = True) -> Command:
     """Run a command in the shell on localhost and return the output.  This attempts to be a simplified wrapper
     for subprocess.run
 
@@ -44,22 +44,22 @@ def shell_command(command: str, combine: bool = False, decodebytes: bool = True)
     :type command: str, required
     :param combine: Direct stderr to stdout (Default: False)
     :type combine: bool, optional
-    :param decodebytes: Decode bytes objects to unicode strings (Default: True)
-    :type decodebytes: bool, optional
+    :param decode_bytes: Decode bytes objects to unicode strings (Default: True)
+    :type decode_bytes: bool, optional
     :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
     :rtype: Command
     :raises: None
     """
     if combine:
         sp_output = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        if decodebytes:
+        if decode_bytes:
             result = Command(cmd=command, stdout=sp_output.stdout.decode(), stderr=None,
                              return_code=sp_output.returncode)
         else:
             result = Command(cmd=command, stdout=sp_output.stdout, stderr=None, return_code=sp_output.returncode)
     else:
         sp_output = subprocess.run(command, shell=True, capture_output=True)
-        if decodebytes:
+        if decode_bytes:
             result = Command(cmd=command, stdout=sp_output.stdout.decode(), stderr=sp_output.stderr.decode(),
                              return_code=sp_output.returncode)
         else:
@@ -69,7 +69,8 @@ def shell_command(command: str, combine: bool = False, decodebytes: bool = True)
 
 
 class Hook(object):
-    """ Custom class for pre and post hooks
+    """ Custom class for creating "Hooks" that can execute code before of after a ServerJob object executes and
+    can evn act on the data of a ServerJob when it is passed as the first argument to the Hook object.
 
     :param target: Function to call when using the hook
     :type target: func, required
@@ -105,7 +106,7 @@ class Hook(object):
         :type kwargs: dict, optional
         :return: Result from :obj:`target` function
         """
-        # I perform the following actions this way specifically so I don't "update" the pre-defined args and kwargs
+        # I perform the following actions this way specifically, so I don't "update" the pre-defined args and kwargs
         # in the Hook object.
         args = self.args + list(args)
         kwargs = dict(list(self.kwargs.items()) + list(kwargs.items()))
@@ -129,18 +130,18 @@ class ServerJob(object):
     :type password: str, optional
     :param keyfile: Path to ssh private key
     :type keyfile: str, optional
-    :param keypass: Password for private ssh key file
-    :type keypass: str, optional
+    :param key_pass: Password for private ssh key file
+    :type key_pass: str, optional
     :param ssh_port: Integer of SSH Port to use (Default: 22)
     :type ssh_port: int
     :param timeout: Tuple of timeouts in seconds (TCP timeout, SSH Timeout)
     :type timeout: tuple, optional
-    :param runlocal: Run job on localhost without opening SSH connection (Default: False)
-    :type runlocal: bool, optional
-    :param prehook: Hook object
-    :type prehook: :class:`Hook`, optional
-    :param posthook: Hook object
-    :type posthook: :class:`Hook`, optional
+    :param run_local: Run job on localhost without opening SSH connection (Default: False)
+    :type run_local: bool, optional
+    :param pre_hook: Hook object
+    :type pre_hook: :class:`Hook`, optional
+    :param post_hook: Hook object
+    :type post_hook: :class:`Hook`, optional
     :param combine_output: Combine stdout and stderr (Default: False)
     :type combine_output: bool, optional
 
@@ -148,19 +149,19 @@ class ServerJob(object):
     :property status: Sum of return codes for entire job (255 = ssh did not connect)
     """
     def __init__(self, fqdn: str, cmds: Union[list, tuple, str], username: Optional[str] = None,
-                 password: Optional[str] = None, keyfile: Optional[str] = None, keypass: Optional[str] = None,
-                 timeout: Optional[TimeoutTuple] = (0.5, 30), runlocal: bool = False,
-                 prehook: Optional[Hook] = None, posthook: Optional[Hook] = None,
+                 password: Optional[str] = None, keyfile: Optional[str] = None, key_pass: Optional[str] = None,
+                 timeout: Optional[TimeoutTuple] = (0.5, 30), run_local: bool = False,
+                 pre_hook: Optional[Hook] = None, post_hook: Optional[Hook] = None,
                  combine_output: bool = False, ssh_port: int = 22) -> None:
         self.name = str(fqdn)
         self.results = list()
         self.username = username
         self.password = password
         self.key = keyfile
-        self.keypass = keypass
+        self.key_pass = key_pass
         self.status = 0
         self.combine_output = combine_output
-        self.runlocal = runlocal
+        self.run_local = run_local
         self.ssh_port = ssh_port
         if isinstance(cmds, (list, tuple)):
             self.cmds = cmds
@@ -169,26 +170,26 @@ class ServerJob(object):
         if isinstance(timeout, (tuple, list)):
             if len(timeout) != 2:
                 raise ValueError('<timeout> requires two integer or float values')
-            self.sshtimeout = timeout[0]
-            self.cmdtimeout = timeout[1]
+            self.ssh_timeout = timeout[0]
+            self.cmd_timeout = timeout[1]
         else:
-            self.sshtimeout = timeout
-            self.cmdtimeout = timeout
-        if prehook:
-            if isinstance(prehook, Hook):
-                self.prehook = prehook
+            self.ssh_timeout = timeout
+            self.cmd_timeout = timeout
+        if pre_hook:
+            if isinstance(pre_hook, Hook):
+                self.pre_hook = pre_hook
             else:
-                raise TypeError('prehook should be of type: ' + str(Hook))
+                raise TypeError('pre_hook should be of type: ' + str(Hook))
         else:
-            self.prehook = prehook
-        if posthook:
-            if isinstance(posthook, Hook):
-                self.posthook = posthook
+            self.pre_hook = pre_hook
+        if post_hook:
+            if isinstance(post_hook, Hook):
+                self.post_hook = post_hook
             else:
                 raise TypeError('posthook should be of type: ' + str(Hook))
         else:
-            self.posthook = posthook
-        if runlocal:
+            self.post_hook = post_hook
+        if run_local:
             self._conn = 'localhost'
         elif not keyfile and len(paramiko.Agent().get_keys()) == 0:
             if not all([username, password]):
@@ -201,52 +202,52 @@ class ServerJob(object):
         :rtype: int
         """
         log.info('%s: starting ServerJob' % (self.name,))
-        if self.runlocal:
-            if self.prehook:
+        if self.run_local:
+            if self.pre_hook:
                 log.debug('%s: running prehook' % (self.name,))
-                self.prehook.run(self)
+                self.pre_hook.run(self)
             for cmd in self.cmds:
                 result = shell_command(cmd, combine=self.combine_output)
                 log.debug('%s: %s' % (self.name, str(result)))
                 self.results.append(result)
                 self.status += result.return_code
-            if self.posthook:
+            if self.post_hook:
                 log.debug('%s; running posthook' % (self.name,))
-                self.posthook.run(self)
+                self.post_hook.run(self)
         else:
-            if self.prehook and self.prehook.ssh_established is False:
+            if self.pre_hook and self.pre_hook.ssh_established is False:
                 log.debug('%s: running prehook' % (self.name,))
-                self.prehook.run(self)
+                self.pre_hook.run(self)
             try:
                 self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
                                  port=self.ssh_port, connect=False)
-                self._conn.connect(timeout=self.sshtimeout)
+                self._conn.connect(timeout=self.ssh_timeout)
                 log.debug('%s: ssh connection established' % (self.name,))
             except Exception as errorMsg:
                 log.debug(str(errorMsg))
                 self.status = 255
                 self.results.append(str(errorMsg))
             else:
-                if self.prehook and self.prehook.ssh_established:
+                if self.pre_hook and self.pre_hook.ssh_established:
                     log.debug('%s: running prehook' % (self.name,))
-                    self.prehook.run(self)
+                    self.pre_hook.run(self)
                 for cmd in self.cmds:
                     try:
-                        result = self._conn.ssh_command(cmd, timeout=self.cmdtimeout, combine=self.combine_output)
+                        result = self._conn.ssh_command(cmd, timeout=self.cmd_timeout, combine=self.combine_output)
                     except Exception as errorMsg:
                         result = Command(cmd, '', str(errorMsg), 54)
                     log.debug('%s: %s' % (self.name, str(result)))
                     self.results.append(result)
                     self.status += result.return_code
-                if self.posthook and self.posthook.ssh_established:
+                if self.post_hook and self.post_hook.ssh_established:
                     log.debug('%s; running posthook' % (self.name,))
-                    self.posthook.run(self)
+                    self.post_hook.run(self)
                 self._conn.close()
             finally:
                 self._conn = None  # So the ssh connection can be pickled!
-            if self.posthook and self.posthook.ssh_established is False:
+            if self.post_hook and self.post_hook.ssh_established is False:
                 log.debug('%s; running posthook' % (self.name,))
-                self.posthook.run(self)
+                self.post_hook.run(self)
         log.info('%s: exiting ServerJob' % (self.name,))
         return self.status
 
@@ -367,7 +368,7 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
             threads.append(thread)
     else:
         # Found this while digging around the multiprocessing API.
-        # This might help some of the pickling errors when working with ssh
+        # This might help some pickling errors when working with ssh
         mpctx.allow_connection_pickling()
 
         # Adjust number of sub-processes to spawn.
@@ -388,12 +389,13 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
 
         log.info(u'spawning %d processes' % (pcount, ))
         for pid in range(pcount):
-            pid = mpctx.Process(target=_sub_process_, args=(task_queue, result_queue, item_counter, tcount, progress_bar),
+            pid = mpctx.Process(target=_sub_process_,
+                                args=(task_queue, result_queue, item_counter, tcount, progress_bar),
                                 daemon=True)
             pid.start()
             pids.append(pid)
 
-    # Non blocking way to wait for threads/processes
+    # Non-blocking way to wait for threads/processes
     log.debug('main waiting for %d ServerJobs to finish' % (totaljobs,))
     while result_queue.full() is False:
         if progress_bar:
