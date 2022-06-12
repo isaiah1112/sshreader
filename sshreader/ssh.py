@@ -25,6 +25,7 @@ from typing import Any, Optional
 from .types import Command, EnvVars, Timeout
 log = logging.getLogger('sshreader')
 
+
 def envvars() -> EnvVars:
     """ Attempt to determine the current username and location of any ssh private keys.
     If any value is unable to be determined it is returned as 'None'.
@@ -35,15 +36,12 @@ def envvars() -> EnvVars:
     :rtype: :class:`typing.NamedTuple`
     """
     global log
-    env = dict(username=None, agent_keys=None, rsa_key=None, dsa_key=None, ecdsa_key=None)
+    env = {'username': None, 'id_rsa': None, 'id_dsa': None, 'id_ecdsa': None, 'agent_keys': None}
     user_home = os.getenv('HOME', '~')
     if user_home == '~':
         user_home = os.path.expanduser('~')
     try:
-        if os.getlogin() == getuser():
-            env['username'] = getuser()
-        else:
-            log.warning('Unable to reliably determine logged in user.')
+        env['username'] = getuser()
     except OSError:  # Running in a container or inside an IDE, let's take our best guess based on your $HOME
         env['username'] = user_home.split('/').pop()
     if os.path.exists(user_home + "/.ssh"):
@@ -74,7 +72,7 @@ class SSH(object):
     :type keypass: str, optional
     :param port: SSH port (Default: 22)
     :type port: int, optional
-    :param connect: Initiate the connect on object initialization (Default: True)
+    :param connect: Initiate ssh connection on object initialization (Default: True)
     :type connect: bool, optional
     :param rsa_sha2: Enable/Disable RSA w/SHA2 hashes (Default: True)
     :type rsa_sha2: bool, optional
@@ -127,28 +125,27 @@ class SSH(object):
             raise paramiko.SSHException("connection to %s not established" % (self.host,))
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         try:
-            result = sftp.put(os.path.expanduser(srcfile), os.path.expanduser(dstfile), confirm=True)
+            result = sftp.put(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
         finally:
             sftp.close()
         return result
 
-    def sftp_get(self, srcfile: str, dstfile: str) -> Any:
+    def sftp_get(self, srcfile: str, dstfile: str) -> None:
         """ Use the SFTP subsystem of OpenSSH to copy a remote file to the localhost
 
         :param srcfile: Path to the remote file
         :type srcfile: str, required
         :param dstfile: Path to the local file
         :type dstfile: str, required
-        :return: Result of :meth:`paramiko.SFTPClient.get()`
+        :return: None
         """
         if not self.__alive():
             raise paramiko.SSHException("connection to %s not established" % (self.host,))
         sftp = paramiko.SFTPClient.from_transport(self._connection.get_transport())
         try:
-            result = sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
+            sftp.get(os.path.expanduser(srcfile), os.path.expanduser(dstfile))
         finally:
             sftp.close()
-        return result
 
     def ssh_command(self, command: str, timeout: Timeout = 30, combine: bool = False,
                     decodebytes: bool = True) -> Command:
@@ -222,14 +219,14 @@ class SSH(object):
     def connect(self, timeout: Timeout = 0.5) -> bool:
         """Opens an SSH Connection
 
-        :param timeout: TCP Timeout in seconds (Defualt: 0.5)
+        :param timeout: TCP Timeout in seconds (Default: 0.5)
         :type timeout: int or float, optional
         :return: True
         :rtype: bool
         :raises: :class:`paramiko.SSHException`
         """
         if self.__alive():
-            raise paramiko.SSHException("connection to % already established" % (self.host, ))
+            raise paramiko.SSHException("connection to %s already established" % (self.host, ))
         paramiko.util.logging.getLogger().setLevel(logging.CRITICAL)  # Keeping paramiko from logging errors to stdout
         if not self.keyfile:
             if len(paramiko.Agent().get_keys()) == 0:
@@ -238,19 +235,19 @@ class SSH(object):
         if self.keyfile:
             if self.rsa_sha2:
                 self._connection.connect(self.host, port=self.port, username=self.username, password=self.keypass,
-                                        key_filename=self.keyfile, timeout=timeout, look_for_keys=False)
+                                         key_filename=self.keyfile, timeout=timeout, look_for_keys=False)
             else:
                 # While this is more insecure, it is required for pre-OpenSSH 8.8 servers
                 # For more info, visit: https://www.paramiko.org/changelog.html#2.9.0
                 self._connection.connect(self.host, port=self.port, username=self.username, password=self.keypass,
-                                        key_filename=self.keyfile, timeout=timeout, look_for_keys=False, 
-                                        disabled_algorithms={'pubkeys': ['rsa-sha2-256', 'rsa-sha2-512']})
+                                         key_filename=self.keyfile, timeout=timeout, look_for_keys=False,
+                                         disabled_algorithms={'pubkeys': ['rsa-sha2-256', 'rsa-sha2-512']})
         else:
             self._connection.connect(self.host, port=self.port, username=self.username, password=self.password,
                                      timeout=timeout, look_for_keys=False)
         return True
 
-    # Privatizing some of the functions so SSH can be subclassed
+    # Privatizing some functions so SSH can be subclassed
     __alive = alive
     __connect = connect
     __close = close
