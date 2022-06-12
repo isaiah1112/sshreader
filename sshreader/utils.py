@@ -32,8 +32,6 @@ from .types import Command, TimeoutTuple
 
 # Globals
 mpctx = multiprocessing.get_context('spawn')  # Forcing the forking type to spawn in older versions of Python3
-__cpuhardlimitfactor__ = 3
-__threadlimitfactor__ = 2
 log = logging.getLogger('sshreader')
 lockobj = None
 
@@ -259,37 +257,22 @@ class ServerJob(object):
         return self.__dict__[item]
 
 
-def cpusoftlimit() -> int:
-    """ Using the cpu count, determine number of processes the script is allowed to spawn
+def cpu_limit(factor: int = 1) -> int:
+    """ Using the cpu count, determine number of processes/threads the script is allowed to spawn.
 
-    :return: Result of :meth:`mpctx.cpu_count()` or 1, whichever is greater
+    :param factor: Number of processes/threads to allow per CPU (Default: 1)
+    :type factor: int
+    :return: Number of processes/threads you can safely spawn
     :rtype: int
     """
+    global log
     cpu_count = mpctx.cpu_count()
+    if factor > 2:
+        log.warning('Specifying a CPU factor greater than 2 can result in an unusable system.')
     if cpu_count > 1:
-        return cpu_count - 1
+        return cpu_count * factor
     else:
         return cpu_count
-
-
-def cpuhardlimit() -> int:
-    """ Return the maximum number of sub-processes your system is allowed to spawn.
-
-    :return: cpusoftlimit() * __cpuhardlimitfactor__
-    :rtype: int
-    """
-    global __cpuhardlimitfactor__
-    return cpusoftlimit() * __cpuhardlimitfactor__
-
-
-def threadlimit() -> int:
-    """ Return the maximum number of threads each process is allowed to spawn.  The idea here is to not overload a system.
-
-    :return: cpu_count() * __threadlimitfactor__
-    :rtype: int
-    """
-    global __threadlimitfactor__
-    return mpctx.cpu_count() * __threadlimitfactor__
 
 
 def echo(*args, **kwargs) -> None:
@@ -317,9 +300,9 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
 
     :param serverjobs: List of ServerJob objects
     :type serverjobs: list, required
-    :param pcount: Number of sub-processes to spawn (None = off, 0 = cpusoftlimit, -1 = cpuhardlimit)
+    :param pcount: Number of sub-processes to spawn (None = off, 0 = cpu_limit(), -1 = cpu_limit(2)
     :type pcount: int, required
-    :param tcount: Number of threads to spawn (None = off, 0 = threadlimit)
+    :param tcount: Number of threads to spawn (None = off, 0 = cpu_limit())
     :type tcount: int, required
     :param progress_bar: Print a progress bar (Default: False)
     :type progress_bar: bool, optional
@@ -371,7 +354,7 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
     if pcount is None:
         # Limit the number of threads to spawn
         if tcount == 0:
-            tcount = int(min(totaljobs, threadlimit()))
+            tcount = int(min(totaljobs, cpu_limit()))
         else:
             tcount = int(min(tcount, totaljobs))
 
@@ -389,19 +372,16 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
 
         # Adjust number of sub-processes to spawn.
         if pcount == 0:
-            pcount = cpusoftlimit()
+            pcount = cpu_limit()
         elif pcount < 0:
-            pcount = cpuhardlimit()
+            pcount = cpu_limit(2)
         pcount = int(min(pcount, totaljobs))
-
-        if pcount > cpuhardlimit():
-            raise ValueError('CPUHardLimit exceeded: %d > %d' % (pcount, cpuhardlimit()))
 
         if tcount is None:
             tcount = 0
         else:
             if tcount == 0:
-                tcount = int(min(totaljobs // pcount, threadlimit()))
+                tcount = int(min(totaljobs // pcount, cpu_limit()))
             if tcount < 2:
                 # If we don't have enough jobs to spawn more than 1 thread per process, then we won't spawn threads
                 tcount = 0
