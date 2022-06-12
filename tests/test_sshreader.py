@@ -68,10 +68,10 @@ class TestMisc(unittest.TestCase):
     def test_bytes(self):
         """ Test to ensure that result is a bytes string type
         """
-        result = sshreader.shell_command('uname -a', decodebytes=False)
+        result = sshreader.shell_command('uname -a', decode_bytes=False)
         self.assertEqual(result.return_code, 0)
         self.assertIsInstance(result.stdout, bytes)
-        result = sshreader.shell_command('uname -a', combine=True, decodebytes=False)
+        result = sshreader.shell_command('uname -a', combine=True, decode_bytes=False)
         self.assertEqual(result.return_code, 0)
         self.assertIsInstance(result.stdout, bytes)
         pass
@@ -106,7 +106,7 @@ class TestSSH(unittest.TestCase):
         """
         global ssh_data
         conn = sshreader.SSH(ssh_data['host_fqdn'], port=ssh_data['host_port'], username=ssh_data['ssh_user'],
-                           password=ssh_data['ssh_password'], connect=False)
+                             password=ssh_data['ssh_password'], connect=False)
         self.assertFalse(conn.alive())
         conn.reconnect()
         self.assertTrue(conn.alive())
@@ -166,12 +166,12 @@ class TestSshreader(unittest.TestCase):
         post = sshreader.Hook(my_hook, args=['post'])
         jobs = list()
         for x in range(size):
-            x = sshreader.ServerJob(ssh_data['host_fqdn'], ['sleep 1', 'echo done'], prehook=pre, posthook=post,
+            x = sshreader.ServerJob(ssh_data['host_fqdn'], ['sleep 1', 'echo done'], pre_hook=pre, post_hook=post,
                                     username=ssh_data['ssh_user'], password=ssh_data['ssh_password'],
                                     ssh_port=ssh_data['host_port'])
             jobs.append(x)
         for x in range(size):
-            jobs.append(sshreader.ServerJob('local-' + str(x), ['sleep 1', 'echo done'], runlocal=True))
+            jobs.append(sshreader.ServerJob('local-' + str(x), ['sleep 1', 'echo done'], run_local=True))
         return jobs
 
     def test_Hook_creation(self):
@@ -196,7 +196,7 @@ class TestSshreader(unittest.TestCase):
         global ssh_data
         pre = sshreader.Hook(my_hook, args=['pre'])
         post = sshreader.Hook(my_hook, args=['post'])
-        job = sshreader.ServerJob(ssh_data['host_fqdn'], 'echo foo', prehook=pre, posthook=post,
+        job = sshreader.ServerJob(ssh_data['host_fqdn'], 'echo foo', pre_hook=pre, post_hook=post,
                                   username=ssh_data['ssh_user'], password=ssh_data['ssh_password'],
                                   ssh_port=ssh_data['host_port'])
         self.assertIsInstance(job, sshreader.ServerJob)
@@ -229,17 +229,11 @@ class TestSshreader(unittest.TestCase):
             self.assertEqual(x.status, 0, msg=x.results)
         pass
 
-    def test_cpulimits(self):
-        """ Ensure the cpulimit methods
+    def test_cpu_limit(self):
+        """ Ensure the cpu_limit methods
         """
-        self.assertIsInstance(sshreader.utils.cpusoftlimit(), int)
-        self.assertIsInstance(sshreader.utils.cpuhardlimit(), int)
-        pass
-
-    def test_threadlimits(self):
-        """ Ensure the threadlimit method
-        """
-        self.assertIsInstance(sshreader.utils.threadlimit(), int)
+        self.assertIsInstance(sshreader.utils.cpu_limit(), int)
+        self.assertIsInstance(sshreader.utils.cpu_limit(2), int)
         pass
 
 
