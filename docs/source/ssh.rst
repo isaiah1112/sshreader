@@ -1,5 +1,3 @@
-.. ssh documentation master file, created by Jesse Almanrode
-
 ssh API
 =======
 

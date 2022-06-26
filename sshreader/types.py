@@ -1,5 +1,5 @@
 # coding=utf-8
-"""A Python Package for parallelizing ssh connections via threading and multiprocessing.
+""" Typing module for sshreader
 """
 # Copyright (C) 2015-2022 Jesse Almanrode
 #
@@ -15,19 +15,23 @@
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+from typing import NamedTuple, Optional, Union, Tuple
 
-# For backwards compatibility
-from .ssh import SSH, envvars
-from .types import Command, EnvVars, Timeout, TimeoutTuple
-from .utils import ServerJob, Hook, sshread, echo, cpu_limit, shell_command
-import logging
 
-__author__ = 'Jesse Almanrode (jesse@almanrode.com)'
-__all__ = ['ssh', 'types', 'utils']
+class Command(NamedTuple):
+    cmd: str
+    stdout: Optional[Union[str, bytes]]
+    stderr: Optional[Union[str, bytes]]
+    return_code: int
 
-log = logging.getLogger(__name__)
-log_handler = logging.StreamHandler()
-log_handler.setFormatter(logging.Formatter('%(levelname)s:%(name)s.%(module)s.%(funcName)s:%(message)s'))
-log.addHandler(log_handler)
-log.setLevel(logging.WARNING)
-log.propagate = False  # Keeps our messages out of the root logger.
+
+class EnvVars(NamedTuple):
+    username: Optional[str]
+    agent_keys: Optional[list]
+    dsa_key: Optional[str]
+    ecdsa_key: Optional[str]
+    rsa_key: Optional[str]
+
+
+Timeout = Union[int, float]
+TimeoutTuple = Tuple[Timeout]

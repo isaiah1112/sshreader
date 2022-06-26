@@ -1,53 +1,35 @@
-.. testing documentation master file, created by Jesse Almanrode
+Local Testing
+=============
 
-Testing
-===============
-
-Locally Using Tox
------------------
-
-If you would like to test locally using :code:`tox`, simply add a :code:`test_params.json` to the :code:`tests` directory
-with the following parameters:
-
-.. code-block:: json
-
-    {"host_fqdn": "127.0.0.1",
-      "ssh_user": "jdoe",
-      "ssh_password": "password1234",
-      "ssh_key_path": "~/.ssh/id_rsa"
-    }
-
-Then, simply specify the python version you would like to test with:
+In order to make the testing/integration process as simple as possilbe, I utilize a custom `Docker Image`_ to run an ssh
+server.  To begin configuring your system for local testing, please `install Docker`_ first. After you have installed
+Docker and have it running, simply run the following command:
 
 .. code-block:: bash
 
-    tox -e py310  # Test Python3.10
-    tox -e py39  # Test Python3.9
-    tox -e py38  # Test Python3.8
-    tox -e py37  # Test Python3.7
-    tox -e py36  # Test Python3.6
+    make test
 
-Or to test all the above versions:
+This command pulls down the custom docker image, runs it on port :code:`22`, and then runs all the unit/integration
+tests.  If you would like to change which port this container runs on, simply export the :code:`SSH_PORT=<int>` environment
+variable prior to running :code:`make test` to whatever integer port you would like to map this container to.
 
-.. code-block:: bash
-
-    tox  # Will test py36, py37, py38, py39, py310
-
-Bitbucket Pipelines
--------------------
-
-SSHreader uses Docker within `Bitbucket Pipelines`_ to run the automated tests across the various versions of Python.  If you
-would like to use docker image used by :code:`sshreader` to run the openssh for local testing simply do the following:
+To clean up after running the tests (stopping external docker containers) run:
 
 .. code-block:: bash
 
-    docker run -rm --publish=22 isaiah1112/sshreader:latest
+    make test-clean
 
-Then you should be able to simply run:
+Testing Coverage
+----------------
+
+To generate a test coverage report, ensure all the requirements for running the unit/integration tests are installed and
+running and then simply run the following command:
 
 .. code-block:: bash
 
-    tox
+    make test-coverage
+
+Then, open the HTML files in your default browser using :code:`open htmlcov/index.html`!
 
 Indices and tables
 ------------------
@@ -59,4 +41,6 @@ Indices and tables
 * `JA Computing`_
 
 .. _JA Computing: http://www.jacomputing.net
+.. _Docker Image: https://hub.docker.com/repository/docker/isaiah1112/sshreader
+.. _install Docker: https://www.docker.com/get-started/
 .. _Bitbucket Pipelines: https://bitbucket.org/isaiah1112/sshreader/addon/pipelines/home#!/

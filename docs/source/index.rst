@@ -1,8 +1,3 @@
-.. sshreader documentation master file, created by
-   sphinx-quickstart on Wed Oct 28 15:25:15 2015.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 .. _sshreader:
 
 sshreader Package
@@ -26,12 +21,12 @@ Threads vs. Processes vs. (Processes and Threads)
 To use multi-threading to parallelize jobs either set **tcount** to 0 or to the number of threads you wish to spawn.
 If the number of jobs is less than the number of threads you requested sshreader will adjust accordingly.  If **tcount**
 is set to 0 then the number of threads spawned will either equal the number of jobs passed to the :code:`sshreader.sshread()`
-method or the number returned from :code:`threadlimit()`, whichever is smaller.
+method or the number returned from :code:`cpu_limit()`, whichever is smaller.
 
 To use multi-processing to parallelize jobs either set **pcount** to 0 or to the number of processes you wish to spawn.
 If the number of jobs is less than the number of processes you requested sshreader will adjust accordingly.  If
-**pcount** is set to 0 then the number of processes spawned will equal :code:`cpusoftlimit()`.  If **pcount**
-is set to -1 then the number of processes spawned will equal the :code:`cpuhardlimit()`.
+**pcount** is set to 0 then the number of processes spawned will equal :code:`cpu_limit()`.  If **pcount**
+is set to -1 then the number of processes spawned will equal the :code:`cpu_limit(2)`.
 
 When using **pcount** and **tcount** in conjunction, **tcount** will equal the total number of threads each process is
 allowed to spawn.  Sshreader will automatically adjust the number of processes and number of threads in order to make
@@ -42,8 +37,13 @@ sshreader will adjust those numbers down automatically. Generally though, the to
 
 .. code:: Python
 
-    total_processes = sshreader.cpusoftlimit()
-    total_threads = min(len(jobs) // total_processes, threadlimit())
+    total_processes = sshreader.cpu_limit()
+    total_threads = min(len(jobs) // total_processes, cpu_limit())
+
+.. warning::
+
+   In version 5.0 of :code:`sshreader` there is no mechanism to prevent a user from spawning as many processes as
+they would like.  Keep in mind, spawning too many processes on your system may cause it to be unusable.
 
 Topics
 ------
@@ -71,7 +71,6 @@ Compatibility
 In order to maintain the widest range of compatibility, sshreader is currently tested using the following versions of
 Python:
 
-* Python3.6
 * Python3.7
 * Python3.8
 * Python3.9
