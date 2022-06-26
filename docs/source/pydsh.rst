@@ -7,8 +7,8 @@ can be used.
 
 .. warning::
 
-    With :code:`pydsh v1.3` I have moved away from the argparse module in favor of the `Click`_ module.  Some of the cli
-    flags have changed.
+    With :code:`pydsh v1.3` I have moved away from the :code:`argparse` module in favor of the `Click`_ module.  Some of
+    the cli flags have changed.
 
 Debugging
 ---------
@@ -22,7 +22,7 @@ which powers it.  There are 4 levels of debugging available to you:
 * debug + 3verbose = pydsh:DEBUG + sshreader:DEBUG
 
 Keep in mind that most people will probably only ever need the INFO levels of debugging.  DEBUG levels may generate a lot
-of output and are generally used to find issues within the script/module.
+of output and are generally used to find issues within the :code:`sshreader` package itself.
 
 Examples
 --------

@@ -3,7 +3,7 @@ Local Testing
 
 In order to make the testing/integration process as simple as possilbe, I utilize a custom `Docker Image`_ to run an ssh
 server.  To begin configuring your system for local testing, please `install Docker`_ first. After you have installed
-Docker and have the daemon running, simply run the following command:
+Docker and have it running, simply run the following command:
 
 .. code-block:: bash
 
