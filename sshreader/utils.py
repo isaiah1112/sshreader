@@ -322,7 +322,6 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
     if pcount is not None:
         assert isinstance(pcount, int)
     totaljobs = len(serverjobs)
-    printlock = mpctx.Lock()
     if logging.getLogger('sshreader').getEffectiveLevel() < 30 and progress_bar:
         log.info('logging enabled: disabling progress bar')
         progress_bar = False
@@ -426,7 +425,7 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
 
 
 def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress_bar):
-    """ Private method for managing multi-processing and spawning thread pools.
+    """ Private method for managing multiprocessing and spawning thread pools.
 
     DO NOT USE THIS METHOD!
     """
@@ -456,7 +455,7 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress
 
 
 def _sub_thread_(task_queue, result_queue, item_counter, progress_bar):
-    """ Private method for managing multi-processing and spawning thread pools.
+    """ Private method for managing multiprocessing and spawning thread pools.
 
     DO NOT USE THIS METHOD!
     """

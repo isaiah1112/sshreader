@@ -1,4 +1,4 @@
-.PHONY: docker-build docker-push docs install test test-clean test-coverage test-init
+.PHONY: docker docker-push docs install test test-clean test-coverage test-init
 
 DOCKER_TAG = $(shell git describe)
 DOCKER_CID = $(shell docker ps -q -f name=sshreader_test)
