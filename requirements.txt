@@ -2,6 +2,7 @@ click>=8.1.2
 colorama>=0.4.4
 coverage>=6.4
 discover>=0.4.0
+flake8>=5.0.4
 paramiko>=2.10.3
 progressbar2>=4.0.0
 python-hostlist>=1.21

@@ -1,4 +1,4 @@
-.PHONY: docker docker-push docs install test test-clean test-coverage test-init
+.PHONY: docker docker-push docs install test test-clean test-coverage test-init test-lint
 
 DOCKER_TAG = $(shell git describe)
 DOCKER_CID = $(shell docker ps -q -f name=sshreader_test)
@@ -38,3 +38,7 @@ test-init:
  			docker run -d -p 127.0.0.1:$(SSH_PORT):22 --name sshreader_test isaiah1112/sshreader:latest > /dev/null;\
  		fi\
  	fi
+
+test-lint: test-init
+	@flake8 sshreader/ --count --select=E9,F63,F7,F82 --show-source --statistics --exclude docs
+	@flake8 sshreader/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude docs
