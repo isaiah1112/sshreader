@@ -42,12 +42,21 @@ pipelines:
           - sshd
         caches:
           - pip
+    - step: &py311
+        name: Python 3.11 Tests
+        image: python:3.11.0rc2
+        script:
+          - python -m pip install -U -r requirements.txt
+          - python -m unittest discover tests/
+        caches:
+          - pip
   branches:
     release/*:
       - step: *py37
       - step: *py38
       - step: *py39
       - step: *py310
+      - step: *py311
       - step:
           name: Build Documentation
           script:
@@ -67,6 +76,7 @@ pipelines:
       - step: *py38
       - step: *py39
       - step: *py310
+      - step: *py311
       - step:
           name: Deploy To PyPi
           script:
