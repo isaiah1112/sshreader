@@ -44,7 +44,7 @@ pipelines:
           - pip
     - step: &py311
         name: Python 3.11 Tests
-        image: python:3.11.0rc2
+        image: python:3.11
         script:
           - python -m pip install -U -r requirements.txt
           - python -m unittest discover tests/
