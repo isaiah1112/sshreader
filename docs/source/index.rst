@@ -42,8 +42,8 @@ sshreader will adjust those numbers down automatically. Generally though, the to
 
 .. warning::
 
-   In version 5.0 of :code:`sshreader` there is no mechanism to prevent a user from spawning as many processes as
-they would like.  Keep in mind, spawning too many processes on your system may cause it to be unusable.
+    In version 5.0 of :code:`sshreader` there is no mechanism to prevent a user from spawning as many processes as
+    they would like.  Keep in mind, spawning too many processes on your system may cause it to be unusable.
 
 Topics
 ------
@@ -75,6 +75,7 @@ Python:
 * Python3.8
 * Python3.9
 * Python3.10
+* Python3.11
 
 .. note::
 

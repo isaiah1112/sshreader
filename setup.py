@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(name='sshreader',
-                 version='4.9.2',
+                 version='5.0.0',
                  author='Jesse Almanrode',
                  author_email='jesse@almanrode.com',
                  description='Multi-threading/processing wrapper for Paramiko',
@@ -38,6 +38,7 @@ setuptools.setup(name='sshreader',
                      'Programming Language :: Python :: 3.8',
                      'Programming Language :: Python :: 3.9',
                      'Programming Language :: Python :: 3.10',
+                     'Programming Language :: Python :: 3.11',
                      'Topic :: Software Development :: Libraries',
                      'Topic :: Software Development :: Libraries :: Python Modules',
                  ],
