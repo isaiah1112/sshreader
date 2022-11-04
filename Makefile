@@ -1,6 +1,6 @@
 .PHONY: docker docker-push docs install test test-clean test-coverage test-init test-lint
 
-DOCKER_TAG = $(shell git describe)
+DOCKER_TAG = $(shell git describe --tags)
 DOCKER_CID = $(shell docker ps -q -f name=sshreader_test)
 
 docker:
@@ -39,6 +39,7 @@ test-init:
  		fi\
  	fi
 
-test-lint: test-init
+test-lint:
+	@python -m pip install -U -r requirements.txt
 	@flake8 sshreader/ --count --select=E9,F63,F7,F82 --show-source --statistics --exclude docs
 	@flake8 sshreader/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude docs
