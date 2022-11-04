@@ -48,6 +48,8 @@ pipelines:
         script:
           - python -m pip install -U -r requirements.txt
           - python -m unittest discover tests/
+        services:
+          - sshd
         caches:
           - pip
   branches:
