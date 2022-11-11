@@ -1,5 +1,3 @@
-.. getting started documentation master file, created by Jesse Almanrode
-
 Getting Started
 ===============
 
@@ -21,7 +19,7 @@ the following in your terminal
 
     pip install --upgrade sshreader
 
-Contratulations!  You are now ready to begin working with sshreader!
+Congratulations!  You are now ready to begin working with sshreader!
 
 Working With SSH Objects
 ------------------------

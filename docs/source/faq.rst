@@ -1,5 +1,3 @@
-.. faq documentation master file, created by Jesse Almanrode
-
 FAQ
 ===
 
@@ -7,31 +5,26 @@ Why are my print statements funky?
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Often times with multiprocessing print statements come out funky because multiple processes are writing to
-:code:`sys.stdout` at the same time.  One of the ways you can deal with this is by implementing a
-`multiprocessing.Lock()`_.  An example of how to use the lock in a pre or post hook is shown below:
+:code:`sys.stdout` at the same time.  One of the ways you can deal with this is by using the built-in
+:code:`sshreader.echo` method and passing :code:`print_lock=True` to the :code:`sshreader.sshread` method:
 
 .. code-block:: python
 
-    from multiprocessing import Lock
-    # Make the Lock object global so all child processes can use it
-    _print_lock_ = Lock()
+    from sshreader import echo, ServerJob, sshread, Hook
 
-    def my_hook(*args):
-        """ Process safe print for pre/post hook
+    def print_name(job):
+        # You will need to ensure you accept at least one arg since
+        # the ServerJob will be passed to your hook
+        echo(job.name)
 
-        :param args: Tuple of ( *args, <ServerJob> )
-        :return: None
-        """
-        global _print_lock_
-        thisjob = list(args).pop()
-        with _print_lock_:
-            print(str(thisjob.name))
-        return None
 
-.. note::
-
-    After :code:`sshreader v3.2` you can also use the new :code:`sshreader.echo` method to automatically implement a
-    :code:`multiprocessing.Lock` on the fly.
+    # Create the function as a hook object
+    myhook = Hook(target=print_name)
+    # Create a ServerJob with a prehook
+    job = ServerJob('myhost.example.com',['uname -a', 'hostname', 'whoami'], username='jdoe', password='jdoe1',
+                    prehook=myhook)
+    # Now, run the job with print_lock enabled
+    sshread(job, pcount=1, print_lock=True)
 
 Where did my output go?
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -140,7 +133,7 @@ OpenSSH 8.8 and RSA SHA2
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
 In versions of OpenSSH 8.8 and later the default behavior is to not allow RSA keys with a SHA1 hash. While this is more secure, there are
-times when you may still need to allow thes for connections to older servers.  :code:`sshreader v4.9.0` and later support an easy flag to
+times when you may still need to allow these for connections to older servers.  :code:`sshreader v4.9.0` and later support an easy flag to
 enable/disable this functionality within `Paramiko`_. By default, sshreader will allow the SHA1 keys unless you specifically enable the SHA2
 support for RSA keys.
 

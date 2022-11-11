@@ -1,4 +1,3 @@
-#!/usr/bin/env python -u
 # coding=utf-8
 """ A Pythonic implementation of pdsh powered by sshreader
 """
@@ -26,7 +25,7 @@ import sshreader
 import sys
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '2.6.3'
+__version__ = '3.0.0'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
@@ -34,13 +33,6 @@ Examples:
     pydsh -u root -P Password123 -w host[1-3] "uname -r"
     pydsh -F -w host[01-10] myscript.sh
 """
-
-if sys.version_info[0] < 3:
-    print('Python2.x is no longer supported in this version of sshreader')
-    sys.exit(-1)
-elif sys.version_info[1] < 6:
-    print('Only Python 3.6 and later is supported in this version of sshreader')
-    sys.exit(-1)
 
 log = logging.getLogger(__name__)
 log_handler = logging.StreamHandler()
@@ -145,11 +137,10 @@ def validate_hostlist(ctx, param, value):
 @click.option('--hostlist', '-w', metavar='EXPR', required=True, callback=validate_hostlist,
               help='Hostlist expression')
 @click.option('--username', '-u', help='Override ssh username')
-@click.option('--keyfile', '-k', type=click.Path(exists=True, dir_okay=False), help='Override ssh key')
+@click.option('--keyfile', '-k', type=click.Path(exists=True, dir_okay=False), help='Private key file')
 @click.option('--keypass', '-K', is_flag=True, help='Prompt for private key password')
 @click.option('--prompt', '-p', is_flag=True, help='Prompt for ssh password')
 @click.option('--password', '-P', help='Supply ssh password')
-@click.option('--timeout', '-T', default=600, help='Timeout for ssh commands')
 @click.option('--dshbak', '-D', is_flag=True, help='Group output by host')
 @click.option('--coalesce', '-C', is_flag=True, help='Coalesce similar output from hosts')
 @click.option('--file', '-F', is_flag=True, help='Treat CMD as a script file')
@@ -157,7 +148,7 @@ def validate_hostlist(ctx, param, value):
 @click.option('--verbose', '-v', count=True, help='Increase debug verbosity')
 @click.option('--redline', is_flag=True, help='Run pydsh faster')
 @click.option('--port', default=22, help='SSH Port')
-@click.argument('cmd', nargs=1, required=True)
+@click.argument('cmd', nargs=1)
 def cli(**kwargs):
     """  Run ssh commands in parallel across hosts
     """
@@ -195,12 +186,12 @@ def cli(**kwargs):
     # By default, we prefer ssh keys
     if not kwargs['keyfile']:
         if any((sshenv.rsa_key, sshenv.dsa_key, sshenv.ecdsa_key)):
-            if sshenv.rsa_key:
-                kwargs['keyfile'] = sshenv.rsa_key
-                log.info('Using RSA private key file')
-            elif sshenv.ecdsa_key:
+            if sshenv.ecdsa_key:
                 kwargs['keyfile'] = sshenv.ecdsa_key
                 log.info('Using ECDSA private key file')
+            elif sshenv.rsa_key:
+                kwargs['keyfile'] = sshenv.rsa_key
+                log.info('Using RSA private key file')
             else:
                 kwargs['keyfile'] = sshenv.dsa_key
                 log.info('Using DSA private key file')
@@ -238,10 +229,10 @@ def cli(**kwargs):
     for host in kwargs['hostlist']:
         if kwargs['keyfile']:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
-                                      keypass=kwargs['keypass'], timeout=kwargs['timeout'], combine_output=True)
+                                      keypass=kwargs['keypass'], combine_output=True)
         else:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
-                                      timeout=kwargs['timeout'], combine_output=True)
+                                      combine_output=True)
         job.ssh_port = kwargs['port']
         if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
             job.posthook = posthook
@@ -251,9 +242,9 @@ def cli(**kwargs):
 
     if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
         if kwargs['redline']:
-            sshreader.sshread(jobs, pcount=0, tcount=0)
+            sshreader.sshread(jobs, pcount=0, tcount=0, print_lock=True)
         else:
-            sshreader.sshread(jobs, tcount=0)
+            sshreader.sshread(jobs, tcount=0, print_lock=True)
     else:
         if kwargs['redline']:
             jobs_finished = sshreader.sshread(jobs, pcount=0, tcount=0, progress_bar=True)
@@ -267,4 +258,5 @@ def cli(**kwargs):
 
 
 if __name__ == "__main__":
-    cli()
+    print('Please install pydsh by running: pip install sshreader')
+    sys.exit(1)

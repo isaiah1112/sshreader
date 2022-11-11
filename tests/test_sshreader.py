@@ -2,7 +2,6 @@
 # coding=utf-8
 """ Integration and Unit tests for sshreader Python Package
 """
-import json
 import os
 import sys
 import unittest
@@ -14,27 +13,28 @@ sys.path.append(project_root)
 import sshreader
 
 global ssh_data
-try:
-    # If you want to test locally simply create a test_params.json file like the dictionary below
-    params_file = open(project_root + '/tests/test_params.json')
-    ssh_data = json.load(params_file)
-except IOError:
-    # Defaults for testing with Docker!
-    ssh_data = {"host_fqdn": "127.0.0.1", "ssh_user": "sshreader", "ssh_password": "sunshine",
-                "ssh_key_path": project_root + "/tests/keys/id_rsa"}
+# Defaults for testing with Docker!
+ssh_data = {"host_fqdn": "127.0.0.1", "host_port": os.getenv('SSH_PORT', 22),
+            "ssh_user": "sshreader", "ssh_password": "sunshine",
+            "ssh_key_path": project_root + "/tests/keys/id_rsa"}
 
 
-class TestShellScript(unittest.TestCase):
-    """ Test Cases for the shell script portion of SSH module
+class TestMisc(unittest.TestCase):
+    """ Test Cases for miscellaneous functions of SSH module
     """
+
+    def test_env_variables(self):
+        """ Test envvars method"""
+        ssh_env = sshreader.envvars()
+        self.assertIsNotNone(ssh_env.username)
+        pass
 
     def test_shell_command(self):
         """ Test shell_command method
         """
         result = sshreader.shell_command('echo "foo"')
-        self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stdout, 'foo')
+        self.assertIn('foo', result.stdout)
         self.assertEqual(len(result.stderr), 0)
         pass
 
@@ -42,24 +42,38 @@ class TestShellScript(unittest.TestCase):
         """ Test combining stdout and stderr of shell_command method
         """
         result = sshreader.shell_command('echo "foo"; echo "bar" 1>&2', combine=True)
-        self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
+        self.assertIn('foo', result.stdout)
+        self.assertIn('bar', result.stdout)
+        self.assertEqual(result.stderr, None)
         pass
 
     def test_shell_command_stderr(self):
         """ Test stderr of shell_command method
         """
         result = sshreader.shell_command('echo "bar" 1>&2')
-        self.assertIsInstance(result, tuple)
         self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stderr, 'bar')
+        self.assertEqual(len(result.stdout), 0)
+        self.assertIn('bar', result.stderr)
         pass
 
     def test_decode_bytes(self):
         """ Test to ensure that result is a unicode string type
         """
-        result = sshreader.shell_command('uname -a', decodebytes=True)
+        result = sshreader.shell_command('uname -a')
+        self.assertEqual(result.return_code, 0)
         self.assertIsInstance(result.stdout, str)
+        pass
+
+    def test_bytes(self):
+        """ Test to ensure that result is a bytes string type
+        """
+        result = sshreader.shell_command('uname -a', decode_bytes=False)
+        self.assertEqual(result.return_code, 0)
+        self.assertIsInstance(result.stdout, bytes)
+        result = sshreader.shell_command('uname -a', combine=True, decode_bytes=False)
+        self.assertEqual(result.return_code, 0)
+        self.assertIsInstance(result.stdout, bytes)
         pass
 
 
@@ -67,83 +81,56 @@ class TestSSH(unittest.TestCase):
     """ Test cases for the SSH class
     """
 
-    def setUp(self):
-        """ Setup SSH connection
-        :return: Connection state conn.is_alive()
-        """
-        global ssh_data
-        self.conn = sshreader.SSH(ssh_data['host_fqdn'], username=ssh_data['ssh_user'],
-                                  password=ssh_data['ssh_password'], connect=False)
-        return self.conn.alive()
-
     def test_password(self):
         """ Test an SSH connection using a password
         """
-        self.conn.connect()
-        self.conn.alive()
-        self.assertTrue(self.conn.alive(), msg='ssh connection using password failed to: ' + ssh_data['host_fqdn'])
-        self.conn.close()
+        global ssh_data
+        with sshreader.SSH(ssh_data['host_fqdn'], port=ssh_data['host_port'], username=ssh_data['ssh_user'],
+                           password=ssh_data['ssh_password']) as conn:
+            self.assertTrue(conn.alive())
+            self.assertEqual(conn.ssh_command('uname').stdout, 'Linux')
         pass
 
     def test_keyfile(self):
         """ Test an SSH connection using an ssh key
         """
         global ssh_data
-        conn = sshreader.SSH(ssh_data['host_fqdn'], username=ssh_data['ssh_user'], keyfile=ssh_data['ssh_key_path'])
-        self.assertTrue(conn.alive(), msg='ssh connection using password failed to: ' + ssh_data['host_fqdn'])
+        with sshreader.SSH(ssh_data['host_fqdn'], port=ssh_data['host_port'], username=ssh_data['ssh_user'],
+                           keyfile=ssh_data['ssh_key_path']) as conn:
+            self.assertTrue(conn.alive())
+            self.assertEqual(conn.ssh_command('uname').stdout, 'Linux')
         pass
 
     def test_reconnect(self):
         """ Test re-opening an SSH connection
         """
-        self.assertFalse(self.conn.alive())
-        self.conn.reconnect()
-        self.assertTrue(self.conn.alive())
+        global ssh_data
+        conn = sshreader.SSH(ssh_data['host_fqdn'], port=ssh_data['host_port'], username=ssh_data['ssh_user'],
+                             password=ssh_data['ssh_password'], connect=False)
+        self.assertFalse(conn.alive())
+        conn.reconnect()
+        self.assertTrue(conn.alive())
+        conn.close()
         pass
 
     def test_command(self):
-        """ Test an ssh_command
+        """ Test commands over ssh
         """
-        self.assertFalse(self.conn.alive())
-        self.conn.connect()
-        result = self.conn.ssh_command('echo foo')
-        self.assertIsInstance(result, tuple)
-        self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stdout, 'foo')
-        pass
-
-    def test_command_stderr(self):
-        """ Test an ssh_command
-        """
-        self.assertFalse(self.conn.alive())
-        self.conn.connect()
-        result = self.conn.ssh_command('echo bar 1>&2')
-        self.assertIsInstance(result, tuple)
-        self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stderr, 'bar')
-        pass
-
-    def test_combine_output(self):
-        """ Test combining stdout and stderr of ssh_command
-        """
-        self.assertFalse(self.conn.alive())
-        self.conn.connect()
-        result = self.conn.ssh_command('echo foo; echo bar 1>&2;', combine=True)
-        self.assertIsInstance(result, tuple)
-        self.assertEqual(result.return_code, 0)
-        self.assertEqual(result.stdout, 'foo\r\nbar')
-        pass
-
-    def test_cmd_timeout(self):
-        """ Test handling of cmd timeout via SSH
-        """
-        if self.conn.alive() is False:
-            self.conn.connect()
-        self.assertTrue(self.conn.alive())
-        result = self.conn.ssh_command('sleep 5', timeout=2)
-        self.assertIsInstance(result, tuple)
-        self.assertEqual(result.return_code, 124)
-        self.assertIn('command timed out', result.stderr)
+        with sshreader.SSH(ssh_data['host_fqdn'], port=ssh_data['host_port'], username=ssh_data['ssh_user'],
+                           password=ssh_data['ssh_password']) as conn:
+            cmd = conn.ssh_command('uname')
+            self.assertEqual(cmd.stdout, 'Linux')
+            self.assertEqual(cmd.stderr, '')
+            cmd = conn.ssh_command('uname 1>&2')
+            self.assertEqual(cmd.stderr, 'Linux')
+            self.assertEqual(cmd.stdout, '')
+            cmd = conn.ssh_command('echo foo; echo bar 1>&2;', combine=True)
+            self.assertIn('foo', cmd.stdout)
+            self.assertIn('bar', cmd.stdout)
+            self.assertIsNone(cmd.stderr)
+            cmd = conn.ssh_command('sleep 5', timeout=2)
+            self.assertEqual(cmd.return_code, 124)
+            self.assertIn('command timed out', cmd.stderr)
         pass
 
 
@@ -179,11 +166,12 @@ class TestSshreader(unittest.TestCase):
         post = sshreader.Hook(my_hook, args=['post'])
         jobs = list()
         for x in range(size):
-            x = sshreader.ServerJob(ssh_data['host_fqdn'], ['sleep 1', 'echo done'], prehook=pre, posthook=post,
-                                    username=ssh_data['ssh_user'], password=ssh_data['ssh_password'])
+            x = sshreader.ServerJob(ssh_data['host_fqdn'], ['sleep 1', 'echo done'], pre_hook=pre, post_hook=post,
+                                    username=ssh_data['ssh_user'], password=ssh_data['ssh_password'],
+                                    ssh_port=ssh_data['host_port'])
             jobs.append(x)
         for x in range(size):
-            jobs.append(sshreader.ServerJob('local-' + str(x), ['sleep 1', 'echo done'], runlocal=True))
+            jobs.append(sshreader.ServerJob('local-' + str(x), ['sleep 1', 'echo done'], run_local=True))
         return jobs
 
     def test_Hook_creation(self):
@@ -197,7 +185,7 @@ class TestSshreader(unittest.TestCase):
         """ Test valid ServerJob creation
         """
         global ssh_data
-        job = sshreader.ServerJob(ssh_data['host_fqdn'], 'echo foo',
+        job = sshreader.ServerJob(ssh_data['host_fqdn'], 'echo foo', ssh_port=ssh_data['host_port'],
                                   username=ssh_data['ssh_user'], password=ssh_data['ssh_password'])
         self.assertIsInstance(job, sshreader.ServerJob)
         pass
@@ -208,8 +196,9 @@ class TestSshreader(unittest.TestCase):
         global ssh_data
         pre = sshreader.Hook(my_hook, args=['pre'])
         post = sshreader.Hook(my_hook, args=['post'])
-        job = sshreader.ServerJob(ssh_data['host_fqdn'], 'echo foo', prehook=pre, posthook=post,
-                                  username=ssh_data['ssh_user'], password=ssh_data['ssh_password'])
+        job = sshreader.ServerJob(ssh_data['host_fqdn'], 'echo foo', pre_hook=pre, post_hook=post,
+                                  username=ssh_data['ssh_user'], password=ssh_data['ssh_password'],
+                                  ssh_port=ssh_data['host_port'])
         self.assertIsInstance(job, sshreader.ServerJob)
         pass
 
@@ -240,17 +229,11 @@ class TestSshreader(unittest.TestCase):
             self.assertEqual(x.status, 0, msg=x.results)
         pass
 
-    def test_cpulimits(self):
-        """ Ensure the cpulimit methods
+    def test_cpu_limit(self):
+        """ Ensure the cpu_limit methods
         """
-        self.assertIsInstance(sshreader.utils.cpusoftlimit(), int)
-        self.assertIsInstance(sshreader.utils.cpuhardlimit(), int)
-        pass
-
-    def test_threadlimits(self):
-        """ Ensure the threadlimit method
-        """
-        self.assertIsInstance(sshreader.utils.threadlimit(), int)
+        self.assertIsInstance(sshreader.utils.cpu_limit(), int)
+        self.assertIsInstance(sshreader.utils.cpu_limit(2), int)
         pass
 
 
