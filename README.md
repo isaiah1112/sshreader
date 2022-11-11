@@ -2,7 +2,7 @@
 
 ## Overview
 
-[SSHreader][] is a Python Module for multi-processing/threading ssh connections in order to make ssh operations
+[SSHreader][] is a Python Module for multiprocessing/threading ssh connections in order to make ssh operations
 across multiple servers parallel.  It utilizes the [Paramiko](http://www.paramiko.org/) module for its ssh client.
 
 In order to maintain the widest range of compatibility, [SSHreader][] is currently tested using the following versions of
@@ -12,11 +12,12 @@ Python:
 * Python3.8
 * Python3.9
 * Python3.10
+* Python3.11
 
 ## License
 
-[SSHreader][] is released under the [GNU Lesser General Public License v3.0][],
-see the file LICENSE and LICESE.lesser for the license text.
+[SSHreader][] is released under [GNU Lesser General Public License v3.0][],
+see the file LICENSE and LICENSE.lesser for the license text.
 
 ## Installation
 

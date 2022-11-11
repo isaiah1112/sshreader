@@ -1,5 +1,24 @@
 # Changelog
 
+## Release 5.0.0
+ * Dropped Python3.6 from supported versions
+ * Added Python3.11 to supported versions
+ * Removing failfast from SSH.connection function [0e14155]
+ * Updated default timeouts in ServerJob class to 0.5s and 30s [c491d71]
+ * Removed timeout flag in pydsh [05e5540]
+ * Removing sleep loop waiting for task_queue to fill [2773c8c]
+ * Fixed bug with leaking semaphores when using echo function with Lock object [8c93c78]
+ * Configuring pydsh to use print_lock feature [ba5b419]
+ * Changed up logic for joining and closing pids and threads [cd3d2e6]
+ * Updated paramiko requirement to remove blowfish depreciation warnings [cf0d3d7]
+ * Added typing hints to methods, classes, etc [a9d1ebf]
+ * Removed tox testing (Bitbucket Pipelines does things much faster) [ac34edd]
+ * Removed a number of assert statements across the utilities module [05194f4]
+ * Added ability to guess at a username based on $HOME path [29408ff]
+ * Configured pydsh to be an entry_point and part of the sshreader package [b0d3804]
+ * Removed cpuhardlimit and threadlimit methods in favor of cpu_limit method. [566300d]
+ * Adding Flake8 liniting to Makefile and Bitbucket Pipelines [9019abb]
+
 ## Release 4.9.2
  * Fixed bug with leaking semaphores for echo method [bc9422b]
  * Updated paramiko requirement to remove blowfish depreciation warnings [cf0d3d7]
