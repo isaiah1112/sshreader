@@ -3,7 +3,7 @@
 sshreader Package
 =================
 
-A Python Package for multi-processing/threading ssh connections in order to make ssh operations
+A Python Package for multiprocessing/threading ssh connections in order to make ssh operations
 across multiple servers parallel.  The module allows for timeouts for each ssh connection
 as well as each command given to an ssh connection to run.  ServerJob objects allow for each server
 to have multiple commands that should be run inside of a single job.  The results
