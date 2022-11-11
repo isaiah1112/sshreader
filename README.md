@@ -17,7 +17,7 @@ Python:
 ## License
 
 [SSHreader][] is released under [GNU Lesser General Public License v3.0][],
-see the file LICENSE and LICESE.lesser for the license text.
+see the file LICENSE and LICENSE.lesser for the license text.
 
 ## Installation
 
