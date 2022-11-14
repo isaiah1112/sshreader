@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(name='sshreader',
-                 version='5.0.0',
+                 version='5.0.1',
                  author='Jesse Almanrode',
                  author_email='jesse@almanrode.com',
                  description='Multi-threading/processing wrapper for Paramiko',
@@ -17,7 +17,7 @@ setuptools.setup(name='sshreader',
                  project_urls={'Documentation': 'http://sshreader.readthedocs.io/',
                                'Source': 'https://bitbucket.org/isaiah1112/sshreader/',
                                'Tracker': 'https://bitbucket.org/isaiah1112/sshreader/issues'},
-                 packages=['sshreader'],
+                 packages=['sshreader', 'sshreader/scripts'],
                  include_package_data=True,
                  python_requires='>=3.7',
                  install_requires=['click>=8.1.3',
