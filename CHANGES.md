@@ -1,5 +1,8 @@
 # Changelog
 
+## Release 5.0.1
+ * Fixing bug where pydsh script was being created properly [1f7e04c]
+
 ## Release 5.0.0
  * Dropped Python3.6 from supported versions
  * Added Python3.11 to supported versions
