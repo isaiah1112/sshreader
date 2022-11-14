@@ -34,7 +34,7 @@ This will ensure that all the requirements are met.
 If you are wanting to work on development of [SSHreader][] perform the following:
 
 ```commandline
-make install
+make install-dev
 ```
 
 To ensure all development requirements are met. This will allow you to build the Sphinx Documentation for [SSHreader][]

@@ -1,4 +1,4 @@
-.PHONY: docker docker-push docs install test test-clean test-coverage test-init test-lint
+.PHONY: docker docker-push docs install install-dev test test-clean test-coverage test-init test-lint
 
 DOCKER_TAG = $(shell git describe --tags)
 DOCKER_CID = $(shell docker ps -q -f name=sshreader_test)
@@ -15,6 +15,9 @@ docs:
 	@sphinx-build -b html docs/source/ docs/build/html/
 
 install:
+	@python -m pip install -U .
+
+install-dev:
 	@python -m pip install -U -e .
 
 test: test-init
