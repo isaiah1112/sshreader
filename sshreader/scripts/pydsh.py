@@ -174,7 +174,7 @@ def cli(**kwargs):
     sshenv = sshreader.envvars()
     log.debug(sshenv)
 
-    if kwargs['port'] <= 0:
+    if kwargs['port'] <= 0 or not isinstance(kwargs['port'], int):
         raise click.BadOptionUsage('port', 'Please enter a positive integer')
 
     if kwargs['username'] is None:
