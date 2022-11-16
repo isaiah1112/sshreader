@@ -1,5 +1,8 @@
 # Changelog
 
+## Release 5.0.2
+ * Fixed typo in pydsh which was breaking the entire tool. [cfd0fc7]
+
 ## Release 5.0.1
  * Fixing bug where pydsh script was being created properly [1f7e04c]
 

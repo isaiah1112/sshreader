@@ -25,7 +25,7 @@ import sshreader
 import sys
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '3.0.0'
+__version__ = '3.0.1'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
@@ -229,7 +229,7 @@ def cli(**kwargs):
     for host in kwargs['hostlist']:
         if kwargs['keyfile']:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
-                                      keypass=kwargs['keypass'], combine_output=True)
+                                      key_pass=kwargs['keypass'], combine_output=True)
         else:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
                                       combine_output=True)
