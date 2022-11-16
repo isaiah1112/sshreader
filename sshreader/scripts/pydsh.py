@@ -229,7 +229,7 @@ def cli(**kwargs):
     for host in kwargs['hostlist']:
         if kwargs['keyfile']:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
-                                      keypass=kwargs['keypass'], combine_output=True)
+                                      key_pass=kwargs['keypass'], combine_output=True)
         else:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
                                       combine_output=True)
