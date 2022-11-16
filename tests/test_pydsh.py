@@ -31,13 +31,40 @@ class TestPydsh(unittest.TestCase):
         self.assertEqual(self.cli.invoke(pydsh.cli, ['--help']).exit_code, 0)
         pass
 
-    def test_basic_usage(self):
+    def test_password_auth(self):
         global ssh_data
         cli_result = self.cli.invoke(pydsh.cli, ['-w', ssh_data['host_fqdn'], '--port', ssh_data['host_port'],
                                                  '-u', ssh_data['ssh_user'], '-P', ssh_data['ssh_password'],
                                                  'uname'])
-        print((cli_result.stdout, cli_result.exit_code))
         self.assertIn('Linux', cli_result.stdout)
+        self.assertEqual(cli_result.exit_code, 0)
+        pass
+
+    def test_keyfile_auth(self):
+        global ssh_data
+        cli_result = self.cli.invoke(pydsh.cli, ['-w', ssh_data['host_fqdn'], '--port', ssh_data['host_port'],
+                                                 '-u', ssh_data['ssh_user'], '-k', ssh_data['ssh_key_path'],
+                                                 'uname'])
+        self.assertIn('Linux', cli_result.stdout)
+        self.assertEqual(cli_result.exit_code, 0)
+        pass
+
+    def test_dshbak_output(self):
+        global ssh_data
+        cli_result = self.cli.invoke(pydsh.cli, ['-w', ssh_data['host_fqdn'], '--port', ssh_data['host_port'],
+                                                 '-u', ssh_data['ssh_user'], '-k', ssh_data['ssh_key_path'],
+                                                 '-D', 'uname'])
+        self.assertIn('Linux', cli_result.stdout)
+        self.assertEqual(cli_result.exit_code, 0)
+        pass
+
+    def test_coalesce_output(self):
+        global ssh_data
+        cli_result = self.cli.invoke(pydsh.cli, ['-w', ssh_data['host_fqdn'], '--port', ssh_data['host_port'],
+                                                 '-u', ssh_data['ssh_user'], '-k', ssh_data['ssh_key_path'],
+                                                 '-C', 'uname'])
+        self.assertIn('Linux', cli_result.stdout)
+        self.assertEqual(cli_result.exit_code, 0)
         pass
 
 
