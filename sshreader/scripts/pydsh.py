@@ -227,13 +227,19 @@ def cli(**kwargs):
     posthook = sshreader.Hook(target=output)
     jobs = list()
     for host in kwargs['hostlist']:
+        if ':' in host:
+            log.info('SSH Port declared in host: ' + host)
+            host, port = host.split(':')
+            log.debug((host, port))
+        else:
+            port = kwargs['port']
         if kwargs['keyfile']:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
                                       key_pass=kwargs['keypass'], combine_output=True)
         else:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
                                       combine_output=True)
-        job.ssh_port = kwargs['port']
+        job.ssh_port = port
         if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
             job.post_hook = posthook
         if kwargs['file']:
