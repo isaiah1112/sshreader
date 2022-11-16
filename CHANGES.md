@@ -1,5 +1,8 @@
 # Changelog
 
+## Release 5.0.3
+ * Fixed bug in pydsh where non-dshbak/coalesce output wasn't printed to terminal [16bdc25]
+
 ## Release 5.0.2
  * Fixed typo in pydsh which was breaking the entire tool. [cfd0fc7]
 
