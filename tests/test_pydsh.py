@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # coding=utf-8
-""" Integration and Unit tests for sshreader Python Package
+""" Integration and Unit tests for pydsh script
 """
 import os
 import sys
@@ -43,6 +43,15 @@ class TestPydsh(unittest.TestCase):
     def test_keyfile_auth(self):
         global ssh_data
         cli_result = self.cli.invoke(pydsh.cli, ['-w', ssh_data['host_fqdn'], '--port', ssh_data['host_port'],
+                                                 '-u', ssh_data['ssh_user'], '-k', ssh_data['ssh_key_path'],
+                                                 'uname'])
+        self.assertIn('Linux', cli_result.stdout)
+        self.assertEqual(cli_result.exit_code, 0)
+        pass
+
+    def test_hostlist_port(self):
+        global ssh_data
+        cli_result = self.cli.invoke(pydsh.cli, ['-w', ssh_data['host_fqdn'] + ':' + ssh_data['host_port'],
                                                  '-u', ssh_data['ssh_user'], '-k', ssh_data['ssh_key_path'],
                                                  'uname'])
         self.assertIn('Linux', cli_result.stdout)
