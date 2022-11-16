@@ -235,9 +235,9 @@ def cli(**kwargs):
                                       combine_output=True)
         job.ssh_port = kwargs['port']
         if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
-            job.posthook = posthook
+            job.post_hook = posthook
         if kwargs['file']:
-            job.prehook = prehook
+            job.pre_hook = prehook
         jobs.append(job)
 
     if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
