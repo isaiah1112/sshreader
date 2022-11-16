@@ -165,6 +165,7 @@ def cli(**kwargs):
         mkpath = click.Path(exists=True, dir_okay=False)
         script_path = mkpath(kwargs['cmd'])
         script_name = os.path.split(script_path)[1]
+        log.info('Creating copy_script prehook for: ' + script_name)
         prehook = sshreader.Hook(copy_script, args=[script_path], ssh_established=True)
         with open(script_path) as s:
             script = s.readline()
@@ -185,6 +186,7 @@ def cli(**kwargs):
 
     # By default, we prefer ssh keys
     if not kwargs['keyfile']:
+        log.info('SSH keyfile not specified, searching for one anyways')
         if any((sshenv.rsa_key, sshenv.dsa_key, sshenv.ecdsa_key)):
             if sshenv.ecdsa_key:
                 kwargs['keyfile'] = sshenv.ecdsa_key
@@ -200,10 +202,11 @@ def cli(**kwargs):
                 if not all((kwargs['username'], kwargs['password'])):
                     raise click.ClickException('Unable to find ssh key to use and password not supplied.')
             else:
-                log.info('Fallback to SSH Agent')
+                log.info('Falling back to SSH Agent')
             if kwargs['keypass']:
                 kwargs['keypass'] = click.prompt('Private Key Password', hide_input=True)
     else:
+        log.info('SSH keyfile provided disabling password authentication')
         # If you specify an SSH key then we ignore any password or prompt flags you might have entered
         kwargs['password'] = None
         kwargs['prompt'] = False
@@ -216,10 +219,12 @@ def cli(**kwargs):
             if not kwargs['keyfile'] and len(sshenv.agent_keys) == 0:
                 raise click.ClickException('Unable to find ssh key to use and password not supplied or prompt enabled.')
         else:
+            log.info('Prompting for password and disabling discovered SSH keyfiles')
             kwargs['keyfile'] = None
             while kwargs['password'] is None:
                 kwargs['password'] = click.prompt(kwargs['username'] + "'s Password", hide_input=True)
     else:
+        log.info('Using password authentication and disabling discovered SSH keyfiles')
         # You provided a password, ignore the SSH key
         kwargs['keyfile'] = None
 
@@ -241,11 +246,14 @@ def cli(**kwargs):
                                       combine_output=True)
         job.ssh_port = port
         if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
+            log.info('Adding posthook to ServerJob for: ' + host)
             job.post_hook = posthook
         if kwargs['file']:
+            log.info('Adding prehook to ServerJob for: ' + host)
             job.pre_hook = prehook
         jobs.append(job)
 
+    log.info('Sending %s ServerJobs to sshreader module' % (len(jobs),))
     if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
         if kwargs['redline']:
             sshreader.sshread(jobs, pcount=0, tcount=0, print_lock=True)
