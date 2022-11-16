@@ -51,7 +51,8 @@ class TestPydsh(unittest.TestCase):
 
     def test_hostlist_port(self):
         global ssh_data
-        cli_result = self.cli.invoke(pydsh.cli, ['-w', ssh_data['host_fqdn'] + ':' + ssh_data['host_port'],
+        host_port = ssh_data['host_fqdn'] + ':' + int(ssh_data['host_port'])
+        cli_result = self.cli.invoke(pydsh.cli, ['-w', host_port,
                                                  '-u', ssh_data['ssh_user'], '-k', ssh_data['ssh_key_path'],
                                                  'uname'])
         self.assertIn('Linux', cli_result.stdout)
