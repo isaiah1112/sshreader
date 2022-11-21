@@ -134,6 +134,8 @@ class ServerJob(object):
     :type key_pass: str, optional
     :param ssh_port: Integer of SSH Port to use (Default: 22)
     :type ssh_port: int
+    :param rsa_sha2: Enable/Disable RSA w/SHA2 hashes (Default: True)
+    :type rsa_sha2: bool, optional
     :param timeout: Tuple of timeouts in seconds (TCP timeout, SSH Timeout)
     :type timeout: tuple, optional
     :param run_local: Run job on localhost without opening SSH connection (Default: False)
@@ -152,7 +154,7 @@ class ServerJob(object):
                  password: Optional[str] = None, keyfile: Optional[str] = None, key_pass: Optional[str] = None,
                  timeout: Optional[TimeoutTuple] = (0.5, 30), run_local: bool = False,
                  pre_hook: Optional[Hook] = None, post_hook: Optional[Hook] = None,
-                 combine_output: bool = False, ssh_port: int = 22) -> None:
+                 combine_output: bool = False, ssh_port: int = 22, rsa_sha2: Optional[bool] = True) -> None:
         self.name = str(fqdn)
         self.results = list()
         self.username = username
@@ -163,6 +165,7 @@ class ServerJob(object):
         self.combine_output = combine_output
         self.run_local = run_local
         self.ssh_port = ssh_port
+        self.rsa_sha2 = rsa_sha2
         if isinstance(cmds, (list, tuple)):
             self.cmds = cmds
         else:
@@ -220,7 +223,7 @@ class ServerJob(object):
                 self.pre_hook.run(self)
             try:
                 self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
-                                 port=self.ssh_port, connect=False)
+                                 port=self.ssh_port, connect=False, rsa_sha2=self.rsa_sha2)
                 self._conn.connect(timeout=self.ssh_timeout)
                 log.debug('%s: ssh connection established' % (self.name,))
             except Exception as errorMsg:
