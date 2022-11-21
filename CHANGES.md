@@ -1,5 +1,8 @@
 # Changelog
 
+## Release 5.0.4
+ * Added ability to disable SHA2 RSA hashes on ServerJob objects [dc46c2a]
+
 ## Release 5.0.3
  * Fixed bug in pydsh where non-dshbak/coalesce output wasn't printed to terminal [16bdc25]
 
