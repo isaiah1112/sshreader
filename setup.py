@@ -7,7 +7,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(name='sshreader',
-                 version='5.0.3',
+                 version='5.0.4',
                  author='Jesse Almanrode',
                  author_email='jesse@almanrode.com',
                  description='Multi-threading/processing wrapper for Paramiko',
