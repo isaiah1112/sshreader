@@ -34,4 +34,4 @@ class EnvVars(NamedTuple):
 
 
 Timeout = Union[int, float]
-TimeoutTuple = Tuple[Timeout]
+TimeoutTuple = Tuple[Timeout, Timeout]
