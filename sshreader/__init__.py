@@ -18,12 +18,12 @@
 
 # For backwards compatibility
 from .ssh import SSH, envvars
-from .types import Command, EnvVars, Timeout, TimeoutTuple
+from .customtypes import Command, EnvVars, Timeout, TimeoutTuple
 from .utils import ServerJob, Hook, sshread, echo, cpu_limit, shell_command
 import logging
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
-__all__ = ['ssh', 'types', 'utils']
+__all__ = ['ssh', 'customtypes', 'utils']
 
 log = logging.getLogger(__name__)
 log_handler = logging.StreamHandler()

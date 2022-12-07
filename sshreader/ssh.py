@@ -22,7 +22,7 @@ import socket
 from getpass import getuser
 from typing import Any, Optional
 
-from .types import Command, EnvVars, Timeout
+from .customtypes import Command, EnvVars, Timeout
 log = logging.getLogger('sshreader')
 
 

@@ -28,7 +28,7 @@ from typing import Any, Callable, Optional, Union
 
 
 from .ssh import SSH
-from .types import Command, Timeout, TimeoutTuple
+from .customtypes import Command, Timeout, TimeoutTuple
 
 # Globals
 mpctx = multiprocessing.get_context('spawn')  # Forcing the forking type to spawn in older versions of Python3
