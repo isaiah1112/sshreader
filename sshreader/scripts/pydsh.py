@@ -1,7 +1,7 @@
 # coding=utf-8
 """ A Pythonic implementation of pdsh powered by sshreader
 """
-# Copyright (C) 2015-2022 Jesse Almanrode
+# Copyright (C) 2015-2023 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -15,6 +15,7 @@
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from collections import defaultdict
 from hashlib import md5
 from hostlist import expand_hostlist, collect_hostlist

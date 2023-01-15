@@ -1,7 +1,7 @@
 # coding=utf-8
 """ Typing module for sshreader
 """
-# Copyright (C) 2015-2022 Jesse Almanrode
+# Copyright (C) 2015-2023 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
