@@ -3,8 +3,11 @@
 
 import setuptools
 
-with open("README.md", "r", encoding="utf-8") as fh:
+with open('README.md', 'r', encoding='utf-8') as fh:
     long_description = fh.read()
+
+with open('requirements.txt', 'r') as rf:
+    install_requires = [x.split(' ; ')[0] for x in rf.readlines if '--hash=sha256:' not in x]
 
 setuptools.setup(name='sshreader',
                  version='5.0.4',
@@ -20,12 +23,7 @@ setuptools.setup(name='sshreader',
                  packages=['sshreader', 'sshreader/scripts'],
                  include_package_data=True,
                  python_requires='>=3.7',
-                 install_requires=['click>=8.1.3',
-                                   'colorama>=0.4.6',
-                                   'paramiko>=2.12.0',
-                                   'progressbar2>=4.2.0',
-                                   'python-hostlist>=1.22',
-                                   ],
+                 install_requires=install_requires,
                  entry_points={'console_scripts': ['pydsh = sshreader.scripts.pydsh:cli']},
                  platforms=['Linux', 'Darwin'],
                  classifiers=[
