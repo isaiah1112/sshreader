@@ -28,30 +28,10 @@ pip install sshreader
 
 This will ensure that all the requirements are met.
 
-### Development Installation
-
-If you are wanting to work on development of [SSHreader][] perform the following:
-
-```commandline
-make install-dev
-```
-
-To ensure all development requirements are met. This will allow you to build the Sphinx Documentation for [SSHreader][]
-or run the unit/integration tests!
-
 ## Documentation
 
 The documentation for [SSHreader][] can be found [here](https://sshreader.readthedocs.io)
 
-### Building Docs
-
-If you have installed the requirements for [SSHreader][] you can build its Sphinx Documentation simply by:
-
-```commandline
-make docs
-```
-
-Then simply open `docs/build/html/index.html` in your browser.
 
 ## Contributing
 
@@ -66,11 +46,32 @@ towards.
 Code contributions are encouraged: please feel free to [fork the
 project](https://bitbucket.org/isaiah1112/sshreader) and submit pull requests to the develop branch.
 
+### Development Installation
+
+If you are wanting to work on development of [SSHreader][], first ensure [Poetry](https://python-poetry.org) is installed
+and then:
+
+```commandline
+poetry install --with dev
+```
+
+To ensure all development requirements are met. This will allow you to run the unit/integration tests!
+
+### Building Docs
+
+If you have installed [Poetry](https://python-poetry.org)] you can build its Sphinx Documentation for [SSHreader][] simply by:
+
+```commandline
+make docs
+```
+
+Then simply open `docs/build/html/index.html` in your browser.
+
 ## Extras
 
-Included with sshreader is a binary called **pydsh** (generally installed in /usr/local/bin/).  This works very similar to
-[pdsh](https://computing.llnl.gov/linux/pdsh.html) but uses sshreader at its core to perform ssh commands in parallel
-and return the results.  The output of *pydsh* can also be piped through the **dshbak** tool that comes with pdsh.
+Included with sshreader is a script called `pydsh`.  This works very similar to[pdsh](https://computing.llnl.gov/linux/pdsh.html) 
+but uses sshreader at its core to perform ssh commands in parallel and return the results.  
+The output of `pydsh` can also be piped through the `dshbak` tool that comes with pdsh.
 
 Pydsh uses [hostlist expressions](https://www.nsc.liu.se/~kent/python-hostlist/) to get its list of hosts
 to process.
