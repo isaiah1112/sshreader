@@ -1,6 +1,10 @@
 DOCKER_TAG := $(shell git describe --tags)
 DOCKER_CID := $(shell docker ps -q -f name=sshreader_test)
-POETRY := $(shell which poetry)
+POETRY := $(shell which poetry 2>/dev/null)
+
+.PHONY: init
+init:
+	@if [ -z "$(POETRY)" ]; then echo "Please install 'poetry'"; exit 1; fi
 
 .PHONY: docker
 docker:
@@ -12,13 +16,13 @@ docker-push: docker
 	@docker push --all-tags isaiah1112/sshreader
 
 .PHONY: docs
-docs:
-	@if [ -z "$(POETRY)" ]; then echo "Please install 'poetry'"; exit 1; else poetry install --with docs; fi
-	@poetry run sphinx-build -b html docs/source/ docs/build/html/
+docs: init
+	@$(POETRY) install --with docs
+	@$(POETRY) run sphinx-build -b html docs/source/ docs/build/html/
 
 .PHONY: test
 test: test-init
-	@poetry run coverage run -m unittest discover tests/
+	@$(POETRY) run coverage run -m unittest discover tests/
 
 .PHONY: test-clean
 test-clean:
@@ -27,11 +31,11 @@ test-clean:
 
 .PHONY: test-coverage
 test-coverage: test
-	@poetry run coverage html
+	@$(POETRY) run coverage html
 
 .PHONY: test-init
-test-init:
-	@if [ -z "$(POETRY)" ]; then echo "Please install 'poetry'"; exit 1; else poetry install --with dev; fi
+test-init: init
+	@$(POETRY) install --with dev
 	@if [ -z "$(DOCKER_CID)" ]; then\
 		if [ -z "$(SSH_PORT)" ]; then\
 			echo "Starting sshreader_test container on port 22";\
@@ -43,7 +47,7 @@ test-init:
  	fi
 
 .PHONY: test-lint
-test-lint:
-	@if [ -z "$(POETRY)" ]; then echo "Please install 'poetry'"; exit 1; else poetry install --with dev; fi
-	@poetry run flake8 sshreader/ --count --select=E9,F63,F7,F82 --show-source --statistics --exclude docs
-	@poetry run flake8 sshreader/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude docs
+test-lint: init
+	@$(POETRY) install --with dev
+	@$(POETRY) run flake8 sshreader/ --count --select=E9,F63,F7,F82 --show-source --statistics --exclude docs
+	@$(POETRY) run flake8 sshreader/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude docs
