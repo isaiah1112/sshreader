@@ -10,16 +10,6 @@ pipelines:
           - flake8 sshreader/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude docs
         caches:
             - pip
-    - step: &py37
-        name: Python 3.7 Tests
-        image: python:3.7
-        script:
-          - python -m pip install -U -r requirements.txt
-          - python -m unittest discover tests/
-        services:
-          - sshd
-        caches:
-          - pip
     - step: &py38
         name: Python 3.8 Tests
         image: python:3.8
@@ -63,7 +53,6 @@ pipelines:
   branches:
     release/*:
       - step: *lint
-      - step: *py37
       - step: *py38
       - step: *py39
       - step: *py310
@@ -85,7 +74,7 @@ pipelines:
           caches:
             - pip
     master:
-      - step: *py37
+      - step: *lint
       - step: *py38
       - step: *py39
       - step: *py310
