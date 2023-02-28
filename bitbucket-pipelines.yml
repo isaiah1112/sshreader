@@ -11,7 +11,7 @@ pipelines:
           - poetry run flake8 sshreader/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude docs
         caches:
             - pip
-    parallel:
+    - parallel:
       fail_fast: true
       steps:
         - step: &py38
@@ -61,7 +61,7 @@ pipelines:
   branches:
     release/*:
       - step: *lint
-      parallel:
+      - parallel:
         fail_fast: true
         steps:
           - step: *py38
@@ -79,7 +79,7 @@ pipelines:
             - pip
     master:
       - step: *lint
-      parallel:
+      - parallel:
         fail_fast: true
         steps:
           - step: *py38
