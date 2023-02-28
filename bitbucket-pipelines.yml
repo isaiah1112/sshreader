@@ -11,8 +11,8 @@ pipelines:
           - poetry run flake8 sshreader/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude docs
         caches:
             - pip
-    - parallel: &python_tests
-      fail_fast: true
+    - parallel:
+      fail-fast: true
       steps:
         - step: &py38
             name: Python 3.8 Tests
@@ -61,7 +61,13 @@ pipelines:
   branches:
     release/*:
       - step: *lint
-      - parallel: *python_tests
+      - parallel:
+        fail-fast: true
+        steps:
+          - step: *py38
+          - step: *py39
+          - step: *py310
+          - step: *py311
       - step:
           name: Deploy To Test PyPi
           trigger: manual
@@ -73,7 +79,13 @@ pipelines:
             - pip
     master:
       - step: *lint
-      - parallel: *python_tests
+      - parallel:
+        fail-fast: true
+        steps:
+          - step: *py38
+          - step: *py39
+          - step: *py310
+          - step: *py311
       - step:
           name: Deploy To PyPi
           script:
