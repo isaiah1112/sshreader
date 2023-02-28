@@ -12,58 +12,62 @@ pipelines:
         caches:
             - pip
     parallel:
-      - step: &py38
-          name: Python 3.8 Tests
-          image: python:3.8
-          script:
-            - pip install poetry
-            - poetry install --with dev
-            - poetry run python -m unittest discover tests/
-          services:
-            - sshd
-          caches:
-            - pip
-      - step: &py39
-          name: Python 3.9 Tests
-          image: python:3.9
-          script:
-            - pip install poetry
-            - poetry install --with dev
-            - poetry run python -m unittest discover tests/
-          services:
-            - sshd
-          caches:
-            - pip
-      - step: &py310
-          name: Python 3.10 Tests
-          image: python:3.10
-          script:
-            - pip install poetry
-            - poetry install --with dev
-            - poetry run python -m unittest discover tests/
-          services:
-            - sshd
-          caches:
-            - pip
-      - step: &py311
-          name: Python 3.11 Tests
-          image: python:3.11
-          script:
-            - pip install poetry
-            - poetry install --with dev
-            - poetry run python -m unittest discover tests/
-          services:
-            - sshd
-          caches:
-            - pip
+      fail_fast: true
+      steps:
+        - step: &py38
+            name: Python 3.8 Tests
+            image: python:3.8
+            script:
+              - pip install poetry
+              - poetry install --with dev
+              - poetry run python -m unittest discover tests/
+            services:
+              - sshd
+            caches:
+              - pip
+        - step: &py39
+            name: Python 3.9 Tests
+            image: python:3.9
+            script:
+              - pip install poetry
+              - poetry install --with dev
+              - poetry run python -m unittest discover tests/
+            services:
+              - sshd
+            caches:
+              - pip
+        - step: &py310
+            name: Python 3.10 Tests
+            image: python:3.10
+            script:
+              - pip install poetry
+              - poetry install --with dev
+              - poetry run python -m unittest discover tests/
+            services:
+              - sshd
+            caches:
+              - pip
+        - step: &py311
+            name: Python 3.11 Tests
+            image: python:3.11
+            script:
+              - pip install poetry
+              - poetry install --with dev
+              - poetry run python -m unittest discover tests/
+            services:
+              - sshd
+            caches:
+              - pip
   branches:
     release/*:
       - step: *lint
       parallel:
-        - step: *py38
-        - step: *py39
-        - step: *py310
-        - step: *py311
+        fail_fast: true
+        steps:
+          - step: *py38
+          - step: *py39
+          - step: *py310
+          - step: *py311
       - step:
           name: Deploy To Test PyPi
           trigger: manual
@@ -76,10 +80,12 @@ pipelines:
     master:
       - step: *lint
       parallel:
-        - step: *py38
-        - step: *py39
-        - step: *py310
-        - step: *py311
+        fail_fast: true
+        steps:
+          - step: *py38
+          - step: *py39
+          - step: *py310
+          - step: *py311
       - step:
           name: Deploy To PyPi
           script:
