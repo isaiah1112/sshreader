@@ -17,7 +17,7 @@ pipelines:
         image: python:3.8
         script:
           - pip install poetry
-          - pip install --with dev
+          - poetry install --with dev
           - poetry run python -m unittest discover tests/
         services:
           - sshd
@@ -28,7 +28,7 @@ pipelines:
         image: python:3.9
         script:
           - pip install poetry
-          - pip install --with dev
+          - poetry install --with dev
           - poetry run python -m unittest discover tests/
         services:
           - sshd
@@ -39,7 +39,7 @@ pipelines:
         image: python:3.10
         script:
           - pip install poetry
-          - pip install --with dev
+          - poetry install --with dev
           - poetry run python -m unittest discover tests/
         services:
           - sshd
@@ -50,7 +50,7 @@ pipelines:
         image: python:3.11
         script:
           - pip install poetry
-          - pip install --with dev
+          - poetry install --with dev
           - poetry run python -m unittest discover tests/
         services:
           - sshd
