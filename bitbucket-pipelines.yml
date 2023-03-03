@@ -61,13 +61,10 @@ pipelines:
   branches:
     release/*:
       - step: *lint
-      - parallel:
-        fail-fast: true
-        steps:
-          - step: *py38
-          - step: *py39
-          - step: *py310
-          - step: *py311
+      - step: *py38
+      - step: *py39
+      - step: *py310
+      - step: *py311
       - step:
           name: Deploy To Test PyPi
           trigger: manual
@@ -79,13 +76,10 @@ pipelines:
             - pip
     master:
       - step: *lint
-      - parallel:
-        fail-fast: true
-        steps:
-          - step: *py38
-          - step: *py39
-          - step: *py310
-          - step: *py311
+      - step: *py38
+      - step: *py39
+      - step: *py310
+      - step: *py311
       - step:
           name: Deploy To PyPi
           script:
