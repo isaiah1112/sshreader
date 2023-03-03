@@ -11,53 +11,50 @@ pipelines:
           - poetry run flake8 sshreader/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude docs
         caches:
             - pip
-    - parallel:
-      fail-fast: true
-      steps:
-        - step: &py38
-            name: Python 3.8 Tests
-            image: python:3.8
-            script:
-              - pip install poetry
-              - poetry install --with dev
-              - poetry run python -m unittest discover tests/
-            services:
-              - sshd
-            caches:
-              - pip
-        - step: &py39
-            name: Python 3.9 Tests
-            image: python:3.9
-            script:
-              - pip install poetry
-              - poetry install --with dev
-              - poetry run python -m unittest discover tests/
-            services:
-              - sshd
-            caches:
-              - pip
-        - step: &py310
-            name: Python 3.10 Tests
-            image: python:3.10
-            script:
-              - pip install poetry
-              - poetry install --with dev
-              - poetry run python -m unittest discover tests/
-            services:
-              - sshd
-            caches:
-              - pip
-        - step: &py311
-            name: Python 3.11 Tests
-            image: python:3.11
-            script:
-              - pip install poetry
-              - poetry install --with dev
-              - poetry run python -m unittest discover tests/
-            services:
-              - sshd
-            caches:
-              - pip
+    - step: &py38
+        name: Python 3.8 Tests
+        image: python:3.8
+        script:
+          - pip install poetry
+          - poetry install --with dev
+          - poetry run python -m unittest discover tests/
+        services:
+          - sshd
+        caches:
+          - pip
+    - step: &py39
+        name: Python 3.9 Tests
+        image: python:3.9
+        script:
+          - pip install poetry
+          - poetry install --with dev
+          - poetry run python -m unittest discover tests/
+        services:
+          - sshd
+        caches:
+          - pip
+    - step: &py310
+        name: Python 3.10 Tests
+        image: python:3.10
+        script:
+          - pip install poetry
+          - poetry install --with dev
+          - poetry run python -m unittest discover tests/
+        services:
+          - sshd
+        caches:
+          - pip
+    - step: &py311
+        name: Python 3.11 Tests
+        image: python:3.11
+        script:
+          - pip install poetry
+          - poetry install --with dev
+          - poetry run python -m unittest discover tests/
+        services:
+          - sshd
+        caches:
+          - pip
   branches:
     release/*:
       - step: *lint
