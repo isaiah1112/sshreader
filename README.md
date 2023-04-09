@@ -26,7 +26,7 @@ The most straightforward way to get the [SSHreader][] module working for you is:
 pip install sshreader
 ```
 
-This will ensure that all the requirements are met.
+This ensures that all the requirements are met.
 
 ## Documentation
 
