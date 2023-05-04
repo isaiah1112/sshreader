@@ -26,7 +26,7 @@ import sshreader
 import sys
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '3.0.2'
+__version__ = '3.1.0'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
@@ -149,6 +149,7 @@ def validate_hostlist(ctx, param, value):
 @click.option('--verbose', '-v', count=True, help='Increase debug verbosity')
 @click.option('--redline', is_flag=True, help='Run pydsh faster')
 @click.option('--port', default=22, help='SSH Port')
+@click.option('--sha2', is_flag=True, default=True, help='Use SHA2 Hash Algorithm for Keys')
 @click.argument('cmd', nargs=1)
 def cli(**kwargs):
     """  Run ssh commands in parallel across hosts
@@ -241,10 +242,10 @@ def cli(**kwargs):
             port = kwargs['port']
         if kwargs['keyfile']:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
-                                      key_pass=kwargs['keypass'], combine_output=True)
+                                      key_pass=kwargs['keypass'], combine_output=True, rsa_sha2=kwargs['sha2'])
         else:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
-                                      combine_output=True)
+                                      combine_output=True, rsa_sha2=kwargs['sha2'])
         job.ssh_port = port
         if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
             log.info('Adding posthook to ServerJob for: ' + host)
