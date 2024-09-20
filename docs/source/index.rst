@@ -75,6 +75,7 @@ Python:
 * Python3.9
 * Python3.10
 * Python3.11
+* Python3.12
 
 .. note::
 
