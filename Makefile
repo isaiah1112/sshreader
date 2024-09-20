@@ -18,6 +18,7 @@ docker-push: docker
 .PHONY: docs
 docs: init
 	@$(POETRY) install --with docs
+	@$(POETRY) export -f requirements.txt --output docs/requirements.txt
 	@$(POETRY) run sphinx-build -b html docs/source/ docs/build/html/
 
 .PHONY: test

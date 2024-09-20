@@ -3,7 +3,7 @@ sshreader API
 
 
 .. automodule:: sshreader.utils
-   :members: Hook, ServerJob, sshread, shell_command, echo, cpusoftlimit, cpuhardlimit, threadlimit
+   :members: Hook, ServerJob, sshread, shell_command, echo
 
 
 Indices and tables
