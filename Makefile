@@ -1,5 +1,5 @@
 DOCKER_TAG := $(shell git describe --tags)
-DOCKER_CID := $(shell docker ps -q -f name=sshreader_test)
+DOCKER_CID := $(shell docker ps -a -q -f name=sshreader_test)
 POETRY := $(shell which poetry 2>/dev/null)
 
 .PHONY: init
