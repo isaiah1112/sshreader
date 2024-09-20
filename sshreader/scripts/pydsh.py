@@ -1,7 +1,7 @@
 # coding=utf-8
 """ A Pythonic implementation of pdsh powered by sshreader
 """
-# Copyright (C) 2015-2022 Jesse Almanrode
+# Copyright (C) 2015-2023 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -15,6 +15,7 @@
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 from collections import defaultdict
 from hashlib import md5
 from hostlist import expand_hostlist, collect_hostlist
@@ -25,7 +26,7 @@ import sshreader
 import sys
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '3.0.2'
+__version__ = '3.1.0'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
@@ -148,6 +149,7 @@ def validate_hostlist(ctx, param, value):
 @click.option('--verbose', '-v', count=True, help='Increase debug verbosity')
 @click.option('--redline', is_flag=True, help='Run pydsh faster')
 @click.option('--port', default=22, help='SSH Port')
+@click.option('--sha2', is_flag=True, default=True, help='Use SHA2 Hash Algorithm for Keys')
 @click.argument('cmd', nargs=1)
 def cli(**kwargs):
     """  Run ssh commands in parallel across hosts
@@ -165,6 +167,7 @@ def cli(**kwargs):
         mkpath = click.Path(exists=True, dir_okay=False)
         script_path = mkpath(kwargs['cmd'])
         script_name = os.path.split(script_path)[1]
+        log.info('Creating copy_script prehook for: ' + script_name)
         prehook = sshreader.Hook(copy_script, args=[script_path], ssh_established=True)
         with open(script_path) as s:
             script = s.readline()
@@ -174,7 +177,7 @@ def cli(**kwargs):
     sshenv = sshreader.envvars()
     log.debug(sshenv)
 
-    if kwargs['port'] <= 0:
+    if kwargs['port'] <= 0 or not isinstance(kwargs['port'], int):
         raise click.BadOptionUsage('port', 'Please enter a positive integer')
 
     if kwargs['username'] is None:
@@ -185,6 +188,7 @@ def cli(**kwargs):
 
     # By default, we prefer ssh keys
     if not kwargs['keyfile']:
+        log.info('SSH keyfile not specified, searching for one anyways')
         if any((sshenv.rsa_key, sshenv.dsa_key, sshenv.ecdsa_key)):
             if sshenv.ecdsa_key:
                 kwargs['keyfile'] = sshenv.ecdsa_key
@@ -200,10 +204,11 @@ def cli(**kwargs):
                 if not all((kwargs['username'], kwargs['password'])):
                     raise click.ClickException('Unable to find ssh key to use and password not supplied.')
             else:
-                log.info('Fallback to SSH Agent')
+                log.info('Falling back to SSH Agent')
             if kwargs['keypass']:
                 kwargs['keypass'] = click.prompt('Private Key Password', hide_input=True)
     else:
+        log.info('SSH keyfile provided disabling password authentication')
         # If you specify an SSH key then we ignore any password or prompt flags you might have entered
         kwargs['password'] = None
         kwargs['prompt'] = False
@@ -216,10 +221,12 @@ def cli(**kwargs):
             if not kwargs['keyfile'] and len(sshenv.agent_keys) == 0:
                 raise click.ClickException('Unable to find ssh key to use and password not supplied or prompt enabled.')
         else:
+            log.info('Prompting for password and disabling discovered SSH keyfiles')
             kwargs['keyfile'] = None
             while kwargs['password'] is None:
                 kwargs['password'] = click.prompt(kwargs['username'] + "'s Password", hide_input=True)
     else:
+        log.info('Using password authentication and disabling discovered SSH keyfiles')
         # You provided a password, ignore the SSH key
         kwargs['keyfile'] = None
 
@@ -227,19 +234,28 @@ def cli(**kwargs):
     posthook = sshreader.Hook(target=output)
     jobs = list()
     for host in kwargs['hostlist']:
+        if ':' in host:
+            log.info('SSH Port declared in host: ' + host)
+            host, port = host.split(':')
+            log.debug((host, port))
+        else:
+            port = kwargs['port']
         if kwargs['keyfile']:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
-                                      key_pass=kwargs['keypass'], combine_output=True)
+                                      key_pass=kwargs['keypass'], combine_output=True, rsa_sha2=kwargs['sha2'])
         else:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
-                                      combine_output=True)
-        job.ssh_port = kwargs['port']
+                                      combine_output=True, rsa_sha2=kwargs['sha2'])
+        job.ssh_port = port
         if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
+            log.info('Adding posthook to ServerJob for: ' + host)
             job.post_hook = posthook
         if kwargs['file']:
+            log.info('Adding prehook to ServerJob for: ' + host)
             job.pre_hook = prehook
         jobs.append(job)
 
+    log.info('Sending %s ServerJobs to sshreader module' % (len(jobs),))
     if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
         if kwargs['redline']:
             sshreader.sshread(jobs, pcount=0, tcount=0, print_lock=True)

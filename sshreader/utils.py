@@ -1,7 +1,7 @@
 # coding=utf-8
 """ All the classes and functions that make sshreader tick
 """
-# Copyright (C) 2015-2022 Jesse Almanrode
+# Copyright (C) 2015-2024 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -28,7 +28,7 @@ from typing import Any, Callable, Optional, Union
 
 
 from .ssh import SSH
-from .types import Command, TimeoutTuple
+from .customtypes import Command, Timeout, TimeoutTuple
 
 # Globals
 mpctx = multiprocessing.get_context('spawn')  # Forcing the forking type to spawn in older versions of Python3
@@ -152,7 +152,7 @@ class ServerJob(object):
     """
     def __init__(self, fqdn: str, cmds: Union[list, tuple, str], username: Optional[str] = None,
                  password: Optional[str] = None, keyfile: Optional[str] = None, key_pass: Optional[str] = None,
-                 timeout: Optional[TimeoutTuple] = (0.5, 30), run_local: bool = False,
+                 timeout: Optional[Union[Timeout, TimeoutTuple]] = (0.5, 30), run_local: bool = False,
                  pre_hook: Optional[Hook] = None, post_hook: Optional[Hook] = None,
                  combine_output: bool = False, ssh_port: int = 22, rsa_sha2: Optional[bool] = True) -> None:
         self.name = str(fqdn)

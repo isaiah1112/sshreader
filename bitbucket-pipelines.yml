@@ -5,25 +5,19 @@ pipelines:
     - step: &lint
         name: Lint using Flake8
         script:
-          - python -m pip install -U -r requirements.txt
-          - flake8 sshreader/ --count --select=E9,F63,F7,F82 --show-source --statistics --exclude docs
-          - flake8 sshreader/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude docs
-    - step: &py37
-        name: Python 3.7 Tests
-        image: python:3.7
-        script:
-          - python -m pip install -U -r requirements.txt
-          - python -m unittest discover tests/
-        services:
-          - sshd
+          - pip install poetry
+          - poetry install --with dev
+          - poetry run flake8 sshreader/ --count --select=E9,F63,F7,F82 --show-source --statistics --exclude docs
+          - poetry run flake8 sshreader/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude docs
         caches:
-          - pip
+            - pip
     - step: &py38
         name: Python 3.8 Tests
         image: python:3.8
         script:
-          - python -m pip install -U -r requirements.txt
-          - python -m unittest discover tests/
+          - pip install poetry
+          - poetry install --with dev
+          - poetry run python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -32,8 +26,9 @@ pipelines:
         name: Python 3.9 Tests
         image: python:3.9
         script:
-          - python -m pip install -U -r requirements.txt
-          - python -m unittest discover tests/
+          - pip install poetry
+          - poetry install --with dev
+          - poetry run python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -42,8 +37,9 @@ pipelines:
         name: Python 3.10 Tests
         image: python:3.10
         script:
-          - python -m pip install -U -r requirements.txt
-          - python -m unittest discover tests/
+          - pip install poetry
+          - poetry install --with dev
+          - poetry run python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -52,8 +48,20 @@ pipelines:
         name: Python 3.11 Tests
         image: python:3.11
         script:
-          - python -m pip install -U -r requirements.txt
-          - python -m unittest discover tests/
+          - pip install poetry
+          - poetry install --with dev
+          - poetry run python -m unittest discover tests/
+        services:
+          - sshd
+        caches:
+          - pip
+    - step: &py312
+        name: Python 3.12 Tests
+        image: python:3.12
+        script:
+          - pip install poetry
+          - poetry install --with dev
+          - poetry run python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -61,37 +69,34 @@ pipelines:
   branches:
     release/*:
       - step: *lint
-      - step: *py37
       - step: *py38
       - step: *py39
       - step: *py310
       - step: *py311
-      - step:
-          name: Build Documentation
-          script:
-            - python -m pip install Sphinx
-            - sphinx-build -b html docs/source/ docs/build/html/
-          caches:
-            - pip
+      - step: *py312
       - step:
           name: Deploy To Test PyPi
           trigger: manual
           script:
-            - pip install build twine
-            - python -m build
-            - twine upload --repository testpypi --non-interactive --username __token__ --password ${TEST_PYPI_PASSWORD} dist/*;
+            - pip install poetry
+            - poetry config repositories.test-pypi https://test.pypi.org/legacy/
+            - poetry publish --build --repository test-pypi --username __token__ --password ${TEST_PYPI_PASSWORD}
+          caches:
+            - pip
     master:
-      - step: *py37
+      - step: *lint
       - step: *py38
       - step: *py39
       - step: *py310
       - step: *py311
+      - step: *py312
       - step:
           name: Deploy To PyPi
           script:
-            - pip install build twine
-            - python -m build
-            - twine upload --non-interactive --username __token__ --password ${PYPI_PASSWORD} dist/*;
+            - pip install poetry
+            - poetry publish --build --username __token__ --password ${PYPI_PASSWORD}
+          caches:
+            - pip
 definitions:
   services:
     sshd:

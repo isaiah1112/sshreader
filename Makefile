@@ -1,34 +1,42 @@
-.PHONY: docker docker-push docs install test test-clean test-coverage test-init test-lint
+DOCKER_TAG := $(shell git describe --tags)
+DOCKER_CID := $(shell docker ps -a -q -f name=sshreader_test)
+POETRY := $(shell which poetry 2>/dev/null)
 
-DOCKER_TAG = $(shell git describe --tags)
-DOCKER_CID = $(shell docker ps -q -f name=sshreader_test)
+.PHONY: init
+init:
+	@if [ -z "$(POETRY)" ]; then echo "Please install 'poetry'"; exit 1; fi
 
+.PHONY: docker
 docker:
 	@docker build -t isaiah1112/sshreader:$(DOCKER_TAG) .
 	@docker tag isaiah1112/sshreader:$(DOCKER_TAG) isaiah1112/sshreader:latest
 
+.PHONY: docker-push
 docker-push: docker
 	@docker push --all-tags isaiah1112/sshreader
 
-docs:
-	@python -m pip install Sphinx
-	@sphinx-build -b html docs/source/ docs/build/html/
+.PHONY: docs
+docs: init
+	@$(POETRY) install --with docs
+	@$(POETRY) export -f requirements.txt --output docs/requirements.txt
+	@$(POETRY) run sphinx-build -b html docs/source/ docs/build/html/
 
-install:
-	@python -m pip install -U -e .
-
+.PHONY: test
 test: test-init
-	@coverage run -m unittest discover tests/
+	@$(POETRY) run coverage run -m unittest discover tests/
 
+.PHONY: test-clean
 test-clean:
 	@if [ -n "$(DOCKER_CID)" ]; then docker stop $(DOCKER_CID) >/dev/null; docker container rm $(DOCKER_CID) >/dev/null; fi
 	@echo "Stopped and Removed sshreader_test container"
 
+.PHONY: test-coverage
 test-coverage: test
-	@coverage html
+	@$(POETRY) run coverage html
 
-test-init:
-	@python -m pip install -U -r requirements.txt
+.PHONY: test-init
+test-init: init
+	@$(POETRY) install --with dev
 	@if [ -z "$(DOCKER_CID)" ]; then\
 		if [ -z "$(SSH_PORT)" ]; then\
 			echo "Starting sshreader_test container on port 22";\
@@ -39,7 +47,8 @@ test-init:
  		fi\
  	fi
 
-test-lint:
-	@python -m pip install -U -r requirements.txt
-	@flake8 sshreader/ --count --select=E9,F63,F7,F82 --show-source --statistics --exclude docs
-	@flake8 sshreader/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude docs
+.PHONY: test-lint
+test-lint: init
+	@$(POETRY) install --with dev
+	@$(POETRY) run flake8 sshreader/ --count --select=E9,F63,F7,F82 --show-source --statistics --exclude docs
+	@$(POETRY) run flake8 sshreader/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude docs

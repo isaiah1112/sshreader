@@ -106,3 +106,5 @@ docs/build/
 # PyBuilder
 target/
 
+# VS Code
+.vscode/

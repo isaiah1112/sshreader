@@ -1,5 +1,15 @@
 # Changelog
 
+## Release 6.0
+ * Removed support for Python3.7
+ * Added support for Python3.12
+ * Added ability to include port in hostlist expression for pydsh [c5b33d9]
+ * Ensuring SSH Port passed to pydsh is a positive integer [e485991]
+ * Adding Timeout type to ServerJob Object [e4f368c]
+ * Renamed types module to customtypes to not override internal types module [8e5a1e6]
+ * Added poetry config and lock file for requirements [7ed936b]
+ * Added option to disable SHA2 hashes in SSH Connections when using `pydsh` [ea06850]
+
 ## Release 5.0.4
  * Added ability to disable SHA2 RSA hashes on ServerJob objects [dc46c2a]
 

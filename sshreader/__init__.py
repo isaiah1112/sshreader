@@ -1,7 +1,7 @@
 # coding=utf-8
 """A Python Package for parallelizing ssh connections via threading and multiprocessing.
 """
-# Copyright (C) 2015-2022 Jesse Almanrode
+# Copyright (C) 2015-2024 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -18,12 +18,12 @@
 
 # For backwards compatibility
 from .ssh import SSH, envvars
-from .types import Command, EnvVars, Timeout, TimeoutTuple
+from .customtypes import Command, EnvVars, Timeout, TimeoutTuple
 from .utils import ServerJob, Hook, sshread, echo, cpu_limit, shell_command
 import logging
 
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
-__all__ = ['ssh', 'types', 'utils']
+__all__ = ['ssh', 'customtypes', 'utils']
 
 log = logging.getLogger(__name__)
 log_handler = logging.StreamHandler()
