@@ -8,11 +8,11 @@ across multiple servers parallel.  It utilizes the [Paramiko](http://www.paramik
 In order to maintain the widest range of compatibility, [SSHreader][] is currently tested using the following versions of
 Python:
 
-* Python3.8
 * Python3.9
 * Python3.10
 * Python3.11
 * Python3.12
+* Python3.13
 
 ## License
 
