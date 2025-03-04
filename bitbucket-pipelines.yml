@@ -66,14 +66,25 @@ pipelines:
           - sshd
         caches:
           - pip
+    - step: &py313
+        name: Python 3.13 Tests
+        image: python:3.13
+        script:
+          - pip install poetry
+          - poetry install --with dev
+          - poetry run python -m unittest discover tests/
+        services:
+          - sshd
+        caches:
+          - pip
   branches:
     release/*:
       - step: *lint
-      - step: *py38
       - step: *py39
       - step: *py310
       - step: *py311
       - step: *py312
+      - step: *py313
       - step:
           name: Deploy To Test PyPi
           trigger: manual
@@ -85,11 +96,11 @@ pipelines:
             - pip
     master:
       - step: *lint
-      - step: *py38
       - step: *py39
       - step: *py310
       - step: *py311
       - step: *py312
+      - step: *py313
       - step:
           name: Deploy To PyPi
           script:
