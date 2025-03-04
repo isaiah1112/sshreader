@@ -50,5 +50,4 @@ test-init: init
 .PHONY: test-lint
 test-lint: init
 	@$(POETRY) install --with dev
-	@$(POETRY) run flake8 sshreader/ --count --select=E9,F63,F7,F82 --show-source --statistics --exclude docs
-	@$(POETRY) run flake8 sshreader/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude docs
+	@$(POETRY) run ruff check sshreader/

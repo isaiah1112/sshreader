@@ -40,7 +40,7 @@ optional = true
 [tool.poetry.group.dev.dependencies]
 coverage = "^7"
 discover = "^0.4"
-flake8 = "^5"
+ruff = "^0.9.9"
 
 [tool.poetry.group.docs]
 optional = true
@@ -51,3 +51,7 @@ sphinx = "^7"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff.lint]
+select = ["E", "F", "B"]
+ignore = ["F401", "E501"]
