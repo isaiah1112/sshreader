@@ -1,5 +1,10 @@
 # Changelog
 
+# Release 6.1
+ * Ensuring Sphinx requirements are exported to `requirements.txt` [0967880]
+ * Added `python3.13` to supported versions and made default [9810ece]
+ * Updated requirements [6ddd72e]
+
 ## Release 6.0
  * Removed support for Python3.7
  * Added support for Python3.12
