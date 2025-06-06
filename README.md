@@ -47,18 +47,18 @@ project](https://bitbucket.org/isaiah1112/sshreader) and submit pull requests to
 
 ### Development Installation
 
-If you are wanting to work on development of [SSHreader][], first ensure [Poetry](https://python-poetry.org) is installed
+If you are wanting to work on development of [SSHreader][], first ensure [UV](https://docs.astral.sh/uv/) is installed
 and then:
 
 ```commandline
-poetry install --with dev
+uv sync --group dev
 ```
 
 To ensure all development requirements are met. This will allow you to run the unit/integration tests!
 
 ### Building Docs
 
-If you have installed [Poetry](https://python-poetry.org)] you can build its Sphinx Documentation for [SSHreader][] simply by:
+If you have installed [UV](https://docs.astral.sh/uv/) you can build its Sphinx Documentation for [SSHreader][] simply by:
 
 ```commandline
 make docs
