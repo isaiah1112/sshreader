@@ -44,7 +44,7 @@ repository = "https://bitbucket.org/isaiah1112/sshreader/"
 pydsh = "sshreader.scripts.pydsh:cli"
 
 [dependency-groups]
-dev = [
+test = [
     "coverage<8,>=7",
     "discover<1.0,>=0.4",
     "ruff<1.0.0,>=0.9.9",

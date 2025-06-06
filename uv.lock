@@ -727,13 +727,13 @@ dependencies = [
 ]
 
 [package.dev-dependencies]
-dev = [
+docs = [
+    { name = "sphinx" },
+]
+test = [
     { name = "coverage" },
     { name = "discover" },
     { name = "ruff" },
-]
-docs = [
-    { name = "sphinx" },
 ]
 
 [package.metadata]
@@ -746,12 +746,12 @@ requires-dist = [
 ]
 
 [package.metadata.requires-dev]
-dev = [
+docs = [{ name = "sphinx", specifier = ">=7,<8" }]
+test = [
     { name = "coverage", specifier = ">=7,<8" },
     { name = "discover", specifier = ">=0.4,<1.0" },
     { name = "ruff", specifier = ">=0.9.9,<1.0.0" },
 ]
-docs = [{ name = "sphinx", specifier = ">=7,<8" }]
 
 [[package]]
 name = "tomli"

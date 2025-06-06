@@ -21,7 +21,7 @@ docs: init
 
 .PHONY: test
 test: test-init
-	@uv run --group dev coverage run -m unittest discover tests/
+	@uv run --group test coverage run -m unittest discover tests/
 
 .PHONY: test-clean
 test-clean:
@@ -30,7 +30,7 @@ test-clean:
 
 .PHONY: test-coverage
 test-coverage: test
-	@uv run --group dev coverage html
+	@uv run --group test coverage html
 
 .PHONY: test-init
 test-init: init
@@ -46,4 +46,4 @@ test-init: init
 
 .PHONY: test-lint
 test-lint: init
-	@uv run --group dev ruff check sshreader/
+	@uv run --group test ruff check sshreader/

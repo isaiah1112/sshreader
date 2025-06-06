@@ -44,7 +44,7 @@ If you are wanting to work on development of [SSHreader][], first ensure [UV](ht
 and then:
 
 ```commandline
-uv sync --group dev
+uv sync --group test
 ```
 
 To ensure all development requirements are met. This will allow you to run the unit/integration tests!
