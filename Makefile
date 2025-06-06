@@ -1,10 +1,10 @@
 DOCKER_TAG := $(shell git describe --tags)
 DOCKER_CID := $(shell docker ps -a -q -f name=sshreader_test)
-POETRY := $(shell which poetry 2>/dev/null)
+UV_PATH := $(shell which uv 2>/dev/null)
 
 .PHONY: init
 init:
-	@if [ -z "$(POETRY)" ]; then echo "Please install 'poetry'"; exit 1; fi
+	@if [ -z "$(UV_PATH)" ]; then curl -LsSf https://astral.sh/uv/install.sh | sh; fi
 
 .PHONY: docker
 docker:
@@ -17,13 +17,11 @@ docker-push: docker
 
 .PHONY: docs
 docs: init
-	@$(POETRY) install --with docs
-	@$(POETRY) export -f requirements.txt --output docs/requirements.txt --with docs
-	@$(POETRY) run sphinx-build -b html docs/source/ docs/build/html/
+	@uv run --group docs sphinx-build -b html docs/source/ docs/build/html/
 
 .PHONY: test
 test: test-init
-	@$(POETRY) run coverage run -m unittest discover tests/
+	@uv run --group dev coverage run -m unittest discover tests/
 
 .PHONY: test-clean
 test-clean:
@@ -32,11 +30,10 @@ test-clean:
 
 .PHONY: test-coverage
 test-coverage: test
-	@$(POETRY) run coverage html
+	@uv run --group dev coverage html
 
 .PHONY: test-init
 test-init: init
-	@$(POETRY) install --with dev
 	@if [ -z "$(DOCKER_CID)" ]; then\
 		if [ -z "$(SSH_PORT)" ]; then\
 			echo "Starting sshreader_test container on port 22";\
@@ -49,5 +46,4 @@ test-init: init
 
 .PHONY: test-lint
 test-lint: init
-	@$(POETRY) install --with dev
-	@$(POETRY) run ruff check sshreader/
+	@uv run --group dev ruff check sshreader/
