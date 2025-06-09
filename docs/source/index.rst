@@ -68,15 +68,7 @@ API Documentation
 Compatibility
 -------------
 
-In order to maintain the widest range of compatibility, sshreader is currently tested using the following versions of
-Python:
-
-* Python3.8 (Deprecated)
-* Python3.9
-* Python3.10
-* Python3.11
-* Python3.12
-* Python3.13
+At this time, I strive to maintain compatibility with all [supported versions of Python](https://devguide.python.org/versions/).
 
 .. note::
 
