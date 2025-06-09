@@ -6,18 +6,17 @@ UV_PATH := $(shell which uv 2>/dev/null)
 init:
 	@if [ -z "$(UV_PATH)" ]; then curl -LsSf https://astral.sh/uv/install.sh | sh; fi
 
-.PHONY: docker
+.PHONY: docker-build
 docker:
 	@docker build -t isaiah1112/sshreader:$(DOCKER_TAG) .
 	@docker tag isaiah1112/sshreader:$(DOCKER_TAG) isaiah1112/sshreader:latest
 
 .PHONY: docker-push
-docker-push: docker
+docker-push: docker-build
 	@docker push --all-tags isaiah1112/sshreader
 
 .PHONY: docs
 docs: init
-	@uv export --group docs --format requirements.txt --no-hashes -o docs/requirements.txt
 	@uv run --group docs sphinx-build -b html docs/source/ docs/build/html/
 
 .PHONY: test
@@ -45,6 +44,6 @@ test-init: init
  		fi\
  	fi
 
-.PHONY: test-lint
-test-lint: init
+.PHONY: lint
+lint: init
 	@uv run --group test ruff check sshreader/
