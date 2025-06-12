@@ -17,13 +17,16 @@ The most straightforward way to get the [SSHreader][] module working for you is:
 ```commandline
 pip install sshreader
 ```
+or, if you'd like to use a local install from the repo:
+```commandline
+make install
+```
 
 This ensures that all the requirements are met.
 
 ## Documentation
 
 The documentation for [SSHreader][] can be found [here](https://sshreader.readthedocs.io)
-
 
 ## Contributing
 
@@ -38,26 +41,15 @@ towards.
 Code contributions are encouraged: please feel free to [fork the
 project](https://bitbucket.org/isaiah1112/sshreader) and submit pull requests to the develop branch.
 
-### Development Installation
-
-If you are wanting to work on development of [SSHreader][], first ensure [UV](https://docs.astral.sh/uv/) is installed
-and then:
-
-```commandline
-uv sync --group test
-```
-
-To ensure all development requirements are met. This will allow you to run the unit/integration tests!
-
 ### Building Docs
 
-If you have installed [UV](https://docs.astral.sh/uv/) you can build its Sphinx Documentation for [SSHreader][] simply by:
+You can build the Sphinx Documentation for [SSHreader][] locally by running:
 
 ```commandline
 make docs
 ```
 
-Then simply open `docs/build/html/index.html` in your browser.
+Then open `docs/build/html/index.html` in your browser.
 
 ## Extras
 

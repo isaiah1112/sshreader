@@ -27,7 +27,7 @@ running and then simply run the following command:
 
 .. code-block:: bash
 
-    make test-coverage
+    make coverage
 
 Then, open the HTML files in your default browser using :code:`open htmlcov/index.html`!
 
