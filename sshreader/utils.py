@@ -359,7 +359,7 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
         else:
             tcount = int(min(tcount, totaljobs))
 
-        log.info('spawning %d threads' % (tcount, ))
+        log.info(f'spawning {tcount} threads')
         # Start a thread pool
         for thread in range(tcount):
             thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar),
@@ -387,7 +387,7 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
                 # If we don't have enough jobs to spawn more than 1 thread per process, then we won't spawn threads
                 tcount = 0
 
-        log.info('spawning %d processes' % (pcount, ))
+        log.info(f'spawning {pcount} processes')
         for pid in range(pcount):
             pid = mpctx.Process(target=_sub_process_,
                                 args=(task_queue, result_queue, item_counter, tcount, progress_bar),
@@ -396,7 +396,7 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
             pids.append(pid)
 
     # Non-blocking way to wait for threads/processes
-    log.debug('main waiting for %d ServerJobs to finish' % (totaljobs,))
+    log.debug(f'main waiting for {totaljobs} ServerJobs to finish')
     while result_queue.full() is False:
         if progress_bar:
             bar.update(item_counter.value)
@@ -405,12 +405,12 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
         bar.finish()
 
     if len(threads) > 0:
-        log.info('joining %d threads' % (len(threads),))
+        log.info(f'joining {len(threads)} threads')
         for t in threads:
             if t.is_alive():
                 t.join(timeout=1)
     elif len(pids) > 0:
-        log.info('joining %d processes' % (len(pids),))
+        log.info(f'joining {len(pids)} processes')
         for p in pids:
             if p.is_alive():
                 p.join(timeout=1)
@@ -431,7 +431,7 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress
     DO NOT USE THIS METHOD!
     """
     pid = os.getpid()
-    log.debug('starting process: %d' % (pid,))
+    log.debug(f'starting process: {pid}')
     if thread_count == 0:
         while task_queue.empty() is False:
             job = task_queue.get()
@@ -442,16 +442,16 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress
                     item_counter.value += 1
     else:
         threads = list()
-        log.debug('process: %d spawning: %d threads' % (pid, thread_count))
+        log.debug(f'process: {pid} spawning: {thread_count} threads')
         for thread in range(thread_count):
             thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar),
                                       daemon=True)
             thread.start()
             threads.append(thread)
-        log.debug('process: %d waiting for: %d threads' % (pid, len(threads)))
+        log.debug(f'process: {pid} waiting for: {len(threads)} threads')
         for thread in threads:
             thread.join()
-    log.debug('exiting process: %d' % (pid,))
+    log.debug(f'exiting process: {pid}')
     return None
 
 
