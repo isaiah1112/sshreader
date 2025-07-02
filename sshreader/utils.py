@@ -1,4 +1,3 @@
-# coding=utf-8
 """ All the classes and functions that make sshreader tick
 """
 # Copyright (C) 2015-2025 Jesse Almanrode
@@ -18,17 +17,17 @@
 import logging
 import multiprocessing
 import os
-import paramiko
 import subprocess
 import sys
 import threading
 import time
-from progressbar import ProgressBar
 from typing import Any, Callable, Optional, Union
 
+import paramiko
+from progressbar import ProgressBar
 
-from .ssh import SSH
 from .customtypes import Command, Timeout, TimeoutTuple
+from .ssh import SSH
 
 # Globals
 mpctx = multiprocessing.get_context('spawn')  # Forcing the forking type to spawn in older versions of Python3
@@ -68,7 +67,7 @@ def shell_command(command: str, combine: bool = False, decode_bytes: bool = True
     return result
 
 
-class Hook(object):
+class Hook:
     """ Custom class for creating "Hooks" that can execute code before of after a ServerJob object executes and
     can evn act on the data of a ServerJob when it is passed as the first argument to the Hook object.
 
@@ -117,7 +116,7 @@ class Hook(object):
         return str(self.__dict__)
 
 
-class ServerJob(object):
+class ServerJob:
     """ Custom class for holding all the info needed to run ssh commands or shell commands in sub-processes or threads
 
     :param fqdn: Fully qualified domain name or IP address
@@ -361,7 +360,7 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
         else:
             tcount = int(min(tcount, totaljobs))
 
-        log.info(u'spawning %d threads' % (tcount, ))
+        log.info('spawning %d threads' % (tcount, ))
         # Start a thread pool
         for thread in range(tcount):
             thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar),
@@ -389,7 +388,7 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
                 # If we don't have enough jobs to spawn more than 1 thread per process, then we won't spawn threads
                 tcount = 0
 
-        log.info(u'spawning %d processes' % (pcount, ))
+        log.info('spawning %d processes' % (pcount, ))
         for pid in range(pcount):
             pid = mpctx.Process(target=_sub_process_,
                                 args=(task_queue, result_queue, item_counter, tcount, progress_bar),
@@ -433,7 +432,7 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress
     DO NOT USE THIS METHOD!
     """
     pid = os.getpid()
-    log.debug(u'starting process: %d' % (pid,))
+    log.debug('starting process: %d' % (pid,))
     if thread_count == 0:
         while task_queue.empty() is False:
             job = task_queue.get()
@@ -444,16 +443,16 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress
                     item_counter.value += 1
     else:
         threads = list()
-        log.debug(u'process: %d spawning: %d threads' % (pid, thread_count))
+        log.debug('process: %d spawning: %d threads' % (pid, thread_count))
         for thread in range(thread_count):
             thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar),
                                       daemon=True)
             thread.start()
             threads.append(thread)
-        log.debug(u'process: %d waiting for: %d threads' % (pid, len(threads)))
+        log.debug('process: %d waiting for: %d threads' % (pid, len(threads)))
         for thread in threads:
             thread.join()
-    log.debug(u'exiting process: %d' % (pid,))
+    log.debug('exiting process: %d' % (pid,))
     return None
 
 

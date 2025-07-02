@@ -1,4 +1,3 @@
-# coding=utf-8
 """ Typing module for sshreader
 """
 # Copyright (C) 2015-2025 Jesse Almanrode
@@ -15,7 +14,7 @@
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from typing import NamedTuple, Optional, Union, Tuple
+from typing import NamedTuple, Optional, Tuple, Union
 
 
 class Command(NamedTuple):

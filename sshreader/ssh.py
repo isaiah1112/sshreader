@@ -1,4 +1,3 @@
-# coding=utf-8
 """A wrapper for Paramiko that attempts to make ssh sessions easier to work with.
 """
 # Copyright (C) 2015-2025 Jesse Almanrode
@@ -17,12 +16,14 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
 import os
-import paramiko
 import socket
 from getpass import getuser
 from typing import Any, Optional
 
+import paramiko
+
 from .customtypes import Command, EnvVars, Timeout
+
 log = logging.getLogger('sshreader')
 
 
@@ -56,7 +57,7 @@ def envvars() -> EnvVars:
     return EnvVars(**env)
 
 
-class SSH(object):
+class SSH:
     """SSH Session class which can be used to send commands to a remote server.  It also supports basic SFTP commands
     and can be used to push/pull files from a remote system.
 

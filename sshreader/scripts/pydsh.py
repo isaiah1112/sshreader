@@ -1,4 +1,3 @@
-# coding=utf-8
 """ A Pythonic implementation of pdsh powered by sshreader
 """
 # Copyright (C) 2015-2025 Jesse Almanrode
@@ -16,14 +15,17 @@
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from collections import defaultdict
-from hashlib import md5
-from hostlist import expand_hostlist, collect_hostlist
-import click
 import logging
 import os
-import sshreader
 import sys
+from collections import defaultdict
+from hashlib import md5
+
+import click
+from hostlist import collect_hostlist, expand_hostlist
+
+import sshreader
+
 # GLOBALS
 __author__ = 'Jesse Almanrode'
 __version__ = '3.1.0'
@@ -109,7 +111,7 @@ def coalesce(jobresults):
             result = job.results[0].stdout
         md5sum = md5(result.encode()).hexdigest()
         job_hashes[md5sum].append(job.name)
-        if md5sum not in output_hashes.keys():
+        if md5sum not in output_hashes:
             output_hashes[md5sum] = result
 
     for md5sum, stdout in output_hashes.items():
