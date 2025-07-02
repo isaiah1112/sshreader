@@ -193,9 +193,8 @@ class ServerJob:
             self.post_hook = post_hook
         if run_local:
             self._conn = 'localhost'
-        elif not keyfile and len(paramiko.Agent().get_keys()) == 0:
-            if not all([username, password]):
-                raise paramiko.SSHException('username and password or ssh key not provided')
+        elif not keyfile and len(paramiko.Agent().get_keys()) == 0 and not all([username, password]):
+            raise paramiko.SSHException('username and password or ssh key not provided')
 
     def run(self) -> int:
         """Run a ServerJob. SSH to server, run cmds, return result

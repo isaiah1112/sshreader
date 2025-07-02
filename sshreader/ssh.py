@@ -81,9 +81,8 @@ class SSH:
     """
     def __init__(self, fqdn: str, username: str, password: Optional[str] = None, keyfile: Optional[str] = None,
                  keypass: Optional[str] = None, port: int = 22, connect: bool = True, rsa_sha2: bool = True) -> None:
-        if not keyfile and len(paramiko.Agent().get_keys()) == 0:
-            if not all((username, password)):
-                paramiko.SSHException('username and password or keyfile not provided')
+        if not keyfile and len(paramiko.Agent().get_keys()) == 0 and not all((username, password)):
+            paramiko.SSHException('username and password or keyfile not provided')
         self.host = fqdn
         self.username = username
         self.password = password
@@ -228,9 +227,8 @@ class SSH:
         if self.__alive():
             raise paramiko.SSHException(f"connection to {self.host} already established")
         paramiko.util.logging.getLogger().setLevel(logging.CRITICAL)  # Keeping paramiko from logging errors to stdout
-        if not self.keyfile and len(paramiko.Agent().get_keys()) == 0:
-            if not all((self.username, self.password)):
-                paramiko.SSHException('username and password or keyfile not provided')
+        if not self.keyfile and len(paramiko.Agent().get_keys()) == 0 and not all((self.username, self.password)):
+            paramiko.SSHException('username and password or keyfile not provided')
         if self.keyfile:
             if self.rsa_sha2:
                 self._connection.connect(self.host, port=self.port, username=self.username, password=self.keypass,
