@@ -126,7 +126,7 @@ def validate_hostlist(ctx, param, value):
     try:
         return expand_hostlist(value)
     except Exception:
-        raise click.BadOptionUsage(param, 'Invalid hostlist expression')
+        raise click.BadOptionUsage(param, 'Invalid hostlist expression') from None
 
 
 @click.command(epilog=__examples__)
