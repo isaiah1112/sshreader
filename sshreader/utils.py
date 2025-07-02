@@ -203,54 +203,54 @@ class ServerJob:
         :return: Sum of return codes for each command executed
         :rtype: int
         """
-        log.info('%s: starting ServerJob' % (self.name,))
+        log.info(f'{self.name}: starting ServerJob')
         if self.run_local:
             if self.pre_hook:
-                log.debug('%s: running prehook' % (self.name,))
+                log.debug(f'{self.name}: running prehook')
                 self.pre_hook.run(self)
             for cmd in self.cmds:
                 result = shell_command(cmd, combine=self.combine_output)
-                log.debug('%s: %s' % (self.name, str(result)))
+                log.debug(f'{self.name}: {str(result)}')
                 self.results.append(result)
                 self.status += result.return_code
             if self.post_hook:
-                log.debug('%s; running posthook' % (self.name,))
+                log.debug(f'{self.name}; running posthook')
                 self.post_hook.run(self)
         else:
             if self.pre_hook and self.pre_hook.ssh_established is False:
-                log.debug('%s: running prehook' % (self.name,))
+                log.debug(f'{self.name}: running prehook')
                 self.pre_hook.run(self)
             try:
                 self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
                                  port=self.ssh_port, connect=False, rsa_sha2=self.rsa_sha2)
                 self._conn.connect(timeout=self.ssh_timeout)
-                log.debug('%s: ssh connection established' % (self.name,))
+                log.debug(f'{self.name}: ssh connection established')
             except Exception as errorMsg:
                 log.debug(str(errorMsg))
                 self.status = 255
                 self.results.append(str(errorMsg))
             else:
                 if self.pre_hook and self.pre_hook.ssh_established:
-                    log.debug('%s: running prehook' % (self.name,))
+                    log.debug(f'{self.name}: running prehook')
                     self.pre_hook.run(self)
                 for cmd in self.cmds:
                     try:
                         result = self._conn.ssh_command(cmd, timeout=self.cmd_timeout, combine=self.combine_output)
                     except Exception as errorMsg:
                         result = Command(cmd, '', str(errorMsg), 54)
-                    log.debug('%s: %s' % (self.name, str(result)))
+                    log.debug(f'{self.name}: {str(result)}')
                     self.results.append(result)
                     self.status += result.return_code
                 if self.post_hook and self.post_hook.ssh_established:
-                    log.debug('%s; running posthook' % (self.name,))
+                    log.debug(f'{self.name}; running posthook')
                     self.post_hook.run(self)
                 self._conn.close()
             finally:
                 self._conn = None  # So the ssh connection can be pickled!
             if self.post_hook and self.post_hook.ssh_established is False:
-                log.debug('%s; running posthook' % (self.name,))
+                log.debug(f'{self.name}; running posthook')
                 self.post_hook.run(self)
-        log.info('%s: exiting ServerJob' % (self.name,))
+        log.info(f'{self.name}: exiting ServerJob')
         return self.status
 
     def __str__(self) -> str:

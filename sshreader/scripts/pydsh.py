@@ -65,10 +65,7 @@ def output(thisjob):
     :param thisjob: <ServerJob> object
     :return: None
     """
-    if thisjob.status == 255:
-        result = thisjob.results[0]
-    else:
-        result = thisjob.results[0].stdout
+    result = thisjob.results[0] if thisjob.status == 255 else thisjob.results[0].stdout
     if len(result) != 0:
         for line in result.split('\n'):
             sshreader.echo(str(thisjob.name) + ': ' + str(line))
@@ -105,10 +102,7 @@ def coalesce(jobresults):
     job_hashes = defaultdict(list)
     output_hashes = dict()
     for job in jobresults:
-        if job.status == 255:
-            result = job.results[0]
-        else:
-            result = job.results[0].stdout
+        result = job.results[0] if job.status == 255 else job.results[0].stdout
         md5sum = md5(result.encode()).hexdigest()
         job_hashes[md5sum].append(job.name)
         if md5sum not in output_hashes:
@@ -257,7 +251,7 @@ def cli(**kwargs):
             job.pre_hook = prehook
         jobs.append(job)
 
-    log.info('Sending %s ServerJobs to sshreader module' % (len(jobs),))
+    log.info(f'Sending {len(jobs)} ServerJobs to sshreader module')
     if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
         if kwargs['redline']:
             sshreader.sshread(jobs, pcount=0, tcount=0, print_lock=True)

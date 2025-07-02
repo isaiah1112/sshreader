@@ -14,7 +14,7 @@
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from typing import NamedTuple, Optional, Tuple, Union
+from typing import NamedTuple, Optional, Union
 
 
 class Command(NamedTuple):
@@ -33,4 +33,4 @@ class EnvVars(NamedTuple):
 
 
 Timeout = Union[int, float]
-TimeoutTuple = Tuple[Timeout, Timeout]
+TimeoutTuple = tuple[Timeout, Timeout]
