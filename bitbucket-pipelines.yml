@@ -6,7 +6,7 @@ pipelines:
         name: Lint using Ruff
         script:
           - pip install uv
-          - uv run --group test ruff check sshreader/
+          - uv run --link-mode=copy --group test ruff check sshreader/
         caches:
             - pip
     - step: &py38
@@ -14,7 +14,7 @@ pipelines:
         image: python:3.8
         script:
           - pip install uv
-          - uv run --group test python -m unittest discover tests/
+          - uv run --link-mode=copy --group test python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -24,7 +24,7 @@ pipelines:
         image: python:3.9
         script:
           - pip install uv
-          - uv run --group test python -m unittest discover tests/
+          - uv run --link-mode=copy --group test python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -34,7 +34,7 @@ pipelines:
         image: python:3.10
         script:
           - pip install uv
-          - uv run --group test python -m unittest discover tests/
+          - uv run --link-mode=copy --group test python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -44,7 +44,7 @@ pipelines:
         image: python:3.11
         script:
           - pip install uv
-          - uv run --group test python -m unittest discover tests/
+          - uv run --link-mode=copy --group test python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -54,7 +54,7 @@ pipelines:
         image: python:3.12
         script:
           - pip install uv
-          - uv run --group test python -m unittest discover tests/
+          - uv run --link-mode=copy --group test python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -64,7 +64,7 @@ pipelines:
         image: python:3.13
         script:
           - pip install uv
-          - uv run --group test python -m unittest discover tests/
+          - uv run --link-mode=copy --group test python -m unittest discover tests/
         services:
           - sshd
         caches:
