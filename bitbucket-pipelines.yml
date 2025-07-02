@@ -6,7 +6,7 @@ pipelines:
         name: Lint using Ruff
         script:
           - pip install uv
-          - uv run --group test ruff check --exit-zero sshreader/
+          - uv run --group test ruff check sshreader/
         caches:
             - pip
     - step: &py38
