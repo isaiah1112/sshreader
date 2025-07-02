@@ -18,10 +18,6 @@
 # For backwards compatibility
 import logging
 
-from .customtypes import Command, EnvVars, Timeout, TimeoutTuple
-from .ssh import SSH, envvars
-from .utils import Hook, ServerJob, cpu_limit, echo, shell_command, sshread
-
 __author__ = 'Jesse Almanrode (jesse@almanrode.com)'
 __all__ = ['ssh', 'customtypes', 'utils']
 
