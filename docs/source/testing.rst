@@ -11,7 +11,8 @@ Docker and have it running, simply run the following command:
 
 This command pulls down the custom docker image, runs it on port :code:`22`, and then runs all the unit/integration
 tests.  If you would like to change which port this container runs on, simply export the :code:`SSH_PORT=<int>` environment
-variable prior to running :code:`make test` to whatever integer port you would like to map this container to.
+variable prior to running :code:`make test` to whatever integer port you would like to map this container to. Alternatively,
+you can pass :code:`SSH_PORT=<int>` to the :code:`make test` target.
 
 To clean up after running the tests (stopping external docker containers) run:
 

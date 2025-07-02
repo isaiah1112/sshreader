@@ -1,4 +1,3 @@
-# coding=utf-8
 """ All the classes and functions that make sshreader tick
 """
 # Copyright (C) 2015-2025 Jesse Almanrode
@@ -18,17 +17,17 @@
 import logging
 import multiprocessing
 import os
-import paramiko
 import subprocess
 import sys
 import threading
 import time
-from progressbar import ProgressBar
 from typing import Any, Callable, Optional, Union
 
+import paramiko
+from progressbar import ProgressBar
 
-from .ssh import SSH
 from .customtypes import Command, Timeout, TimeoutTuple
+from .ssh import SSH
 
 # Globals
 mpctx = multiprocessing.get_context('spawn')  # Forcing the forking type to spawn in older versions of Python3
@@ -68,7 +67,7 @@ def shell_command(command: str, combine: bool = False, decode_bytes: bool = True
     return result
 
 
-class Hook(object):
+class Hook:
     """ Custom class for creating "Hooks" that can execute code before of after a ServerJob object executes and
     can evn act on the data of a ServerJob when it is passed as the first argument to the Hook object.
 
@@ -117,7 +116,7 @@ class Hook(object):
         return str(self.__dict__)
 
 
-class ServerJob(object):
+class ServerJob:
     """ Custom class for holding all the info needed to run ssh commands or shell commands in sub-processes or threads
 
     :param fqdn: Fully qualified domain name or IP address
@@ -194,9 +193,8 @@ class ServerJob(object):
             self.post_hook = post_hook
         if run_local:
             self._conn = 'localhost'
-        elif not keyfile and len(paramiko.Agent().get_keys()) == 0:
-            if not all([username, password]):
-                raise paramiko.SSHException('username and password or ssh key not provided')
+        elif not keyfile and len(paramiko.Agent().get_keys()) == 0 and not all([username, password]):
+            raise paramiko.SSHException('username and password or ssh key not provided')
 
     def run(self) -> int:
         """Run a ServerJob. SSH to server, run cmds, return result
@@ -204,54 +202,54 @@ class ServerJob(object):
         :return: Sum of return codes for each command executed
         :rtype: int
         """
-        log.info('%s: starting ServerJob' % (self.name,))
+        log.info(f'{self.name}: starting ServerJob')
         if self.run_local:
             if self.pre_hook:
-                log.debug('%s: running prehook' % (self.name,))
+                log.debug(f'{self.name}: running prehook')
                 self.pre_hook.run(self)
             for cmd in self.cmds:
                 result = shell_command(cmd, combine=self.combine_output)
-                log.debug('%s: %s' % (self.name, str(result)))
+                log.debug(f'{self.name}: {str(result)}')
                 self.results.append(result)
                 self.status += result.return_code
             if self.post_hook:
-                log.debug('%s; running posthook' % (self.name,))
+                log.debug(f'{self.name}; running posthook')
                 self.post_hook.run(self)
         else:
             if self.pre_hook and self.pre_hook.ssh_established is False:
-                log.debug('%s: running prehook' % (self.name,))
+                log.debug(f'{self.name}: running prehook')
                 self.pre_hook.run(self)
             try:
                 self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
                                  port=self.ssh_port, connect=False, rsa_sha2=self.rsa_sha2)
                 self._conn.connect(timeout=self.ssh_timeout)
-                log.debug('%s: ssh connection established' % (self.name,))
+                log.debug(f'{self.name}: ssh connection established')
             except Exception as errorMsg:
                 log.debug(str(errorMsg))
                 self.status = 255
                 self.results.append(str(errorMsg))
             else:
                 if self.pre_hook and self.pre_hook.ssh_established:
-                    log.debug('%s: running prehook' % (self.name,))
+                    log.debug(f'{self.name}: running prehook')
                     self.pre_hook.run(self)
                 for cmd in self.cmds:
                     try:
                         result = self._conn.ssh_command(cmd, timeout=self.cmd_timeout, combine=self.combine_output)
                     except Exception as errorMsg:
                         result = Command(cmd, '', str(errorMsg), 54)
-                    log.debug('%s: %s' % (self.name, str(result)))
+                    log.debug(f'{self.name}: {str(result)}')
                     self.results.append(result)
                     self.status += result.return_code
                 if self.post_hook and self.post_hook.ssh_established:
-                    log.debug('%s; running posthook' % (self.name,))
+                    log.debug(f'{self.name}; running posthook')
                     self.post_hook.run(self)
                 self._conn.close()
             finally:
                 self._conn = None  # So the ssh connection can be pickled!
             if self.post_hook and self.post_hook.ssh_established is False:
-                log.debug('%s; running posthook' % (self.name,))
+                log.debug(f'{self.name}; running posthook')
                 self.post_hook.run(self)
-        log.info('%s: exiting ServerJob' % (self.name,))
+        log.info(f'{self.name}: exiting ServerJob')
         return self.status
 
     def __str__(self) -> str:
@@ -361,7 +359,7 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
         else:
             tcount = int(min(tcount, totaljobs))
 
-        log.info(u'spawning %d threads' % (tcount, ))
+        log.info(f'spawning {tcount} threads')
         # Start a thread pool
         for thread in range(tcount):
             thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar),
@@ -389,7 +387,7 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
                 # If we don't have enough jobs to spawn more than 1 thread per process, then we won't spawn threads
                 tcount = 0
 
-        log.info(u'spawning %d processes' % (pcount, ))
+        log.info(f'spawning {pcount} processes')
         for pid in range(pcount):
             pid = mpctx.Process(target=_sub_process_,
                                 args=(task_queue, result_queue, item_counter, tcount, progress_bar),
@@ -398,7 +396,7 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
             pids.append(pid)
 
     # Non-blocking way to wait for threads/processes
-    log.debug('main waiting for %d ServerJobs to finish' % (totaljobs,))
+    log.debug(f'main waiting for {totaljobs} ServerJobs to finish')
     while result_queue.full() is False:
         if progress_bar:
             bar.update(item_counter.value)
@@ -407,12 +405,12 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
         bar.finish()
 
     if len(threads) > 0:
-        log.info('joining %d threads' % (len(threads),))
+        log.info(f'joining {len(threads)} threads')
         for t in threads:
             if t.is_alive():
                 t.join(timeout=1)
     elif len(pids) > 0:
-        log.info('joining %d processes' % (len(pids),))
+        log.info(f'joining {len(pids)} processes')
         for p in pids:
             if p.is_alive():
                 p.join(timeout=1)
@@ -433,7 +431,7 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress
     DO NOT USE THIS METHOD!
     """
     pid = os.getpid()
-    log.debug(u'starting process: %d' % (pid,))
+    log.debug(f'starting process: {pid}')
     if thread_count == 0:
         while task_queue.empty() is False:
             job = task_queue.get()
@@ -444,16 +442,16 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress
                     item_counter.value += 1
     else:
         threads = list()
-        log.debug(u'process: %d spawning: %d threads' % (pid, thread_count))
+        log.debug(f'process: {pid} spawning: {thread_count} threads')
         for thread in range(thread_count):
             thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar),
                                       daemon=True)
             thread.start()
             threads.append(thread)
-        log.debug(u'process: %d waiting for: %d threads' % (pid, len(threads)))
+        log.debug(f'process: {pid} waiting for: {len(threads)} threads')
         for thread in threads:
             thread.join()
-    log.debug(u'exiting process: %d' % (pid,))
+    log.debug(f'exiting process: {pid}')
     return None
 
 

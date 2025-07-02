@@ -28,8 +28,8 @@ install:
 	@python -m pip install .
 
 .PHONY: docker-build
-docker:
-	@docker build -t isaiah1112/sshreader:$(DOCKER_TAG) .
+docker-build:
+	@docker build --platform linux/amd64,linux/arm64 -t isaiah1112/sshreader:$(DOCKER_TAG) .
 	@docker tag isaiah1112/sshreader:$(DOCKER_TAG) isaiah1112/sshreader:latest
 
 .PHONY: docker-push

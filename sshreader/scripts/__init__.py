@@ -1,4 +1,3 @@
-# coding=utf-8
 """ Scripts portion of sshreader package
 """
 # Copyright (C) 2015-2025 Jesse Almanrode
