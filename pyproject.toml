@@ -54,8 +54,8 @@ docs = [
 ]
 
 [tool.ruff.lint]
-select = ["E", "F", "B"]
-ignore = ["F401", "E501", "B904"]
+select = ["E", "F", "B", "UP", "B", "SIM", "I"]
+ignore = ["E501"]
 
 [[tool.uv.index]]
 name = "test-pypi"
