@@ -68,7 +68,7 @@ API Documentation
 Compatibility
 -------------
 
-At this time, I strive to maintain compatibility with all [supported versions of Python](https://devguide.python.org/versions/).
+At this time, I strive to maintain compatibility with all `supported versions of Python`_.
 
 .. note::
 
@@ -82,3 +82,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+.. _supported versions of Python: https://devguide.python.org/versions/
