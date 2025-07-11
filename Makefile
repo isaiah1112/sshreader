@@ -1,18 +1,18 @@
 # Use current project version for docker image
 DOCKER_TAG := $(shell git describe --tags)
 # Container ID of docker image (if running)
-DOCKER_CID := $(shell docker ps -a -q -f name=sshreader_test)
+DOCKER_CID := $(shell docker ps -a -q -f name=sshreader_test 2>/dev/null)
 UV_PATH := $(shell which uv 2>/dev/null)
 
 .PHONY: help
 help:
 	@echo "Usage: make <target>"
 	@echo "\nTargets:"
-	@echo "  install            Install this package (pip install)"
-	@echo "  docs               Build Sphinx documentation"
-	@echo "  test               Run unit tests (requires Docker)"
-	@echo "  coverage           Build an HTML coverage report"
-	@echo "  lint               Run 'ruff' linting on project"
+	@echo "  install               Install this package (pip install)"
+	@echo "  docs                  Build Sphinx documentation"
+	@echo "  test [SSH_PORT=22]    Run unit tests (requires Docker)"
+	@echo "  coverage              Build an HTML coverage report"
+	@echo "  lint                  Run 'ruff' linting on project"
 	@echo "\nSpecial Targets:"
 	@echo "  docker-build       Build ssh server image for unit/integration tests"
 	@echo "  docker-push        Push ssh server image to Docker Hub"
