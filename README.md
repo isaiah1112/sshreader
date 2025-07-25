@@ -1,9 +1,11 @@
 ![logo](./logo.png)
 
 A Python Module for multiprocessing/threading ssh connections in order to make ssh operations
-across multiple servers parallel.  It utilizes the [Paramiko](http://www.paramiko.org/) module for its ssh client.
+across multiple servers parallel.  It utilizes the [Paramiko](http://www.paramiko.org/) module 
+for its ssh client.
 
-In order to maintain the widest range of compatibility, [SSHreader][] is currently tested using [all supported versions of Python!](https://devguide.python.org/versions/)
+In order to maintain the widest range of compatibility, [SSHreader][] is currently tested 
+using [all supported versions of Python!](https://devguide.python.org/versions/)
 
 ## License
 
@@ -26,7 +28,7 @@ This ensures that all the requirements are met.
 
 ## Documentation
 
-The documentation for [SSHreader][] can be found [here](https://sshreader.readthedocs.io)
+The documentation for [SSHreader][] can be found at [ReadTheDocs.](https://sshreader.readthedocs.io)
 
 ## Contributing
 
@@ -34,26 +36,16 @@ Comments and enhancements are very welcome.
 
 Report any issues or feature requests on the [BitBucket bug
 tracker](https://bitbucket.org/isaiah1112/sshreader/issues?status=new&status=open). Please include a minimal
-(not-) working example which reproduces the bug and, if appropriate, the
- traceback information.  Please do not request features already being worked
+not-working example which reproduces the bug and, if appropriate, the
+traceback information.  Please do not request features already being worked
 towards.
 
 Code contributions are encouraged: please feel free to [fork the
 project](https://bitbucket.org/isaiah1112/sshreader) and submit pull requests to the develop branch.
 
-### Building Docs
-
-You can build the Sphinx Documentation for [SSHreader][] locally by running:
-
-```commandline
-make docs
-```
-
-Then open `docs/build/html/index.html` in your browser.
-
 ## Extras
 
-Included with sshreader is a script called `pydsh`.  This works very similar to[pdsh](https://computing.llnl.gov/linux/pdsh.html) 
+Included with sshreader is a script called `pydsh`.  This works very similar to [pdsh](https://computing.llnl.gov/linux/pdsh.html) 
 but uses sshreader at its core to perform ssh commands in parallel and return the results.  
 The output of `pydsh` can also be piped through the `dshbak` tool that comes with pdsh.
 
