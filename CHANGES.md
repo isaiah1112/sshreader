@@ -1,3 +1,17 @@
+# Release 6.2.0
+* Replaced `flake8` with `ruff` linter
+* Replaced `poetry` with `uv` for dependency and project management
+* Updated logo [7e200ea]
+* Updated ReadTheDocs to use `ubuntu-latest` [622b022]
+* Added `help` and `install` targets to Makefile [3d0aa91]
+* Initial fixes from `ruff` linting [918e288]
+* `ruff` unsafe fixes [f423d70]
+* Fixed unused imports in module [ada8e2d]
+* Refactored `if` statements [20ec8c8]
+* Fixed Exception [9120d40]
+* Moved to f-strings [cdbbd44]
+* Updated `uv.lock` and `requirements.txt` [3d2cf3d]
+
 ## Release 6.1
 * Ensuring Sphinx requirements are exported to `requirements.txt` [0967880]
 * Added `python3.13` to supported versions and made default [9810ece]
