@@ -1,18 +1,11 @@
-# [sshreader][]
+![logo](./logo.png)
 
-## Overview
+A Python Module for multiprocessing/threading ssh connections in order to make ssh operations
+across multiple servers parallel.  It utilizes the [Paramiko](http://www.paramiko.org/) module 
+for its ssh client.
 
-[SSHreader][] is a Python Module for multiprocessing/threading ssh connections in order to make ssh operations
-across multiple servers parallel.  It utilizes the [Paramiko](http://www.paramiko.org/) module for its ssh client.
-
-In order to maintain the widest range of compatibility, [SSHreader][] is currently tested using the following versions of
-Python:
-
-* Python3.9
-* Python3.10
-* Python3.11
-* Python3.12
-* Python3.13
+In order to maintain the widest range of compatibility, [SSHreader][] is currently tested 
+using [all supported versions of Python!](https://devguide.python.org/versions/)
 
 ## License
 
@@ -26,13 +19,16 @@ The most straightforward way to get the [SSHreader][] module working for you is:
 ```commandline
 pip install sshreader
 ```
+or, if you'd like to use a local install from the repo:
+```commandline
+make install
+```
 
 This ensures that all the requirements are met.
 
 ## Documentation
 
-The documentation for [SSHreader][] can be found [here](https://sshreader.readthedocs.io)
-
+The documentation for [SSHreader][] can be found at [ReadTheDocs.](https://sshreader.readthedocs.io)
 
 ## Contributing
 
@@ -40,37 +36,16 @@ Comments and enhancements are very welcome.
 
 Report any issues or feature requests on the [BitBucket bug
 tracker](https://bitbucket.org/isaiah1112/sshreader/issues?status=new&status=open). Please include a minimal
-(not-) working example which reproduces the bug and, if appropriate, the
- traceback information.  Please do not request features already being worked
+not-working example which reproduces the bug and, if appropriate, the
+traceback information.  Please do not request features already being worked
 towards.
 
 Code contributions are encouraged: please feel free to [fork the
 project](https://bitbucket.org/isaiah1112/sshreader) and submit pull requests to the develop branch.
 
-### Development Installation
-
-If you are wanting to work on development of [SSHreader][], first ensure [Poetry](https://python-poetry.org) is installed
-and then:
-
-```commandline
-poetry install --with dev
-```
-
-To ensure all development requirements are met. This will allow you to run the unit/integration tests!
-
-### Building Docs
-
-If you have installed [Poetry](https://python-poetry.org)] you can build its Sphinx Documentation for [SSHreader][] simply by:
-
-```commandline
-make docs
-```
-
-Then simply open `docs/build/html/index.html` in your browser.
-
 ## Extras
 
-Included with sshreader is a script called `pydsh`.  This works very similar to[pdsh](https://computing.llnl.gov/linux/pdsh.html) 
+Included with sshreader is a script called `pydsh`.  This works very similar to [pdsh](https://computing.llnl.gov/linux/pdsh.html) 
 but uses sshreader at its core to perform ssh commands in parallel and return the results.  
 The output of `pydsh` can also be piped through the `dshbak` tool that comes with pdsh.
 

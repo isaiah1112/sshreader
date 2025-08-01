@@ -1,4 +1,3 @@
-# coding=utf-8
 """ A Pythonic implementation of pdsh powered by sshreader
 """
 # Copyright (C) 2015-2025 Jesse Almanrode
@@ -16,17 +15,20 @@
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from collections import defaultdict
-from hashlib import md5
-from hostlist import expand_hostlist, collect_hostlist
-import click
 import logging
 import os
-import sshreader
 import sys
+from collections import defaultdict
+from hashlib import md5
+
+import click
+from hostlist import collect_hostlist, expand_hostlist
+
+import sshreader
+
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '3.1.0'
+__version__ = '3.2.0'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
@@ -63,10 +65,7 @@ def output(thisjob):
     :param thisjob: <ServerJob> object
     :return: None
     """
-    if thisjob.status == 255:
-        result = thisjob.results[0]
-    else:
-        result = thisjob.results[0].stdout
+    result = thisjob.results[0] if thisjob.status == 255 else thisjob.results[0].stdout
     if len(result) != 0:
         for line in result.split('\n'):
             sshreader.echo(str(thisjob.name) + ': ' + str(line))
@@ -103,13 +102,10 @@ def coalesce(jobresults):
     job_hashes = defaultdict(list)
     output_hashes = dict()
     for job in jobresults:
-        if job.status == 255:
-            result = job.results[0]
-        else:
-            result = job.results[0].stdout
+        result = job.results[0] if job.status == 255 else job.results[0].stdout
         md5sum = md5(result.encode()).hexdigest()
         job_hashes[md5sum].append(job.name)
-        if md5sum not in output_hashes.keys():
+        if md5sum not in output_hashes:
             output_hashes[md5sum] = result
 
     for md5sum, stdout in output_hashes.items():
@@ -130,7 +126,7 @@ def validate_hostlist(ctx, param, value):
     try:
         return expand_hostlist(value)
     except Exception:
-        raise click.BadOptionUsage(param, 'Invalid hostlist expression')
+        raise click.BadOptionUsage(param, 'Invalid hostlist expression') from None
 
 
 @click.command(epilog=__examples__)
@@ -255,7 +251,7 @@ def cli(**kwargs):
             job.pre_hook = prehook
         jobs.append(job)
 
-    log.info('Sending %s ServerJobs to sshreader module' % (len(jobs),))
+    log.info(f'Sending {len(jobs)} ServerJobs to sshreader module')
     if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
         if kwargs['redline']:
             sshreader.sshread(jobs, pcount=0, tcount=0, print_lock=True)

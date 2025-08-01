@@ -1,12 +1,20 @@
-[tool.poetry]
+[project]
+authors = [
+    {name = "Jesse Almanrode", email = "jesse@almanrode.com"},
+]
+license = {text = "LGPL-3.0-or-later"}
+requires-python = "<4.0,>3.9"
+dependencies = [
+    "click<9,>=8",
+    "colorama<1.0,>=0.4",
+    "paramiko<4,>=3",
+    "progressbar2<5,>=4",
+    "python-hostlist<2,>=1",
+]
 name = "sshreader"
-version = "6.1.0"
+version = "6.2.0"
 description = "Multi-threading/processing wrapper for Paramiko"
-authors = ["Jesse Almanrode <jesse@almanrode.com>"]
-license = "LGPL-3.0-or-later"
 readme = "README.md"
-homepage = "http://sshreader.readthedocs.io/"
-repository = "https://bitbucket.org/isaiah1112/sshreader/"
 classifiers = [
     "Programming Language :: Python",
     "Intended Audience :: Developers",
@@ -19,35 +27,38 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries",
-    "Topic :: Software Development :: Libraries :: Python Modules"
-    ]
-packages = [{include = "sshreader"}, {include = "sshreader/scripts"}]
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 
-[tool.poetry.scripts]
-pydsh = 'sshreader.scripts.pydsh:cli'
-
-[tool.poetry.dependencies]
-python = ">3.8,<3.14"
-click = "^8"
-colorama = "^0.4"
-paramiko = "^3"
-progressbar2 = "^4"
-python-hostlist = "^1"
-
-[tool.poetry.group.dev]
-optional = true
-
-[tool.poetry.group.dev.dependencies]
-coverage = "^7"
-discover = "^0.4"
-flake8 = "^5"
-
-[tool.poetry.group.docs]
-optional = true
-
-[tool.poetry.group.docs.dependencies]
-sphinx = "^7"
-
+[tool.pdm.build]
+includes = ["sshreader", "sshreader/scripts"]
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
+
+[project.urls]
+homepage = "http://sshreader.readthedocs.io/"
+repository = "https://bitbucket.org/isaiah1112/sshreader/"
+
+[project.scripts]
+pydsh = "sshreader.scripts.pydsh:cli"
+
+[dependency-groups]
+test = [
+    "coverage<8,>=7",
+    "discover<1.0,>=0.4",
+    "ruff<1.0.0,>=0.9.9",
+]
+docs = [
+    "sphinx<8,>=7",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "B", "UP", "B", "SIM", "I"]
+ignore = ["E501", "F401"]
+
+[[tool.uv.index]]
+name = "test-pypi"
+url = "https://test.pypi.org/simple/"
+publish-url = "https://test.pypi.org/legacy/"
+explicit = true

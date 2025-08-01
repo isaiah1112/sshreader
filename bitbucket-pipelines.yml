@@ -3,21 +3,18 @@ image: python:latest
 pipelines:
   default:
     - step: &lint
-        name: Lint using Flake8
+        name: Lint using Ruff
         script:
-          - pip install poetry
-          - poetry install --with dev
-          - poetry run flake8 sshreader/ --count --select=E9,F63,F7,F82 --show-source --statistics --exclude docs
-          - poetry run flake8 sshreader/ --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude docs
+          - pip install --root-user-action=ignore uv
+          - uv run --link-mode=copy --group test ruff check sshreader/
         caches:
             - pip
     - step: &py38
         name: Python 3.8 Tests
         image: python:3.8
         script:
-          - pip install poetry
-          - poetry install --with dev
-          - poetry run python -m unittest discover tests/
+          - pip install --root-user-action=ignore uv
+          - uv run --link-mode=copy --group test python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -26,9 +23,8 @@ pipelines:
         name: Python 3.9 Tests
         image: python:3.9
         script:
-          - pip install poetry
-          - poetry install --with dev
-          - poetry run python -m unittest discover tests/
+          - pip install --root-user-action=ignore uv
+          - uv run --link-mode=copy --group test python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -37,9 +33,8 @@ pipelines:
         name: Python 3.10 Tests
         image: python:3.10
         script:
-          - pip install poetry
-          - poetry install --with dev
-          - poetry run python -m unittest discover tests/
+          - pip install --root-user-action=ignore uv
+          - uv run --link-mode=copy --group test python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -48,9 +43,8 @@ pipelines:
         name: Python 3.11 Tests
         image: python:3.11
         script:
-          - pip install poetry
-          - poetry install --with dev
-          - poetry run python -m unittest discover tests/
+          - pip install --root-user-action=ignore uv
+          - uv run --link-mode=copy --group test python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -59,9 +53,8 @@ pipelines:
         name: Python 3.12 Tests
         image: python:3.12
         script:
-          - pip install poetry
-          - poetry install --with dev
-          - poetry run python -m unittest discover tests/
+          - pip install --root-user-action=ignore uv
+          - uv run --link-mode=copy --group test python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -70,9 +63,8 @@ pipelines:
         name: Python 3.13 Tests
         image: python:3.13
         script:
-          - pip install poetry
-          - poetry install --with dev
-          - poetry run python -m unittest discover tests/
+          - pip install --root-user-action=ignore uv
+          - uv run --link-mode=copy --group test python -m unittest discover tests/
         services:
           - sshd
         caches:
@@ -89,9 +81,8 @@ pipelines:
           name: Deploy To Test PyPi
           trigger: manual
           script:
-            - pip install poetry
-            - poetry config repositories.test-pypi https://test.pypi.org/legacy/
-            - poetry publish --build --repository test-pypi --username __token__ --password ${TEST_PYPI_PASSWORD}
+            - pip install --root-user-action=ignore uv
+            - uv build && uv publish --index test-pypi --username __token__ --password ${TEST_PYPI_PASSWORD}
           caches:
             - pip
     master:
@@ -104,8 +95,8 @@ pipelines:
       - step:
           name: Deploy To PyPi
           script:
-            - pip install poetry
-            - poetry publish --build --username __token__ --password ${PYPI_PASSWORD}
+            - pip install --root-user-action=ignore uv
+            - uv build && uv publish --username __token__ --password ${PYPI_PASSWORD}
           caches:
             - pip
 definitions:
