@@ -12,7 +12,7 @@ dependencies = [
     "python-hostlist<2,>=1",
 ]
 name = "sshreader"
-version = "6.1.0"
+version = "6.2.0"
 description = "Multi-threading/processing wrapper for Paramiko"
 readme = "README.md"
 classifiers = [
