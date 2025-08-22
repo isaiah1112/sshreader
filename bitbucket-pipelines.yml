@@ -9,16 +9,6 @@ pipelines:
           - uv run --link-mode=copy --group test ruff check sshreader/
         caches:
             - pip
-    - step: &py38
-        name: Python 3.8 Tests
-        image: python:3.8
-        script:
-          - pip install --root-user-action=ignore uv
-          - uv run --link-mode=copy --group test python -m unittest discover tests/
-        services:
-          - sshd
-        caches:
-          - pip
     - step: &py39
         name: Python 3.9 Tests
         image: python:3.9
