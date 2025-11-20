@@ -45,7 +45,7 @@ test: test-init
 	@uv run --group test coverage run -m unittest discover tests/
 
 .PHONY: coverage
-test-coverage: test
+coverage: test
 	@uv run --group test coverage html
 
 .PHONY: lint
