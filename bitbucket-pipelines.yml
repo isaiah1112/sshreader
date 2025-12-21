@@ -9,22 +9,12 @@ pipelines:
           - uv run --link-mode=copy --group test ruff check sshreader/
         caches:
             - pip
-    - step: &py39
-        name: Python 3.9 Tests
-        image: python:3.9
-        script:
-          - pip install --root-user-action=ignore uv
-          - uv run --link-mode=copy --group test python -m unittest discover tests/
-        services:
-          - sshd
-        caches:
-          - pip
     - step: &py310
         name: Python 3.10 Tests
         image: python:3.10
         script:
           - pip install --root-user-action=ignore uv
-          - uv run --link-mode=copy --group test python -m unittest discover tests/
+          - uv run --link-mode=copy --group test python -m pytest
         services:
           - sshd
         caches:
@@ -34,7 +24,7 @@ pipelines:
         image: python:3.11
         script:
           - pip install --root-user-action=ignore uv
-          - uv run --link-mode=copy --group test python -m unittest discover tests/
+          - uv run --link-mode=copy --group test python -m pytest
         services:
           - sshd
         caches:
@@ -44,7 +34,7 @@ pipelines:
         image: python:3.12
         script:
           - pip install --root-user-action=ignore uv
-          - uv run --link-mode=copy --group test python -m unittest discover tests/
+          - uv run --link-mode=copy --group test python -m pytest
         services:
           - sshd
         caches:
@@ -54,7 +44,17 @@ pipelines:
         image: python:3.13
         script:
           - pip install --root-user-action=ignore uv
-          - uv run --link-mode=copy --group test python -m unittest discover tests/
+          - uv run --link-mode=copy --group test python -m pytest
+        services:
+          - sshd
+        caches:
+          - pip
+    - step: &py314
+        name: Python 3.14 Tests
+        image: python:3.14
+        script:
+          - pip install --root-user-action=ignore uv
+          - uv run --link-mode=copy --group test python -m pytest
         services:
           - sshd
         caches:
@@ -62,11 +62,11 @@ pipelines:
   branches:
     release/*:
       - step: *lint
-      - step: *py39
       - step: *py310
       - step: *py311
       - step: *py312
       - step: *py313
+      - step: *py314
       - step:
           name: Deploy To Test PyPi
           trigger: manual
@@ -77,11 +77,11 @@ pipelines:
             - pip
     master:
       - step: *lint
-      - step: *py39
       - step: *py310
       - step: *py311
       - step: *py312
       - step: *py313
+      - step: *py314
       - step:
           name: Deploy To PyPi
           script:
