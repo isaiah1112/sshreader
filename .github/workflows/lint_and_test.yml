@@ -35,3 +35,6 @@ jobs:
     services:
       sshd:
         image: iisaiah1112/sshreader:latest
+        credentials:
+            username: ${{ secrets.dockerhub_username }}
+            password: ${{ secrets.dockerhub_password }}
