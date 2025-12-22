@@ -34,7 +34,4 @@ jobs:
         uv run --group test python -m pytest
     services:
       sshd:
-        image: iisaiah1112/sshreader:latest
-        credentials:
-            username: ${{ secrets.DOCKERHUB_USERNAME }}
-            password: ${{ secrets.DOCKERHUB_PASSWORD }}
+        image: isaiah1112/sshreader:latest
