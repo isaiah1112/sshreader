@@ -9,13 +9,9 @@ on:
 permissions:
   contents: read
 
-env:
-  SSH_PORT: 2222
-
 jobs:
   build:
     strategy:
-      max-parallel: 1
       matrix:
         python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
     runs-on: ubuntu-latest
@@ -35,9 +31,11 @@ jobs:
         uv run --group test ty check sshreader/
     - name: Run Tests
       run: |
+        export SSH_HOST=127.0.0.1;
+        export SSH_PORT=${{ job.services.sshd.ports['22'] }}
         uv run --group test python -m pytest
     services:
       sshd:
         image: isaiah1112/sshreader:latest
         ports:
-          - 2222:22
+          - 22
