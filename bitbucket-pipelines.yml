@@ -3,10 +3,11 @@ image: python:latest
 pipelines:
   default:
     - step: &lint
-        name: Lint using Ruff
+        name: Lint using ruff, type-check using ty
         script:
           - pip install --root-user-action=ignore uv
           - uv run --link-mode=copy --group test ruff check sshreader/
+          - uv run --link-mode=copy --group test ty check sshreader/
         caches:
             - pip
     - step: &py310

@@ -12,7 +12,7 @@ help:
 	@echo "  docs                  Build Sphinx documentation"
 	@echo "  test [SSH_PORT=22]    Run unit tests (requires Docker)"
 	@echo "  coverage              Build an HTML coverage report"
-	@echo "  lint                  Run 'ruff' linting on project"
+	@echo "  lint                  Run 'ruff' linting and 'ty' type-checking on project"
 	@echo "\nSpecial Targets:"
 	@echo "  docker-build       Build ssh server image for unit/integration tests"
 	@echo "  docker-push        Push ssh server image to Docker Hub"
@@ -51,6 +51,7 @@ coverage: test
 .PHONY: lint
 lint: uv-init
 	@uv run --group test ruff check sshreader/
+	@uv run --group test ty check sshreader/
 
 .PHONY: test-clean
 test-clean:
