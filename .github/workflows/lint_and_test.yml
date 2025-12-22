@@ -9,6 +9,9 @@ on:
 permissions:
   contents: read
 
+env:
+  SSH_PORT: 2222
+
 jobs:
   build:
     strategy:
@@ -35,3 +38,5 @@ jobs:
     services:
       sshd:
         image: isaiah1112/sshreader:latest
+        ports:
+          - 22:2222
