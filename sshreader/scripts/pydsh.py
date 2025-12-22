@@ -196,7 +196,7 @@ def cli(**kwargs):
                 kwargs['keyfile'] = sshenv.dsa_key
                 log.info('Using DSA private key file')
         else:
-            if len(sshenv.agent_keys) == 0:
+            if sshenv.agent_keys is None or len(sshenv.agent_keys) == 0:
                 if not all((kwargs['username'], kwargs['password'])):
                     raise click.ClickException('Unable to find ssh key to use and password not supplied.')
             else:
@@ -214,7 +214,7 @@ def cli(**kwargs):
     # If you specify a password or prompt for one it overrides the ssh key
     if not kwargs['password']:
         if not kwargs['prompt']:
-            if not kwargs['keyfile'] and len(sshenv.agent_keys) == 0:
+            if not kwargs['keyfile'] and (sshenv.agent_keys is None or len(sshenv.agent_keys) == 0):
                 raise click.ClickException('Unable to find ssh key to use and password not supplied or prompt enabled.')
         else:
             log.info('Prompting for password and disabling discovered SSH keyfiles')
