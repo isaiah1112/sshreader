@@ -1,5 +1,7 @@
 ![logo](./logo.png)
 
+[![Python Tests](https://github.com/isaiah1112/sshreader/actions/workflows/lint_and_test.yml/badge.svg)](https://github.com/isaiah1112/sshreader/actions/workflows/lint_and_test.yml)
+
 A Python Module for multiprocessing/threading ssh connections in order to make ssh operations
 across multiple servers parallel.  It utilizes the [Paramiko](http://www.paramiko.org/) module 
 for its ssh client.
