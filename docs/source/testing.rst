@@ -44,4 +44,3 @@ Indices and tables
 .. _JA Computing: http://www.jacomputing.net
 .. _Docker Image: https://hub.docker.com/repository/docker/isaiah1112/sshreader
 .. _install Docker: https://www.docker.com/get-started/
-.. _Bitbucket Pipelines: https://bitbucket.org/isaiah1112/sshreader/addon/pipelines/home#!/
