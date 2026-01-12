@@ -47,7 +47,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'sshreader'
-copyright = '2015-2025, Jesse Almanrode'
+copyright = '2015-2026, Jesse Almanrode'
 author = 'Jesse Almanrode'
 
 # The version info for the project you're documenting, acts as replacement for
