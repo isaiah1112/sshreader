@@ -1,6 +1,6 @@
 """ All the classes and functions that make sshreader tick
 """
-# Copyright (C) 2015-2025 Jesse Almanrode
+# Copyright (C) 2015-2026 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -399,10 +399,10 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
     log.debug(f'main waiting for {totaljobs} ServerJobs to finish')
     while result_queue.full() is False:
         if progress_bar:
-            bar.update(item_counter.value)  # ty:ignore[possibly-missing-attribute]
+            bar.update(item_counter.value)  # ty:ignore[unresolved-attribute]
         time.sleep(1)
     if progress_bar:
-        bar.finish()  # ty:ignore[possibly-missing-attribute]
+        bar.finish()  # ty:ignore[unresolved-attribute]
 
     if len(threads) > 0:
         log.info(f'joining {len(threads)} threads')

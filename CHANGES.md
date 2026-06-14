@@ -1,4 +1,11 @@
-# Release 6.2.0
+## Release 6.3.0
+* Moved repo from Bitbucket to GitHub
+* Dropped Python3.8 and 3.9 support
+* Added Python3.14 support
+* Updated all tests to run in GitHub Actions
+* Added `ty` type checking to project [54c5dd5]
+
+## Release 6.2.0
 * Replaced `flake8` with `ruff` linter
 * Replaced `poetry` with `uv` for dependency and project management
 * Updated logo [7e200ea]
