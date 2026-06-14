@@ -12,7 +12,7 @@ dependencies = [
     "python-hostlist<2,>=1",
 ]
 name = "sshreader"
-version = "6.2.0"
+version = "6.3.0"
 description = "Multi-threading/processing wrapper for Paramiko"
 readme = "README.md"
 classifiers = [
@@ -26,6 +26,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
@@ -47,7 +48,9 @@ pydsh = "sshreader.scripts.pydsh:cli"
 test = [
     "coverage<8,>=7",
     "discover<1.0,>=0.4",
+    "pytest>=8.4.2",
     "ruff<1.0.0,>=0.9.9",
+    "ty>=0.0.5",
 ]
 docs = [
     "sphinx<8,>=7",

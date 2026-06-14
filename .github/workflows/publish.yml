@@ -1,0 +1,23 @@
+name: Publish to PyPI
+
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - name: Set up Python 3.14
+      uses: actions/setup-python@v6
+      with:
+        python-version: "3.14"
+    - name: Install UV
+      uses: astral-sh/setup-uv@v7
+    - name: Publish to PyPI
+      run: |
+        uv build && uv publish --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}

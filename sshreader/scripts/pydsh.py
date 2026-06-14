@@ -1,6 +1,6 @@
 """ A Pythonic implementation of pdsh powered by sshreader
 """
-# Copyright (C) 2015-2025 Jesse Almanrode
+# Copyright (C) 2015-2026 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -162,10 +162,11 @@ def cli(**kwargs):
     if kwargs['file']:
         mkpath = click.Path(exists=True, dir_okay=False)
         script_path = mkpath(kwargs['cmd'])
-        script_name = os.path.split(script_path)[1]
+        # Ensure script_path is a str for os.path functions (type-checker safe)
+        script_name = os.path.basename(str(script_path))
         log.info('Creating copy_script prehook for: ' + script_name)
         prehook = sshreader.Hook(copy_script, args=[script_path], ssh_established=True)
-        with open(script_path) as s:
+        with open(str(script_path)) as s:
             script = s.readline()
         if script.startswith('#!') is False:
             raise click.UsageError('Script must start with #!')
@@ -196,7 +197,7 @@ def cli(**kwargs):
                 kwargs['keyfile'] = sshenv.dsa_key
                 log.info('Using DSA private key file')
         else:
-            if len(sshenv.agent_keys) == 0:
+            if sshenv.agent_keys is None or len(sshenv.agent_keys) == 0:
                 if not all((kwargs['username'], kwargs['password'])):
                     raise click.ClickException('Unable to find ssh key to use and password not supplied.')
             else:
@@ -214,7 +215,7 @@ def cli(**kwargs):
     # If you specify a password or prompt for one it overrides the ssh key
     if not kwargs['password']:
         if not kwargs['prompt']:
-            if not kwargs['keyfile'] and len(sshenv.agent_keys) == 0:
+            if not kwargs['keyfile'] and (sshenv.agent_keys is None or len(sshenv.agent_keys) == 0):
                 raise click.ClickException('Unable to find ssh key to use and password not supplied or prompt enabled.')
         else:
             log.info('Prompting for password and disabling discovered SSH keyfiles')

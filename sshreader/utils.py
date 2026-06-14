@@ -1,6 +1,6 @@
 """ All the classes and functions that make sshreader tick
 """
-# Copyright (C) 2015-2025 Jesse Almanrode
+# Copyright (C) 2015-2026 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -175,8 +175,8 @@ class ServerJob:
             self.ssh_timeout = timeout[0]
             self.cmd_timeout = timeout[1]
         else:
-            self.ssh_timeout = timeout
-            self.cmd_timeout = timeout
+            self.ssh_timeout = timeout if timeout is not None else 0.5
+            self.cmd_timeout = timeout if timeout is not None else 0.5
         if pre_hook:
             if isinstance(pre_hook, Hook):
                 self.pre_hook = pre_hook
@@ -220,8 +220,8 @@ class ServerJob:
                 log.debug(f'{self.name}: running prehook')
                 self.pre_hook.run(self)
             try:
-                self._conn = SSH(self.name, username=self.username, password=self.password, keyfile=self.key,
-                                 port=self.ssh_port, connect=False, rsa_sha2=self.rsa_sha2)
+                self._conn = SSH(self.name, username=self.username or '', password=self.password or '', keyfile=self.key,
+                                 port=self.ssh_port, connect=False, rsa_sha2=self.rsa_sha2 or True)
                 self._conn.connect(timeout=self.ssh_timeout)
                 log.debug(f'{self.name}: ssh connection established')
             except Exception as errorMsg:
@@ -354,7 +354,7 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
 
     if pcount is None:
         # Limit the number of threads to spawn
-        if tcount == 0:
+        if tcount == 0 or tcount is None:
             tcount = int(min(totaljobs, cpu_limit()))
         else:
             tcount = int(min(tcount, totaljobs))
@@ -399,10 +399,10 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
     log.debug(f'main waiting for {totaljobs} ServerJobs to finish')
     while result_queue.full() is False:
         if progress_bar:
-            bar.update(item_counter.value)
+            bar.update(item_counter.value)  # ty:ignore[unresolved-attribute]
         time.sleep(1)
     if progress_bar:
-        bar.finish()
+        bar.finish()  # ty:ignore[unresolved-attribute]
 
     if len(threads) > 0:
         log.info(f'joining {len(threads)} threads')

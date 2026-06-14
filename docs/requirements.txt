@@ -5,38 +5,38 @@ alabaster==0.7.16
     # via sphinx
 babel==2.17.0
     # via sphinx
-bcrypt==4.3.0
+bcrypt==5.0.0
     # via paramiko
-certifi==2025.7.14
+certifi==2026.1.4
     # via requests
-cffi==1.17.1
+cffi==2.0.0 ; platform_python_implementation != 'PyPy'
     # via
     #   cryptography
     #   pynacl
-charset-normalizer==3.4.2
+charset-normalizer==3.4.4
     # via requests
 click==8.1.8 ; python_full_version < '3.10'
     # via sshreader
-click==8.2.1 ; python_full_version >= '3.10'
+click==8.3.1 ; python_full_version >= '3.10'
     # via sshreader
 colorama==0.4.6
     # via
     #   click
     #   sphinx
     #   sshreader
-cryptography==45.0.5
+cryptography==46.0.3
     # via paramiko
 docutils==0.21.2
     # via sphinx
-idna==3.10
+idna==3.11
     # via requests
 imagesize==1.4.1
     # via sphinx
-importlib-metadata==8.7.0 ; python_full_version < '3.10'
+importlib-metadata==8.7.1 ; python_full_version < '3.10'
     # via sphinx
 jinja2==3.1.6
     # via sphinx
-markupsafe==3.0.2
+markupsafe==3.0.3
     # via jinja2
 packaging==25.0
     # via sphinx
@@ -44,17 +44,17 @@ paramiko==3.5.1
     # via sshreader
 progressbar2==4.5.0
     # via sshreader
-pycparser==2.22
+pycparser==2.23 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
     # via cffi
 pygments==2.19.2
     # via sphinx
-pynacl==1.5.0
+pynacl==1.6.2
     # via paramiko
 python-hostlist==1.23.0
     # via sshreader
 python-utils==3.9.1
     # via progressbar2
-requests==2.32.4
+requests==2.32.5
     # via sphinx
 snowballstemmer==3.0.1
     # via sphinx
@@ -71,11 +71,13 @@ sphinxcontrib-qthelp==2.0.0
     # via sphinx
 sphinxcontrib-serializinghtml==2.0.0
     # via sphinx
-tomli==2.2.1 ; python_full_version < '3.11'
+tomli==2.4.0 ; python_full_version < '3.11'
     # via sphinx
-typing-extensions==4.14.1
-    # via python-utils
-urllib3==2.5.0
+typing-extensions==4.15.0
+    # via
+    #   cryptography
+    #   python-utils
+urllib3==2.6.3
     # via requests
 zipp==3.23.0 ; python_full_version < '3.10'
     # via importlib-metadata

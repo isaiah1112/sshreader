@@ -1,6 +1,6 @@
 """A wrapper for Paramiko that attempts to make ssh sessions easier to work with.
 """
-# Copyright (C) 2015-2025 Jesse Almanrode
+# Copyright (C) 2015-2026 Jesse Almanrode
 #
 #     This program is free software: you can redistribute it and/or modify
 #     it under the terms of the GNU Lesser General Public License as published by
@@ -173,7 +173,7 @@ class SSH:
                 else:
                     result = Command(cmd=command, stdout=stdout.read().strip(), stderr=None,
                                      return_code=stdout.channel.recv_exit_status())
-            except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):
+            except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):  # ty:ignore[possibly-missing-submodule]
                 result = Command(cmd=command, stdout='command timed out', stderr=None, return_code=124)
         else:
             try:
@@ -184,7 +184,7 @@ class SSH:
                 else:
                     result = Command(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip(),
                                      return_code=stdout.channel.recv_exit_status())
-            except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):
+            except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):  # ty:ignore[possibly-missing-submodule]
                 result = Command(cmd=command, stdout='', stderr='command timed out', return_code=124)
         return result
 
@@ -226,7 +226,7 @@ class SSH:
         """
         if self.__alive():
             raise paramiko.SSHException(f"connection to {self.host} already established")
-        paramiko.util.logging.getLogger().setLevel(logging.CRITICAL)  # Keeping paramiko from logging errors to stdout
+        paramiko.util.logging.getLogger().setLevel(logging.CRITICAL)  # Keeping paramiko from logging errors to stdout  # ty:ignore[possibly-missing-submodule]
         if not self.keyfile and len(paramiko.Agent().get_keys()) == 0 and not all((self.username, self.password)):
             paramiko.SSHException('username and password or keyfile not provided')
         if self.keyfile:

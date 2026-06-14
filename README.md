@@ -1,5 +1,7 @@
 ![logo](./logo.png)
 
+[![Python Tests](https://github.com/isaiah1112/sshreader/actions/workflows/lint_and_test.yml/badge.svg)](https://github.com/isaiah1112/sshreader/actions/workflows/lint_and_test.yml)
+
 A Python Module for multiprocessing/threading ssh connections in order to make ssh operations
 across multiple servers parallel.  It utilizes the [Paramiko](http://www.paramiko.org/) module 
 for its ssh client.
@@ -34,14 +36,13 @@ The documentation for [SSHreader][] can be found at [ReadTheDocs.](https://sshre
 
 Comments and enhancements are very welcome.
 
-Report any issues or feature requests on the [BitBucket bug
-tracker](https://bitbucket.org/isaiah1112/sshreader/issues?status=new&status=open). Please include a minimal
-not-working example which reproduces the bug and, if appropriate, the
+Report any issues or feature requests on the [GitHub Issue Tracker](https://github.com/isaiah1112/sshreader/issues). 
+Please include a minimal not-working example which reproduces the bug and, if appropriate, the
 traceback information.  Please do not request features already being worked
 towards.
 
-Code contributions are encouraged: please feel free to [fork the
-project](https://bitbucket.org/isaiah1112/sshreader) and submit pull requests to the develop branch.
+Code contributions are encouraged: please feel free to [fork the project](https://github.com/isaiah1112/sshreader) 
+and submit pull requests to the develop branch.
 
 ## Extras
 
@@ -55,4 +56,4 @@ to process.
 
 [GNU Lesser General Public License v3.0]: http://choosealicense.com/licenses/lgpl-3.0/ "LGPL v3"
 
-[sshreader]: https://bitbucket.org/isaiah1112/sshreader "SSHreader Package"
+[sshreader]: https://github.com/isaiah1112/sshreader "SSHreader Package"
