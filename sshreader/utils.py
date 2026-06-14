@@ -399,10 +399,10 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
     log.debug(f'main waiting for {totaljobs} ServerJobs to finish')
     while result_queue.full() is False:
         if progress_bar:
-            bar.update(item_counter.value)  # ty:ignore[possibly-missing-attribute]
+            bar.update(item_counter.value)  # ty:ignore[unresolved-attribute]
         time.sleep(1)
     if progress_bar:
-        bar.finish()  # ty:ignore[possibly-missing-attribute]
+        bar.finish()  # ty:ignore[unresolved-attribute]
 
     if len(threads) > 0:
         log.info(f'joining {len(threads)} threads')
