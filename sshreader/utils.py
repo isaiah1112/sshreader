@@ -21,7 +21,8 @@ import subprocess
 import sys
 import threading
 import time
-from typing import Any, Callable, Optional, Union
+from collections.abc import Callable
+from typing import Any, Optional, Union
 
 import paramiko
 from progressbar import ProgressBar
@@ -82,7 +83,7 @@ class Hook:
     :raises: TypeError
     """
 
-    def __init__(self, target: Callable, args: Optional[list] = None, kwargs: Optional[dict] = None,
+    def __init__(self, target: Callable, args: list | None = None, kwargs: dict | None = None,
                  ssh_established: bool = False) -> None:
         self.target = target
         self.ssh_established = ssh_established
@@ -149,11 +150,11 @@ class ServerJob:
     :property results: List of namedtuples (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
     :property status: Sum of return codes for entire job (255 = ssh did not connect)
     """
-    def __init__(self, fqdn: str, cmds: Union[list, tuple, str], username: Optional[str] = None,
-                 password: Optional[str] = None, keyfile: Optional[str] = None, key_pass: Optional[str] = None,
-                 timeout: Optional[Union[Timeout, TimeoutTuple]] = (0.5, 30), run_local: bool = False,
-                 pre_hook: Optional[Hook] = None, post_hook: Optional[Hook] = None,
-                 combine_output: bool = False, ssh_port: int = 22, rsa_sha2: Optional[bool] = True) -> None:
+    def __init__(self, fqdn: str, cmds: list | tuple | str, username: str | None = None,
+                 password: str | None = None, keyfile: str | None = None, key_pass: str | None = None,
+                 timeout: Timeout | TimeoutTuple | None = (0.5, 30), run_local: bool = False,
+                 pre_hook: Hook | None = None, post_hook: Hook | None = None,
+                 combine_output: bool = False, ssh_port: int = 22, rsa_sha2: bool | None = True) -> None:
         self.name = str(fqdn)
         self.results = list()
         self.username = username
@@ -296,7 +297,7 @@ def echo(*args, **kwargs) -> None:
     return None
 
 
-def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int] = None,
+def sshread(serverjobs: list, pcount: int | None = None, tcount: int | None = None,
             progress_bar: bool = False, print_lock: bool = True) -> list:
     """Takes a list of ServerJob objects and puts them into threads/sub-processes and runs them
 

@@ -79,8 +79,8 @@ class SSH:
     :type rsa_sha2: bool, optional
     :raises: :class:`paramiko.SSHException`
     """
-    def __init__(self, fqdn: str, username: str, password: Optional[str] = None, keyfile: Optional[str] = None,
-                 keypass: Optional[str] = None, port: int = 22, connect: bool = True, rsa_sha2: bool = True) -> None:
+    def __init__(self, fqdn: str, username: str, password: str | None = None, keyfile: str | None = None,
+                 keypass: str | None = None, port: int = 22, connect: bool = True, rsa_sha2: bool = True) -> None:
         if not keyfile and len(paramiko.Agent().get_keys()) == 0 and not all((username, password)):
             paramiko.SSHException('username and password or keyfile not provided')
         self.host = fqdn
@@ -173,7 +173,7 @@ class SSH:
                 else:
                     result = Command(cmd=command, stdout=stdout.read().strip(), stderr=None,
                                      return_code=stdout.channel.recv_exit_status())
-            except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):  # ty:ignore[possibly-missing-submodule]
+            except (TimeoutError, paramiko.buffered_pipe.PipeTimeout):  # ty:ignore[possibly-missing-submodule]
                 result = Command(cmd=command, stdout='command timed out', stderr=None, return_code=124)
         else:
             try:
@@ -184,7 +184,7 @@ class SSH:
                 else:
                     result = Command(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip(),
                                      return_code=stdout.channel.recv_exit_status())
-            except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):  # ty:ignore[possibly-missing-submodule]
+            except (TimeoutError, paramiko.buffered_pipe.PipeTimeout):  # ty:ignore[possibly-missing-submodule]
                 result = Command(cmd=command, stdout='', stderr='command timed out', return_code=124)
         return result
 
