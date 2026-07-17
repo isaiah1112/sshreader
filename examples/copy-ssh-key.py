@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-# coding=utf-8
 """ Copy your public ssh key to a remote host
 """
 
-from __future__ import print_function
-from hostlist import expand_hostlist
-import click
-import sshreader
 import sys
+
+import click
+from hostlist import expand_hostlist
+
+import sshreader
 
 __author__ = 'Jesse Almanrode'
 __version__ = '1.0'
