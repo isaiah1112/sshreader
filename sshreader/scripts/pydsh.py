@@ -20,6 +20,7 @@ import os
 import sys
 from collections import defaultdict
 from hashlib import md5
+from pathlib import Path
 
 import click
 from hostlist import collect_hostlist, expand_hostlist
@@ -56,7 +57,9 @@ def copy_script(scriptfile, job):
     try:
         job._conn.sftp_put(scriptfile, '/tmp/' + script_name)
     except Exception as err:
-        return err
+        log.exception('Failed to copy script %s to %s: %s', scriptfile, getattr(job, 'name', '<unknown>'), err)
+        return False
+    return True
 
 
 def output(thisjob):
@@ -160,17 +163,17 @@ def cli(**kwargs):
             logging.getLogger('sshreader').setLevel(logging.DEBUG)
     log.debug(kwargs)
     if kwargs['file']:
-        mkpath = click.Path(exists=True, dir_okay=False)
-        script_path = mkpath(kwargs['cmd'])
-        # Ensure script_path is a str for os.path functions (type-checker safe)
-        script_name = os.path.basename(str(script_path))
+        script_path = Path(kwargs['cmd'])
+        if not script_path.exists() or not script_path.is_file():
+            raise click.BadParameter('Script file not found: ' + str(script_path))
+        script_name = script_path.name
         log.info('Creating copy_script prehook for: ' + script_name)
-        prehook = sshreader.Hook(copy_script, args=[script_path], ssh_established=True)
-        with open(str(script_path)) as s:
-            script = s.readline()
-        if script.startswith('#!') is False:
+        prehook = sshreader.Hook(copy_script, args=[str(script_path)], ssh_established=True)
+        content = script_path.read_text(encoding='utf-8', errors='replace')
+        first_line = content.splitlines()[0] if content.splitlines() else ''
+        if not first_line.startswith('#!'):
             raise click.UsageError('Script must start with #!')
-        kwargs['cmd'] = [script.split('#!').pop().strip() + ' /tmp/' + script_name, 'rm /tmp/' + script_name]
+        kwargs['cmd'] = [first_line.split('#!').pop().strip() + ' /tmp/' + script_name, 'rm /tmp/' + script_name]
     sshenv = sshreader.envvars()
     log.debug(sshenv)
 
@@ -233,7 +236,11 @@ def cli(**kwargs):
     for host in kwargs['hostlist']:
         if ':' in host:
             log.info('SSH Port declared in host: ' + host)
-            host, port = host.split(':')
+            host, port = host.split(':', 1)
+            try:
+                port = int(port)
+            except Exception:
+                raise click.BadParameter('Invalid port in host: ' + host)
             log.debug((host, port))
         else:
             port = kwargs['port']
