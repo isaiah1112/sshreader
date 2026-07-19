@@ -1,8 +1,9 @@
-import click
+import os
+from click.testing import CliRunner
 
 import sshreader
 from sshreader.scripts import pydsh
-from sshreader.customtypes import Command
+from sshreader.customtypes import Command, EnvVars
 
 
 def test_copy_script_success():
@@ -29,7 +30,6 @@ def test_copy_script_failure(monkeypatch):
 
 
 def test_output_and_dshbak_and_coalesce(monkeypatch, capsys):
-    # Prepare jobs
     job1 = type('J', (), {})()
     job1.name = 'h1'
     job1.status = 0
@@ -40,7 +40,6 @@ def test_output_and_dshbak_and_coalesce(monkeypatch, capsys):
     job2.status = 0
     job2.results = [Command('cmd', 'a\nb', None, 0)]
 
-    # Capture echo outputs via sshreader.echo
     collected = []
 
     def fake_echo(s):
@@ -50,26 +49,72 @@ def test_output_and_dshbak_and_coalesce(monkeypatch, capsys):
     pydsh.output(job1)
     assert any('h1:' in c for c in collected)
 
-    # Test dshbak (uses click.echo -> capsys)
     pydsh.dshbak([job1])
     out = capsys.readouterr().out
     assert 'h1' in out
     assert 'a' in out
 
-    # Test coalesce groups identical output
     pydsh.coalesce([job1, job2])
     out2 = capsys.readouterr().out
     assert 'a' in out2
 
 
 def test_validate_hostlist_good_and_bad():
-    # good
     res = pydsh.validate_hostlist(None, 'hosts', 'host[1-2]')
     assert isinstance(res, list)
-    # bad
     try:
         pydsh.validate_hostlist(None, 'hosts', 'not_a_host[')
         raised = False
-    except click.BadOptionUsage:
+    except pydsh.click.BadOptionUsage:
         raised = True
     assert raised
+
+
+def test_cli_script_file_not_found():
+    runner = CliRunner()
+    result = runner.invoke(pydsh.cli, ['--file', '-w', 'host1', 'nonexistent.sh'])
+    assert result.exit_code != 0
+    assert 'Script file not found' in result.output
+
+
+def test_cli_script_without_shebang(tmp_path, monkeypatch):
+    script = tmp_path / 'script.sh'
+    script.write_text('echo hello')
+    key = tmp_path / 'id_rsa'
+    key.write_text('key')
+    runner = CliRunner()
+    monkeypatch.setattr(sshreader, 'envvars', lambda: EnvVars(username='u', agent_keys=None, dsa_key=None, ecdsa_key=None, rsa_key=None))
+    result = runner.invoke(pydsh.cli, ['--file', '-w', 'host1', '-u', 'u', '-k', str(key), str(script)])
+    assert result.exit_code != 0
+    assert 'Script must start with #!' in result.output
+
+
+def test_cli_port_invalid(monkeypatch):
+    runner = CliRunner()
+    monkeypatch.setattr(sshreader, 'envvars', lambda: EnvVars(username='u', agent_keys=None, dsa_key=None, ecdsa_key=None, rsa_key=None))
+    result = runner.invoke(pydsh.cli, ['-w', 'host1', 'uname', '--port', '-1', '-u', 'u'])
+    assert result.exit_code != 0
+    assert 'Please enter a positive integer' in result.output
+
+
+def test_cli_missing_username_and_no_env(monkeypatch):
+    runner = CliRunner()
+    monkeypatch.setattr(sshreader, 'envvars', lambda: EnvVars(username=None, agent_keys=None, dsa_key=None, ecdsa_key=None, rsa_key=None))
+    result = runner.invoke(pydsh.cli, ['-w', 'host1', 'uname'])
+    assert result.exit_code != 0
+    assert 'Unable to determine ssh username' in result.output
+
+
+def test_cli_runs_sshread_monkeypatched(monkeypatch):
+    monkeypatch.setattr(sshreader, 'envvars', lambda: EnvVars(username='u', agent_keys=None, dsa_key=None, ecdsa_key=None, rsa_key=None))
+    called = {}
+
+    def fake_sshread(jobs, *args, **kwargs):
+        called['count'] = len(jobs)
+        return jobs
+
+    monkeypatch.setattr(sshreader, 'sshread', fake_sshread)
+    runner = CliRunner()
+    result = runner.invoke(pydsh.cli, ['-w', 'host1', '-u', 'u', '-P', 'pw', 'uname'])
+    assert result.exit_code == 0
+    assert called.get('count') == 1

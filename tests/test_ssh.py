@@ -7,7 +7,6 @@ from sshreader.ssh import envvars, SSH
 
 
 def test_envvars_with_ssh_keys_and_agent(monkeypatch, tmp_path):
-    # Create fake HOME with .ssh containing keys
     home = tmp_path
     sshdir = home / '.ssh'
     sshdir.mkdir()
@@ -34,7 +33,6 @@ def test_envvars_with_ssh_keys_and_agent(monkeypatch, tmp_path):
 
 def test_envvars_no_ssh_dir_and_no_agent(monkeypatch, tmp_path):
     monkeypatch.setenv('HOME', str(tmp_path))
-    # getuser raises => fallback to home last path part
     monkeypatch.setattr('sshreader.ssh.getuser', lambda: (_ for _ in ()).throw(OSError()))
     class FakeAgent:
         def get_keys(self):
@@ -48,7 +46,6 @@ def test_envvars_no_ssh_dir_and_no_agent(monkeypatch, tmp_path):
 
 
 def test_ssh_init_keyfile_type_error(monkeypatch):
-    # Ensure Agent reports no keys so keyfile branch exercised
     class FakeAgent:
         def get_keys(self):
             return []
@@ -59,25 +56,19 @@ def test_ssh_init_keyfile_type_error(monkeypatch):
 
 
 def test_ssh_command_and_sftp_and_alive(monkeypatch):
-    # Provide a working Agent
     class FakeAgent:
         def get_keys(self):
             return ['k']
 
     monkeypatch.setattr(paramiko, 'Agent', lambda: FakeAgent())
 
-    # Fake transport and channel
-    class FakeChannel:
-        def recv_exit_status(self):
-            return 0
-
     class FakeFile:
         def __init__(self, data):
             self._b = data.encode()
+
         def read(self):
             return self._b
 
-        # Provide a channel with recv_exit_status used by ssh_command
         @property
         def channel(self):
             class C:
@@ -99,7 +90,6 @@ def test_ssh_command_and_sftp_and_alive(monkeypatch):
             return True
 
         def get(self, src, dst):
-            # simulate copying
             open(dst, 'w').write('ok')
 
         def close(self):
@@ -122,37 +112,26 @@ def test_ssh_command_and_sftp_and_alive(monkeypatch):
             self._transport = None
 
         def connect(self, *args, **kwargs):
-            # simulate establishing transport
             self._transport = FakeTransport()
 
-    # Patch the SSHClient class used inside SSH
     monkeypatch.setattr(paramiko, 'SSHClient', FakeSSHClient)
-    # Patch SFTPClient.from_transport
     monkeypatch.setattr(paramiko.SFTPClient, 'from_transport', staticmethod(lambda t: FakeSFTP()))
 
     s = SSH('host', 'user', password='pw', connect=False)
-    # attach our fake client instance if constructor created another
     s._connection = FakeSSHClient()
 
-    # alive should return True
     assert s.alive() is True
-
-    # ssh_command normal
     res = s.ssh_command('echo hi', timeout=1, combine=False)
     assert res.return_code == 0
     assert 'out' in res.stdout
-
-    # combine True returns stdout and stderr None
     res2 = s.ssh_command('echo hi', timeout=1, combine=True)
     assert res2.stderr is None
 
-    # sftp put/get
     tmp_src = 'tests/test_ssh_tmp.txt'
     with open(tmp_src, 'w') as f:
         f.write('x')
     put_res = s.sftp_put(tmp_src, '/tmp/dst')
     assert put_res is True
-    # get
     dst_local = 'tests/test_ssh_tmp_get.txt'
     s.sftp_get('/tmp/src', dst_local)
     assert os.path.exists(dst_local)
@@ -186,3 +165,102 @@ def test_alive_raises_when_transport_dead(monkeypatch):
     s._connection = FakeSSHClient()
     with pytest.raises(paramiko.SSHException):
         s.alive()
+
+
+def test_connect_disabled_algorithms(monkeypatch):
+    monkeypatch.setattr(paramiko, 'Agent', lambda: type('A', (), {'get_keys': lambda self: ['k']})())
+
+    captured = {}
+
+    class FakeSSHClient2:
+        def __init__(self):
+            pass
+
+        def set_missing_host_key_policy(self, p):
+            pass
+
+        def get_transport(self):
+            return None
+
+        def connect(self, *args, **kwargs):
+            captured.update(kwargs)
+
+    monkeypatch.setattr(paramiko, 'SSHClient', FakeSSHClient2)
+
+    s = SSH('h', 'u', password='p', keyfile='/tmp/fake', connect=False, rsa_sha2=False)
+    s._connection = FakeSSHClient2()
+    s.connect()
+    assert 'disabled_algorithms' in captured
+
+
+def test_ssh_command_timeout_branches(monkeypatch):
+    monkeypatch.setattr(paramiko, 'Agent', lambda: type('A', (), {'get_keys': lambda self: ['k']})())
+
+    class TimeoutClient:
+        def __init__(self):
+            pass
+
+        def set_missing_host_key_policy(self, p):
+            pass
+
+        def exec_command(self, command, timeout=None, get_pty=False):
+            raise TimeoutError()
+
+        def get_transport(self):
+            class T:
+                def is_alive(self):
+                    return True
+
+            return T()
+
+    monkeypatch.setattr(paramiko, 'SSHClient', TimeoutClient)
+    s = SSH('h', 'u', password='p', connect=False)
+    s._connection = TimeoutClient()
+    res = s.ssh_command('cmd', combine=False)
+    assert res.return_code == 124
+    assert 'command timed out' in (res.stderr or '')
+    res2 = s.ssh_command('cmd', combine=True)
+    assert res2.return_code == 124
+    assert 'command timed out' in (res2.stdout or '')
+
+
+def test_sftp_methods_raise_when_not_alive(monkeypatch):
+    monkeypatch.setattr(paramiko, 'Agent', lambda: type('A', (), {'get_keys': lambda self: ['k']})())
+
+    class DeadClient:
+        def __init__(self):
+            pass
+
+        def set_missing_host_key_policy(self, p):
+            pass
+
+        def get_transport(self):
+            return None
+
+    monkeypatch.setattr(paramiko, 'SSHClient', DeadClient)
+    s = SSH('h', 'u', password='p', connect=False)
+    s._connection = DeadClient()
+    from paramiko import SSHException
+    with pytest.raises(SSHException):
+        s.sftp_put('a', 'b')
+    with pytest.raises(SSHException):
+        s.sftp_get('a', 'b')
+
+
+def test_context_manager_invokes_connect_and_close(monkeypatch):
+    monkeypatch.setattr(paramiko, 'Agent', lambda: type('A', (), {'get_keys': lambda self: ['k']})())
+    s = SSH('h', 'u', password='p', connect=False)
+    called = {'connect': False, 'close': False}
+    setattr(s, '_SSH__alive', lambda: False)
+
+    def fake_connect(timeout=0.5):
+        called['connect'] = True
+
+    def fake_close():
+        called['close'] = True
+
+    setattr(s, '_SSH__connect', fake_connect)
+    setattr(s, '_SSH__close', fake_close)
+    with s:
+        assert called['connect'] is True
+    assert called['close'] is True
