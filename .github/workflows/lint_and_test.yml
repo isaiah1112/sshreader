@@ -31,11 +31,4 @@ jobs:
         uv run --group test ty check sshreader/
     - name: Run Tests
       run: |
-        export SSH_HOST=127.0.0.1;
-        export SSH_PORT=${{ job.services.sshd.ports['22'] }}
         uv run --group test python -m pytest
-    services:
-      sshd:
-        image: isaiah1112/sshreader:latest
-        ports:
-          - 22
