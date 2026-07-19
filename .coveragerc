@@ -1,0 +1,10 @@
+[run]
+omit =
+    tests/*
+    */tests/*
+    .venv/*
+
+[report]
+omit =
+    tests/*
+    */tests/*
