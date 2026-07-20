@@ -240,7 +240,7 @@ def cli(**kwargs):
             try:
                 port = int(port)
             except Exception:
-                raise click.BadParameter('Invalid port in host: ' + host)
+                raise click.BadParameter('Invalid port in host: ' + host) from Exception
             log.debug((host, port))
         else:
             port = kwargs['port']
