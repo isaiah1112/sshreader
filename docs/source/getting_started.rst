@@ -30,9 +30,10 @@ and setup a connection!
 .. code-block:: python
 
     from sshreader import SSH
+
     with SSH('myhost.example.com', username='jdoe', password='jdoe1') as s:
-        uname = s.ssh_command('uname -a')
-        print(uname)  # Show the results of the command, including stdin, stdout, and stderr
+        result = s.ssh_command('uname -a')
+        print(result.stdout)
 
 .. note::
     By using the :code:`with` statement you do not have to worry about running :code:`SSH.close()` when you are finished with
@@ -49,9 +50,10 @@ To create a ServerJob object and run it is nearly as simple as working with SSH 
 .. code-block:: python
 
     from sshreader import ServerJob, sshread
-    job = ServerJob('myhost.example.com',['uname -a', 'hostname', 'whoami'] username='jdoe', password='jdoe1')
-    r = sshread(job, tcount=0)
-    print(r.status, r.results)
+
+    job = ServerJob('myhost.example.com', ['uname -a', 'hostname', 'whoami'], username='jdoe', password='jdoe1')
+    finished = sshread([job], tcount=0)
+    print(finished[0].status, finished[0].results)
 
 What happens here is that you create a ServerJob object that will run three commands in succession and record the results
 in itself.  When you call :code:`sshread` you actually connect to the server and run the commands.
@@ -66,13 +68,19 @@ as needed.
 .. code-block:: python
 
     from sshreader import ServerJob, sshread
+
     jobs = list()
     for host in ['myhost1.example.com', 'myhost2.example.com', 'myhost3.example.com']:
-        job = ServerJob(host,['uname -a', 'hostname', 'whoami'] username='jdoe', password='jdoe1')
+        job = ServerJob(host, ['uname -a', 'hostname', 'whoami'], username='jdoe', password='jdoe1')
         jobs.append(job)
+
     finished = sshread(jobs, tcount=0)
     for job in finished:
         print(job.status, job.results)
+
+.. note::
+    The :code:`sshread` helper requires a list of :class:`sshreader.utils.ServerJob` objects. If you pass a single job, wrap it
+    in a list like :code:`sshread([job], tcount=0)`.
 
 Now you are ready to sshread all your servers as fast as possible!
 
@@ -104,7 +112,7 @@ Creating a Hook is as is as simple as:
     job = ServerJob('myhost.example.com',['uname -a', 'hostname', 'whoami'], username='jdoe', password='jdoe1',
                     prehook=myhook)
     # Now, run the job
-    sshread(job, tcount=1)
+    sshread([job], tcount=1)
 
 .. note::
 
@@ -116,46 +124,46 @@ Creating a Hook is as is as simple as:
 Running Shell Commands
 ----------------------
 Sometimes you don't want to run commands via ssh but want to run them in the shell on the localhost.  Sshreader provides
-a method for doing that as well via the :code:`shell_command` method.
+this via the :code:`shell_command` method.
 
 .. code-block:: python
 
     from sshreader import shell_command
-    r = shell_command('uname -a')
-    print(r)
+
+    r = shell_command('uname -a', decode_bytes=True)
+    print(r.stdout)
 
 Discovering Environment Variables
 ---------------------------------
-Sshreader includes a method that attempts to determine the currently logged in username and any ssh keys located in
-:code:`~/.ssh/`, including rsa and dsa keys.  You can see what sshreader can discover by calling the :code:`envvars`
-method from the ssh module.
+Sshreader includes a helper that attempts to determine the currently logged in username, any ssh keys located in
+:code:`~/.ssh/`, and keys available in the SSH agent.  You can see what sshreader can discover by calling the
+:code:`envvars()` method from the :mod:`sshreader.ssh` module.
 
 .. code-block:: python
 
     from sshreader.ssh import envvars
+
     print(envvars())  # Returns a NamedTuple of info sshreader was able to gather from the OS
 
 Copying Files
 -------------
 
-Version 3.4 of sshreader introduced the :code:`sftp_put()` and :code:`sfpt_get()` methods into SSH objects.  These
-methods attempt to make it easier to use OpenSSH's SFTP protocol to copy files to and from a remote server.  The cool thing
-about having them inside the SSH class is that you can use one object to both SFTP files and run SSH commands on a remote server.
+sshreader supports basic file transfer over SFTP with the :code:`sftp_put()` and :code:`sftp_get()` methods on the
+:class:`sshreader.ssh.SSH` object. This allows you to copy files to and from a remote host while working with the same
+SSH session.
 
 .. code-block:: python
 
-    from sshreader.ssh import SSH
+    from sshreader import SSH
+
     with SSH('myhost.example.com', username='jdoe', password='jdoe1') as s:
-        # Copy a script file from our host to the remote host and run it.
         s.sftp_put('~/secret_script.sh', '/tmp/secret_script.sh')
         s.ssh_command('/tmp/secret_script.sh')
-        # Now, get the output of the script and remove all traces of it
         s.sftp_get('/tmp/secret_output.txt', '~/secret_output.txt')
-        s.ssh_command('rm /tmp/secret_output.txt', 'rm /tmp/secret_output.sh')
+        s.ssh_command('rm /tmp/secret_output.txt')
 
 .. warning::
-
-    SFTP methods are new to sshreader and isn't a primary feature.  Support for this feature will be limited.
+    SFTP support is available, but sshreader remains focused on SSH command execution and parallel remote jobs.
 
 Indices and tables
 ------------------

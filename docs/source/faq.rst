@@ -24,7 +24,10 @@ Often times with multiprocessing print statements come out funky because multipl
     job = ServerJob('myhost.example.com',['uname -a', 'hostname', 'whoami'], username='jdoe', password='jdoe1',
                     prehook=myhook)
     # Now, run the job with print_lock enabled
-    sshread(job, pcount=1, print_lock=True)
+    sshread([job], pcount=1, print_lock=True)
+
+.. note::
+    The :code:`sshread()` helper expects a list of :class:`sshreader.utils.ServerJob` objects. Wrap a single job in a list.
 
 Where did my output go?
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -76,13 +79,13 @@ enable automatic decoding of byte-strings to unicode strings.
 
     # sshreader can automatically decode bytestrings for you (for stdout and stderr)
     # This works for both the shell_command and ssh_command methods
-    uname_cmd = sshreader.shell_command('uname -a', decodebytes=True)
+    uname_cmd = sshreader.shell_command('uname -a', decode_bytes=True)
     uname_cmd.stdout.split(',')
 
 .. note::
 
     As of version 3.3 the default behavior for sshreader is to automatically decode byte strings to unicode strings.  If
-    you would like it do NOT decode byte strings then use this flag, setting it to :code:`False`.
+    you would like it to preserve raw byte output then use :code:`decode_bytes=False`.
 
 Pseduo Terminals
 ~~~~~~~~~~~~~~~~
