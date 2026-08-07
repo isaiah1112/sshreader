@@ -21,7 +21,9 @@ import subprocess
 import sys
 import threading
 import time
+from collections import deque
 from collections.abc import Callable
+from queue import Empty, Queue
 from typing import Any, Optional, Union
 
 import paramiko
@@ -396,31 +398,37 @@ def sshread(serverjobs: list, pcount: int | None = None, tcount: int | None = No
             pid.start()
             pids.append(pid)
 
-    # Non-blocking way to wait for threads/processes
+    # Wait for worker threads/processes to finish
     log.debug(f'main waiting for {totaljobs} ServerJobs to finish')
-    while result_queue.full() is False:
-        if progress_bar:
-            bar.update(item_counter.value)  # ty:ignore[unresolved-attribute]
-        time.sleep(1)
-    if progress_bar:
-        bar.finish()  # ty:ignore[unresolved-attribute]
-
     if len(threads) > 0:
         log.info(f'joining {len(threads)} threads')
+        while any(t.is_alive() for t in threads):
+            if progress_bar:
+                bar.update(item_counter.value)  # ty:ignore[unresolved-attribute]
+            time.sleep(0.1)
         for t in threads:
-            if t.is_alive():
-                t.join(timeout=1)
+            t.join(timeout=1)
     elif len(pids) > 0:
         log.info(f'joining {len(pids)} processes')
+        while any(p.is_alive() for p in pids):
+            if progress_bar:
+                bar.update(item_counter.value)  # ty:ignore[unresolved-attribute]
+            time.sleep(0.1)
         for p in pids:
             if p.is_alive():
                 p.join(timeout=1)
             p.close()
 
+    if progress_bar:
+        bar.finish()  # ty:ignore[unresolved-attribute]
+
     # Extract items from the queue and return a list, just as we were passed
     results = list()
-    while not result_queue.empty():
-        results.append(result_queue.get())
+    while True:
+        try:
+            results.append(result_queue.get_nowait())
+        except Empty:
+            break
     task_queue.close()
     result_queue.close()
     return results
