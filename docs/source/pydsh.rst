@@ -13,8 +13,7 @@ can be used.
 Debugging
 ---------
 
-In :code:`pydsh v2.6` I added better logging support for both the :code:`pydsh` script and the :code:`sshreader` module
-which powers it.  There are 4 levels of debugging available to you:
+pydsh uses the :mod:`click` logging flags present in the current script and the underlying :code:`sshreader` module.  There are 4 levels of debugging available:
 
 * debug = pydsh:INFO
 * debug + verbose = pydsh:INFO + sshreader:INFO
@@ -71,6 +70,18 @@ Override ssh with a username/password combo (but prompt for the password):
 .. code-block:: bash
 
     pydsh -u myuser -p -w myhost[1-100].example.com 'uname -r'
+
+Supply an encrypted SSH key and prompt for its passphrase:
+
+.. code-block:: bash
+
+    pydsh -u myuser -k ~/.ssh/id_rsa -K -w myhost[1-100].example.com 'uname -r'
+
+Use SHA2 key exchange for RSA keys when connecting to newer OpenSSH servers:
+
+.. code-block:: bash
+
+    pydsh --sha2 -u myuser -k ~/.ssh/id_rsa -w myhost[1-100].example.com 'uname -r'
 
 Run pydsh faster (uses multi-processing and multi-threading): [3]_
 

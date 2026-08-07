@@ -68,13 +68,12 @@ API Documentation
 Compatibility
 -------------
 
-At this time, I strive to maintain compatibility with all `supported versions of Python`_.
+sshreader supports Python 3.10 and later.  The package is tested against the currently supported Python versions
+listed in the project metadata.
 
 .. note::
 
-    As of version 4.6 of sshreader, Python2.7 is no longer supported in conjunction with
-    the discontinuation of support for Python2.7 on January 1, 2020.  The last version
-    to support Python2.7 is sshreader 4.5.
+    Python 2.7 is no longer supported by sshreader.  The last version to support Python 2.7 was sshreader 4.5.
 
 Indices and tables
 ------------------

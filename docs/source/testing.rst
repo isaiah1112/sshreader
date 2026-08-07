@@ -1,24 +1,18 @@
 Local Testing
 =============
 
-In order to make the testing/integration process as simple as possible, I utilize a custom `Docker Image`_ to run an ssh
-server.  To begin configuring your system for local testing, please `install Docker`_ first. After you have installed
-Docker and have it running, simply run the following command:
+To run all unit tests in your current version of Python simply run:
 
 .. code-block:: bash
 
     make test
 
-This command pulls down the custom docker image, runs it on port :code:`22`, and then runs all the unit/integration
-tests.  If you would like to change which port this container runs on, simply export the :code:`SSH_PORT=<int>` environment
-variable prior to running :code:`make test` to whatever integer port you would like to map this container to. Alternatively,
-you can pass :code:`SSH_PORT=<int>` to the :code:`make test` target.
 
-To clean up after running the tests (stopping external docker containers) run:
+To test :code:`ruff` linting and :code:`ty` typing, simply run:
 
 .. code-block:: bash
 
-    make test-clean
+    make lint
 
 Testing Coverage
 ----------------
@@ -42,5 +36,3 @@ Indices and tables
 * `JA Computing`_
 
 .. _JA Computing: http://www.jacomputing.net
-.. _Docker Image: https://hub.docker.com/repository/docker/isaiah1112/sshreader
-.. _install Docker: https://www.docker.com/get-started/
