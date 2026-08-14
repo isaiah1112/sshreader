@@ -211,6 +211,7 @@ def validate_hostlist(ctx, param, value):
 @click.option('--verbose', '-v', count=True, help='Increase debug verbosity')
 @click.option('--redline', is_flag=True, help='Run pydsh faster')
 @click.option('--port', default=22, type=click.IntRange(1, 65535), help='SSH Port')
+@click.option('--timeout', default=30, type=click.IntRange(1, 3600), help='SSH connection timeout in seconds')
 @click.option('--sha2', is_flag=True, default=True, help='Use SHA2 Hash Algorithm for Keys')
 @click.argument('cmd', nargs=1)
 def cli(**kwargs):
@@ -259,10 +260,12 @@ def cli(**kwargs):
             port = kwargs['port']
         if kwargs['keyfile']:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
-                                      key_pass=kwargs['keypass'], combine_output=True, rsa_sha2=kwargs['sha2'])
+                                      key_pass=kwargs['keypass'], combine_output=True, rsa_sha2=kwargs['sha2'],
+                                      timeout=(0.5, kwargs['timeout']))
         else:
             job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
-                                      combine_output=True, rsa_sha2=kwargs['sha2'])
+                                      combine_output=True, rsa_sha2=kwargs['sha2'],
+                                      timeout=(0.5, kwargs['timeout']))
         job.ssh_port = port
         if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
             log.info('Adding posthook to ServerJob for: ' + host)
