@@ -118,13 +118,15 @@ def coalesce(jobresults):
     return None
 
 
-def setup_script_file(cmd, file_flag):
+def setup_script_file(cmd, file_flag, confirm_flag):
     """ Prepare script file for remote execution
 
     Validates script file, extracts shebang, and creates pre-hook for copying.
+    Prompts for confirmation unless --confirm flag is set.
 
     :param cmd: Command string or script path
     :param file_flag: Boolean indicating if cmd is a file path
+    :param confirm_flag: Boolean indicating if confirmation should be skipped
     :return: Tuple of (cmd_list, prehook) or (cmd, None) if not a file
     """
     if not file_flag:
@@ -142,6 +144,14 @@ def setup_script_file(cmd, file_flag):
     first_line = content.splitlines()[0] if content.splitlines() else ''
     if not first_line.startswith('#!'):
         raise click.UsageError('Script must start with #!')
+
+    # Request confirmation unless --confirm flag is set
+    if not confirm_flag:
+        click.echo(f'\nScript: {script_path.resolve()}')
+        click.echo(f'Interpreter: {first_line[2:].strip()}')
+        if not click.confirm('Execute this script on selected hosts?'):
+            raise click.Abort()
+        click.echo()
 
     cmd_list = [first_line.split('#!').pop().strip() + ' /tmp/' + script_name, 'rm /tmp/' + script_name]
     return cmd_list, prehook
@@ -325,6 +335,7 @@ def setup_authentication(kwargs, sshenv):
 @click.option('--dshbak', '-D', is_flag=True, help='Group output by host')
 @click.option('--coalesce', '-C', is_flag=True, help='Coalesce similar output from hosts')
 @click.option('--file', '-F', is_flag=True, help='Treat CMD as a script file')
+@click.option('--confirm', is_flag=True, help='Skip confirmation prompt when executing scripts')
 @click.option('--debug', '-d', is_flag=True, help='Enable debug output')
 @click.option('--verbose', '-v', count=True, help='Increase debug verbosity')
 @click.option('--redline', is_flag=True, help='Run pydsh faster')
@@ -347,7 +358,7 @@ def cli(**kwargs):
     log.debug(kwargs)
 
     # Setup script file if provided
-    cmd, prehook = setup_script_file(kwargs['cmd'], kwargs['file'])
+    cmd, prehook = setup_script_file(kwargs['cmd'], kwargs['file'], kwargs['confirm'])
 
     # Configure authentication
     sshenv = sshreader.envvars()
