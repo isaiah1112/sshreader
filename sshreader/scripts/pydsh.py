@@ -118,6 +118,138 @@ def coalesce(jobresults):
     return None
 
 
+def setup_script_file(cmd, file_flag):
+    """ Prepare script file for remote execution
+
+    Validates script file, extracts shebang, and creates pre-hook for copying.
+
+    :param cmd: Command string or script path
+    :param file_flag: Boolean indicating if cmd is a file path
+    :return: Tuple of (cmd_list, prehook) or (cmd, None) if not a file
+    """
+    if not file_flag:
+        return cmd, None
+
+    script_path = Path(cmd)
+    if not script_path.exists() or not script_path.is_file():
+        raise click.BadParameter('Script file not found: ' + str(script_path))
+
+    script_name = script_path.name
+    log.info('Creating copy_script prehook for: ' + script_name)
+    prehook = sshreader.Hook(copy_script, args=[str(script_path)], ssh_established=True)
+
+    content = script_path.read_text(encoding='utf-8', errors='replace')
+    first_line = content.splitlines()[0] if content.splitlines() else ''
+    if not first_line.startswith('#!'):
+        raise click.UsageError('Script must start with #!')
+
+    cmd_list = [first_line.split('#!').pop().strip() + ' /tmp/' + script_name, 'rm /tmp/' + script_name]
+    return cmd_list, prehook
+
+
+def create_jobs(hostlist, cmd, username, password, keyfile, keypass, port, timeout, sha2, prehook, posthook, file_flag):
+    """ Create ServerJob objects for each host
+
+    :param hostlist: List of hosts from expanded hostlist expression
+    :param cmd: Command(s) to run on each host
+    :param username: SSH username
+    :param password: SSH password
+    :param keyfile: Path to SSH private key
+    :param keypass: Passphrase for private key
+    :param port: Default SSH port
+    :param timeout: SSH timeout in seconds
+    :param sha2: Use SHA2 for RSA keys
+    :param prehook: Pre-execution hook (if any)
+    :param posthook: Post-execution hook (if any)
+    :param file_flag: Boolean indicating if cmd is from a script file
+    :return: List of ServerJob objects
+    """
+    jobs = []
+    for host in hostlist:
+        # Handle port specified in host string
+        if ':' in host:
+            log.info('SSH Port declared in host: ' + host)
+            host, port_str = host.split(':', 1)
+            try:
+                port = int(port_str)
+            except Exception:
+                raise click.BadParameter('Invalid port in host: ' + host) from Exception
+            log.debug((host, port))
+        else:
+            port = port  # Use default port from args
+
+        # Create job with appropriate authentication
+        if keyfile:
+            job = sshreader.ServerJob(
+                host, cmd, username=username, keyfile=keyfile,
+                key_pass=keypass, combine_output=True, rsa_sha2=sha2,
+                timeout=(0.5, timeout)
+            )
+        else:
+            job = sshreader.ServerJob(
+                host, cmd, username=username, password=password,
+                combine_output=True, rsa_sha2=sha2,
+                timeout=(0.5, timeout)
+            )
+
+        job.ssh_port = port
+        if posthook:
+            log.info('Adding posthook to ServerJob for: ' + host)
+            job.post_hook = posthook
+        if file_flag and prehook:
+            log.info('Adding prehook to ServerJob for: ' + host)
+            job.pre_hook = prehook
+        jobs.append(job)
+
+    return jobs
+
+
+def execute_jobs(jobs, dshbak_flag, coalesce_flag, redline_flag):
+    """ Execute jobs and handle output formatting
+
+    :param jobs: List of ServerJob objects
+    :param dshbak_flag: Format output like dshbak
+    :param coalesce_flag: Coalesce similar output
+    :param redline_flag: Run without thread/process overhead
+    :return: List of completed jobs
+    """
+    log.info(f'Sending {len(jobs)} ServerJobs to sshreader module')
+
+    if dshbak_flag or coalesce_flag:
+        # With output aggregation, use progress bar
+        if redline_flag:
+            jobs_finished = sshreader.sshread(jobs, pcount=0, tcount=0, progress_bar=True)
+        else:
+            jobs_finished = sshreader.sshread(jobs, tcount=0, progress_bar=True)
+
+        if coalesce_flag:
+            coalesce(jobs_finished)
+        else:
+            dshbak(jobs_finished)
+    else:
+        # Without aggregation, output as jobs complete
+        if redline_flag:
+            sshreader.sshread(jobs, pcount=0, tcount=0, print_lock=True)
+        else:
+            sshreader.sshread(jobs, tcount=0, print_lock=True)
+
+    return jobs
+
+
+def validate_hostlist(ctx, param, value):
+    """ Callback for click to expand hostlist expressions or error
+
+    :param ctx: Click context
+    :param param: Parameter Name
+    :param value: Hostlist expression to expand
+    :return: List of expanded hosts
+    """
+    try:
+        return expand_hostlist(value)
+    except Exception:
+        raise click.BadOptionUsage(param, 'Invalid hostlist expression') from None
+
+
 def setup_authentication(kwargs, sshenv):
     """ Configure SSH authentication credentials
 
@@ -181,20 +313,6 @@ def setup_authentication(kwargs, sshenv):
     return kwargs
 
 
-def validate_hostlist(ctx, param, value):
-    """ Callback for click to expand hostlist expressions or error
-
-    :param ctx: Click context
-    :param param: Parameter Name
-    :param value: Hostlist expression to expand
-    :return: List of expanded hosts
-    """
-    try:
-        return expand_hostlist(value)
-    except Exception:
-        raise click.BadOptionUsage(param, 'Invalid hostlist expression') from None
-
-
 @click.command(epilog=__examples__)
 @click.version_option(version=__version__)
 @click.option('--hostlist', '-w', metavar='EXPR', required=True, callback=validate_hostlist,
@@ -217,6 +335,7 @@ def validate_hostlist(ctx, param, value):
 def cli(**kwargs):
     """  Run ssh commands in parallel across hosts
     """
+    # Setup logging
     if kwargs['debug']:
         log.setLevel(logging.INFO)
         if kwargs['verbose']:
@@ -226,70 +345,39 @@ def cli(**kwargs):
         if kwargs['verbose'] > 2:
             logging.getLogger('sshreader').setLevel(logging.DEBUG)
     log.debug(kwargs)
-    if kwargs['file']:
-        script_path = Path(kwargs['cmd'])
-        if not script_path.exists() or not script_path.is_file():
-            raise click.BadParameter('Script file not found: ' + str(script_path))
-        script_name = script_path.name
-        log.info('Creating copy_script prehook for: ' + script_name)
-        prehook = sshreader.Hook(copy_script, args=[str(script_path)], ssh_established=True)
-        content = script_path.read_text(encoding='utf-8', errors='replace')
-        first_line = content.splitlines()[0] if content.splitlines() else ''
-        if not first_line.startswith('#!'):
-            raise click.UsageError('Script must start with #!')
-        kwargs['cmd'] = [first_line.split('#!').pop().strip() + ' /tmp/' + script_name, 'rm /tmp/' + script_name]
+
+    # Setup script file if provided
+    cmd, prehook = setup_script_file(kwargs['cmd'], kwargs['file'])
+
+    # Configure authentication
     sshenv = sshreader.envvars()
     log.debug(sshenv)
-
-    # Configure SSH authentication
     kwargs = setup_authentication(kwargs, sshenv)
-
     log.debug(kwargs)
-    posthook = sshreader.Hook(target=output)
-    jobs = list()
-    for host in kwargs['hostlist']:
-        if ':' in host:
-            log.info('SSH Port declared in host: ' + host)
-            host, port = host.split(':', 1)
-            try:
-                port = int(port)
-            except Exception:
-                raise click.BadParameter('Invalid port in host: ' + host) from Exception
-            log.debug((host, port))
-        else:
-            port = kwargs['port']
-        if kwargs['keyfile']:
-            job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], keyfile=kwargs['keyfile'],
-                                      key_pass=kwargs['keypass'], combine_output=True, rsa_sha2=kwargs['sha2'],
-                                      timeout=(0.5, kwargs['timeout']))
-        else:
-            job = sshreader.ServerJob(host, kwargs['cmd'], username=kwargs['username'], password=kwargs['password'],
-                                      combine_output=True, rsa_sha2=kwargs['sha2'],
-                                      timeout=(0.5, kwargs['timeout']))
-        job.ssh_port = port
-        if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
-            log.info('Adding posthook to ServerJob for: ' + host)
-            job.post_hook = posthook
-        if kwargs['file']:
-            log.info('Adding prehook to ServerJob for: ' + host)
-            job.pre_hook = prehook
-        jobs.append(job)
 
-    log.info(f'Sending {len(jobs)} ServerJobs to sshreader module')
+    # Setup output formatting
+    posthook = None
     if kwargs['dshbak'] is False and kwargs['coalesce'] is False:
-        if kwargs['redline']:
-            sshreader.sshread(jobs, pcount=0, tcount=0, print_lock=True)
-        else:
-            sshreader.sshread(jobs, tcount=0, print_lock=True)
-    else:
-        if kwargs['redline']:
-            jobs_finished = sshreader.sshread(jobs, pcount=0, tcount=0, progress_bar=True)
-        else:
-            jobs_finished = sshreader.sshread(jobs, tcount=0, progress_bar=True)
-        if kwargs['coalesce']:
-            coalesce(jobs_finished)
-        else:
-            dshbak(jobs_finished)
+        posthook = sshreader.Hook(target=output)
+
+    # Create jobs for all hosts
+    jobs = create_jobs(
+        hostlist=kwargs['hostlist'],
+        cmd=cmd,
+        username=kwargs['username'],
+        password=kwargs['password'],
+        keyfile=kwargs['keyfile'],
+        keypass=kwargs['keypass'],
+        port=kwargs['port'],
+        timeout=kwargs['timeout'],
+        sha2=kwargs['sha2'],
+        prehook=prehook,
+        posthook=posthook,
+        file_flag=kwargs['file']
+    )
+
+    # Execute jobs
+    execute_jobs(jobs, kwargs['dshbak'], kwargs['coalesce'], kwargs['redline'])
     sys.exit(0)
 
 
