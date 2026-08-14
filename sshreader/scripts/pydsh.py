@@ -210,7 +210,7 @@ def validate_hostlist(ctx, param, value):
 @click.option('--debug', '-d', is_flag=True, help='Enable debug output')
 @click.option('--verbose', '-v', count=True, help='Increase debug verbosity')
 @click.option('--redline', is_flag=True, help='Run pydsh faster')
-@click.option('--port', default=22, help='SSH Port')
+@click.option('--port', default=22, type=click.IntRange(1, 65535), help='SSH Port')
 @click.option('--sha2', is_flag=True, default=True, help='Use SHA2 Hash Algorithm for Keys')
 @click.argument('cmd', nargs=1)
 def cli(**kwargs):
@@ -239,9 +239,6 @@ def cli(**kwargs):
         kwargs['cmd'] = [first_line.split('#!').pop().strip() + ' /tmp/' + script_name, 'rm /tmp/' + script_name]
     sshenv = sshreader.envvars()
     log.debug(sshenv)
-
-    if kwargs['port'] <= 0 or not isinstance(kwargs['port'], int):
-        raise click.BadOptionUsage('port', 'Please enter a positive integer')
 
     # Configure SSH authentication
     kwargs = setup_authentication(kwargs, sshenv)
