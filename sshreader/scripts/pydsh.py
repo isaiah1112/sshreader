@@ -118,6 +118,69 @@ def coalesce(jobresults):
     return None
 
 
+def setup_authentication(kwargs, sshenv):
+    """ Configure SSH authentication credentials
+
+    Handles the logic for determining which authentication method to use
+    (keyfile, password, SSH agent, or prompt for password).
+
+    :param kwargs: Dictionary of command-line arguments
+    :param sshenv: sshreader.EnvVars object with environment SSH info
+    :return: Updated kwargs with authentication credentials configured
+    """
+    if kwargs['username'] is None:
+        if sshenv.username is None:
+            raise click.ClickException('Unable to determine ssh username. Please provide one using --username')
+        else:
+            kwargs['username'] = sshenv.username
+
+    # By default, we prefer ssh keys
+    if not kwargs['keyfile']:
+        log.info('SSH keyfile not specified, searching for one anyways')
+        if any((sshenv.rsa_key, sshenv.dsa_key, sshenv.ecdsa_key)):
+            if sshenv.ecdsa_key:
+                kwargs['keyfile'] = sshenv.ecdsa_key
+                log.info('Using ECDSA private key file')
+            elif sshenv.rsa_key:
+                kwargs['keyfile'] = sshenv.rsa_key
+                log.info('Using RSA private key file')
+            else:
+                kwargs['keyfile'] = sshenv.dsa_key
+                log.info('Using DSA private key file')
+        else:
+            if sshenv.agent_keys is None or len(sshenv.agent_keys) == 0:
+                if not all((kwargs['username'], kwargs['password'])):
+                    raise click.ClickException('Unable to find ssh key to use and password not supplied.')
+            else:
+                log.info('Falling back to SSH Agent')
+            if kwargs['keypass']:
+                kwargs['keypass'] = click.prompt('Private Key Password', hide_input=True)
+    else:
+        log.info('SSH keyfile provided disabling password authentication')
+        # If you specify an SSH key then we ignore any password or prompt flags you might have entered
+        kwargs['password'] = None
+        kwargs['prompt'] = False
+        if kwargs['keypass']:
+            kwargs['keypass'] = click.prompt('Private Key Password', hide_input=True)
+
+    # If you specify a password or prompt for one it overrides the ssh key
+    if not kwargs['password']:
+        if not kwargs['prompt']:
+            if not kwargs['keyfile'] and (sshenv.agent_keys is None or len(sshenv.agent_keys) == 0):
+                raise click.ClickException('Unable to find ssh key to use and password not supplied or prompt enabled.')
+        else:
+            log.info('Prompting for password and disabling discovered SSH keyfiles')
+            kwargs['keyfile'] = None
+            while kwargs['password'] is None:
+                kwargs['password'] = click.prompt(kwargs['username'] + "'s Password", hide_input=True)
+    else:
+        log.info('Using password authentication and disabling discovered SSH keyfiles')
+        # You provided a password, ignore the SSH key
+        kwargs['keyfile'] = None
+
+    return kwargs
+
+
 def validate_hostlist(ctx, param, value):
     """ Callback for click to expand hostlist expressions or error
 
@@ -180,55 +243,8 @@ def cli(**kwargs):
     if kwargs['port'] <= 0 or not isinstance(kwargs['port'], int):
         raise click.BadOptionUsage('port', 'Please enter a positive integer')
 
-    if kwargs['username'] is None:
-        if sshenv.username is None:
-            raise click.ClickException('Unable to determine ssh username. Please provide one using --username')
-        else:
-            kwargs['username'] = sshenv.username
-
-    # By default, we prefer ssh keys
-    if not kwargs['keyfile']:
-        log.info('SSH keyfile not specified, searching for one anyways')
-        if any((sshenv.rsa_key, sshenv.dsa_key, sshenv.ecdsa_key)):
-            if sshenv.ecdsa_key:
-                kwargs['keyfile'] = sshenv.ecdsa_key
-                log.info('Using ECDSA private key file')
-            elif sshenv.rsa_key:
-                kwargs['keyfile'] = sshenv.rsa_key
-                log.info('Using RSA private key file')
-            else:
-                kwargs['keyfile'] = sshenv.dsa_key
-                log.info('Using DSA private key file')
-        else:
-            if sshenv.agent_keys is None or len(sshenv.agent_keys) == 0:
-                if not all((kwargs['username'], kwargs['password'])):
-                    raise click.ClickException('Unable to find ssh key to use and password not supplied.')
-            else:
-                log.info('Falling back to SSH Agent')
-            if kwargs['keypass']:
-                kwargs['keypass'] = click.prompt('Private Key Password', hide_input=True)
-    else:
-        log.info('SSH keyfile provided disabling password authentication')
-        # If you specify an SSH key then we ignore any password or prompt flags you might have entered
-        kwargs['password'] = None
-        kwargs['prompt'] = False
-        if kwargs['keypass']:
-            kwargs['keypass'] = click.prompt('Private Key Password', hide_input=True)
-
-    # If you specify a password or prompt for one it overrides the ssh key
-    if not kwargs['password']:
-        if not kwargs['prompt']:
-            if not kwargs['keyfile'] and (sshenv.agent_keys is None or len(sshenv.agent_keys) == 0):
-                raise click.ClickException('Unable to find ssh key to use and password not supplied or prompt enabled.')
-        else:
-            log.info('Prompting for password and disabling discovered SSH keyfiles')
-            kwargs['keyfile'] = None
-            while kwargs['password'] is None:
-                kwargs['password'] = click.prompt(kwargs['username'] + "'s Password", hide_input=True)
-    else:
-        log.info('Using password authentication and disabling discovered SSH keyfiles')
-        # You provided a password, ignore the SSH key
-        kwargs['keyfile'] = None
+    # Configure SSH authentication
+    kwargs = setup_authentication(kwargs, sshenv)
 
     log.debug(kwargs)
     posthook = sshreader.Hook(target=output)
