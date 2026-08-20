@@ -1,5 +1,5 @@
 import logging
-from queue import Queue
+from queue import Empty, Queue
 
 import pytest
 
@@ -213,6 +213,35 @@ def test_sshread_pcount_zero_and_negative(monkeypatch):
     resneg = utils.sshread(jobs, pcount=-1, tcount=0, progress_bar=False, print_lock=False)
     assert isinstance(resneg, list)
     assert len(resneg) == 3
+
+
+def test_sub_thread_handles_stale_empty_queue():
+    class StaleEmptyQueue:
+        def __init__(self, jobs):
+            self._jobs = list(jobs)
+            self._empty_calls = 0
+
+        def empty(self):
+            self._empty_calls += 1
+            return self._empty_calls == 1
+
+        def get(self, timeout=None):
+            if not self._jobs:
+                raise Empty()
+            return self._jobs.pop(0)
+
+    class ResultQueue:
+        def __init__(self):
+            self.items = []
+
+        def put(self, item):
+            self.items.append(item)
+
+    job = ServerJob('h1', 'echo hi', run_local=True)
+    tq = StaleEmptyQueue([job])
+    rq = ResultQueue()
+    utils._sub_thread_(tq, rq, None, False)
+    assert len(rq.items) == 1
 
 
 def test_sshread_progress_bar(monkeypatch):

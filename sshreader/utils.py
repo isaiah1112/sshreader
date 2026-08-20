@@ -299,6 +299,24 @@ def echo(*args, **kwargs) -> None:
     return None
 
 
+def _task_queue_get(task_queue):
+    """Safely pull a task without depending on a queue's `empty()` semantics.
+
+    Some queues used in tests expose only a blocking `get()` without a timeout argument,
+    while multiprocessing.Queue supports `get(timeout=...)`. We accept either form and
+    treat an empty queue as a normal exit condition.
+    """
+    try:
+        return task_queue.get(timeout=1)
+    except TypeError:
+        while not task_queue.empty():
+            return task_queue.get() # This can hang, so check whether the queue is empty first.
+        else:
+            return None
+    except Empty:
+        return None
+
+
 def sshread(serverjobs: list, pcount: int | None = None, tcount: int | None = None,
             progress_bar: bool = False, print_lock: bool = True) -> list:
     """Takes a list of ServerJob objects and puts them into threads/sub-processes and runs them
@@ -347,10 +365,8 @@ def sshread(serverjobs: list, pcount: int | None = None, tcount: int | None = No
     for job in serverjobs:
         task_queue.put(job)
     else:
-        # I put this here because if you have 1 ServerJob the buffer is often not flushed in time for a thread to use
-        # the `get` method.
-        while task_queue.empty():
-            time.sleep(1)
+        # Do not poll Queue.empty() here: it can report stale values under multiprocessing and can drop work.
+        pass
 
     threads = list()  # Keep track of threads so we can join them later
     pids = list()  # Keep track of process-ids so we can join/close them later
@@ -442,8 +458,10 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress
     pid = os.getpid()
     log.debug(f'starting process: {pid}')
     if thread_count == 0:
-        while task_queue.empty() is False:
-            job = task_queue.get()
+        while True:
+            job = _task_queue_get(task_queue)
+            if job is None:
+                break
             job.run()
             result_queue.put(job)
             if progress_bar:
@@ -470,8 +488,10 @@ def _sub_thread_(task_queue, result_queue, item_counter, progress_bar):
     DO NOT USE THIS METHOD!
     """
     log.debug('entering thread')
-    while task_queue.empty() is False:
-        job = task_queue.get()
+    while True:
+        job = _task_queue_get(task_queue)
+        if job is None:
+            break
         job.run()
         result_queue.put(job)
         if progress_bar:
