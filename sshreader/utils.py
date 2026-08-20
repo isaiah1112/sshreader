@@ -307,7 +307,7 @@ def _task_queue_get(task_queue):
     treat an empty queue as a normal exit condition.
     """
     try:
-        return task_queue.get(timeout=1)
+        return task_queue.get(timeout=0.1)
     except TypeError:
         while not task_queue.empty():
             return task_queue.get() # This can hang, so check whether the queue is empty first.
