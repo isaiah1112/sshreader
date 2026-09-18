@@ -1,6 +1,7 @@
 name: Publish to Test PyPI
 
-on: workflow_dispatch
+on:
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -9,13 +10,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
-    - name: Set up Python 3.14
-      uses: actions/setup-python@v7
-      with:
-        python-version: "3.14"
-    - name: Install UV
-      uses: astral-sh/setup-uv@v7
-    - name: Publish to Test PyPI
-      run: |
-        uv build && uv publish --index test-pypi --username __token__ --password ${{ secrets.TEST_PYPI_API_TOKEN }}
+      - uses: actions/checkout@v7
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: "uv"
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install build dependencies
+        run: uv sync --locked --group test
+
+      - name: Build package
+        run: uv build --sdist --wheel
+
+      - name: Publish to Test PyPI
+        run: uv publish --index test-pypi --username __token__ --password ${{ secrets.TEST_PYPI_API_TOKEN }}

@@ -11,13 +11,22 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v7
-    - name: Set up Python 3.14
-      uses: actions/setup-python@v7
-      with:
-        python-version: "3.14"
-    - name: Install UV
-      uses: astral-sh/setup-uv@v7
-    - name: Publish to PyPI
-      run: |
-        uv build && uv publish --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}
+      - uses: actions/checkout@v7
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: "uv"
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install build dependencies
+        run: uv sync --locked --group test
+
+      - name: Build package
+        run: uv build --sdist --wheel
+
+      - name: Publish to PyPI
+        run: uv publish --username __token__ --password ${{ secrets.PYPI_API_TOKEN }}
