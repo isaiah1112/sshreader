@@ -17,6 +17,7 @@
 import logging
 import multiprocessing
 import os
+import shlex
 import subprocess
 import sys
 import threading
@@ -38,34 +39,46 @@ log = logging.getLogger('sshreader')
 lockobj = None
 
 
-def shell_command(command: str, combine: bool = False, decode_bytes: bool = True) -> Command:
-    """Run a command in the shell on localhost and return the output.  This attempts to be a simplified wrapper
-    for subprocess.run
+def shell_command(command: str | list[str] | tuple[str, ...], combine: bool = False,
+                 decode_bytes: bool = True, shell: bool = False) -> Command:
+    """Run a command on localhost and return the output.
 
-    :param command: The shell script to run
-    :type command: str, required
+    The default execution path is intentionally shell-free so untrusted input is not
+    reinterpreted by a shell. If a caller explicitly opts into ``shell=True``, the
+    command is executed through the system shell and responsibility for trust is
+    deferred to the caller.
+
+    :param command: The command string or argv sequence to run
+    :type command: str or list[str], required
     :param combine: Direct stderr to stdout (Default: False)
     :type combine: bool, optional
     :param decode_bytes: Decode bytes objects to unicode strings (Default: True)
     :type decode_bytes: bool, optional
+    :param shell: Execute through the system shell (Default: False)
+    :type shell: bool, optional
     :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
     :rtype: Command
     :raises: None
     """
+    if shell:
+        log.warning('shell=True is enabled; command execution will use a shell and is unsafe for untrusted input')
+    if isinstance(command, str) and not shell:
+        command = shlex.split(command)
+
     if combine:
-        sp_output = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        sp_output = subprocess.run(command, shell=shell, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         if decode_bytes:
-            result = Command(cmd=command, stdout=sp_output.stdout.decode(), stderr=None,
+            result = Command(cmd=str(command), stdout=sp_output.stdout.decode(), stderr=None,
                              return_code=sp_output.returncode)
         else:
-            result = Command(cmd=command, stdout=sp_output.stdout, stderr=None, return_code=sp_output.returncode)
+            result = Command(cmd=str(command), stdout=sp_output.stdout, stderr=None, return_code=sp_output.returncode)
     else:
-        sp_output = subprocess.run(command, shell=True, capture_output=True)
+        sp_output = subprocess.run(command, shell=shell, capture_output=True)
         if decode_bytes:
-            result = Command(cmd=command, stdout=sp_output.stdout.decode(), stderr=sp_output.stderr.decode(),
+            result = Command(cmd=str(command), stdout=sp_output.stdout.decode(), stderr=sp_output.stderr.decode(),
                              return_code=sp_output.returncode)
         else:
-            result = Command(cmd=command, stdout=sp_output.stdout, stderr=sp_output.stderr.decode(),
+            result = Command(cmd=str(command), stdout=sp_output.stdout, stderr=sp_output.stderr.decode(),
                              return_code=sp_output.returncode)
     return result
 

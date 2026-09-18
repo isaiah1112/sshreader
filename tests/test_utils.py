@@ -28,6 +28,16 @@ def test_shell_command_decode_false():
     assert isinstance(res.stdout, (bytes, str))
 
 
+def test_shell_command_avoids_shell_metacharacters_by_default():
+    result = shell_command('echo hello && false', combine=False)
+    assert 'hello && false' in result.stdout
+    assert result.return_code == 0
+
+    explicit = shell_command('echo hello && false', shell=True, combine=False)
+    assert 'hello' in explicit.stdout
+    assert explicit.return_code == 1
+
+
 def test_hook_run_and_str():
     def target(a, b=0):
         return a + b
