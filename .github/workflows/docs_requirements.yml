@@ -1,6 +1,8 @@
 name: Docs Requirements Sync
 
 on:
+  schedule:
+    - cron: "0 9 * * 1"
   push:
     branches: ["develop"]
     paths:
@@ -18,13 +20,16 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
-  verify:
+  sync:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Set up Python 3.12
         uses: actions/setup-python@v7
@@ -38,5 +43,21 @@ jobs:
       - name: Export docs requirements
         run: uv export --group docs --no-hashes --output-file docs/requirements.txt
 
-      - name: Verify docs requirements are up to date
-        run: git diff --exit-code -- docs/requirements.txt
+      - name: Create pull request for docs requirements updates
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/update-docs-requirements
+          base: develop
+          title: "chore(docs): refresh generated RTD requirements"
+          commit-message: "chore(docs): refresh generated RTD requirements"
+          body: |
+            This PR updates the generated Sphinx requirements file used by Read the Docs.
+
+            Generated from the `docs` dependency group via:
+            `uv export --group docs --no-hashes --output-file docs/requirements.txt`
+          add-paths: |
+            docs/requirements.txt
+          delete-branch: true
+          labels: |
+            dependencies
+            docs
