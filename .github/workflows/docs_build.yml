@@ -1,0 +1,39 @@
+name: Docs Build
+
+on:
+  push:
+    branches: ["develop"]
+    paths:
+      - "docs/**"
+      - ".readthedocs.yaml"
+      - "README.md"
+      - ".github/workflows/docs_build.yml"
+  pull_request:
+    branches: ["develop"]
+    paths:
+      - "docs/**"
+      - ".readthedocs.yaml"
+      - "README.md"
+      - ".github/workflows/docs_build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: "uv"
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v7
+
+      - name: Build Sphinx docs
+        run: uv run --group docs sphinx-build -b html docs/source docs/_build/html

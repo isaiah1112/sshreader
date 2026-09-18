@@ -1,0 +1,42 @@
+name: Docs Requirements Sync
+
+on:
+  push:
+    branches: ["develop"]
+    paths:
+      - "pyproject.toml"
+      - "uv.lock"
+      - "docs/requirements.txt"
+      - ".github/workflows/docs_requirements.yml"
+  pull_request:
+    branches: ["develop"]
+    paths:
+      - "pyproject.toml"
+      - "uv.lock"
+      - "docs/requirements.txt"
+      - ".github/workflows/docs_requirements.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: "uv"
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v7
+
+      - name: Export docs requirements
+        run: uv export --group docs --no-hashes --output-file docs/requirements.txt
+
+      - name: Verify docs requirements are up to date
+        run: git diff --exit-code -- docs/requirements.txt
