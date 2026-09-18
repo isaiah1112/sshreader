@@ -224,7 +224,10 @@ class ServerJob:
                 log.debug(f'{self.name}: running prehook')
                 self.pre_hook.run(self)
             for cmd in self.cmds:
-                result = shell_command(cmd, combine=self.combine_output)
+                try:
+                    result = shell_command(cmd, combine=self.combine_output)
+                except Exception as errorMsg:
+                    result = Command(cmd, '', str(errorMsg), 54)
                 log.debug(f'{self.name}: {str(result)}')
                 self.results.append(result)
                 self.status += result.return_code
@@ -243,7 +246,7 @@ class ServerJob:
             except Exception as errorMsg:
                 log.debug(str(errorMsg))
                 self.status = 255
-                self.results.append(str(errorMsg))
+                self.results.append(Command(cmd=self.name, stdout='', stderr=str(errorMsg), return_code=255))
             else:
                 if self.pre_hook and self.pre_hook.ssh_established:
                     log.debug(f'{self.name}: running prehook')

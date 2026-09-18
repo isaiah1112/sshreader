@@ -79,6 +79,22 @@ def test_serverjob_run_local_and_hooks():
     assert post_called == ['localhost']
 
 
+def test_serverjob_connection_failure_result_is_command(monkeypatch):
+    class BrokenSSH:
+        def __init__(self, *args, **kwargs):
+            raise RuntimeError('connect failed')
+
+    monkeypatch.setattr(utils, 'SSH', BrokenSSH)
+    job = ServerJob('h', 'echo hi', username='u', password='p')
+
+    status = job.run()
+
+    assert status == 255
+    assert isinstance(job.results[0], Command)
+    assert job.results[0].stderr == 'connect failed'
+    assert job.results[0].return_code == 255
+
+
 def test_serverjob_timeout_tuple_length():
     with pytest.raises(ValueError):
         ServerJob('h', 'cmd', timeout=(1, 2, 3))
