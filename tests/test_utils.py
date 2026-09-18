@@ -5,7 +5,7 @@ import pytest
 
 import sshreader.utils as utils
 from sshreader.customtypes import Command
-from sshreader.utils import ServerJob, Hook, shell_command, cpu_limit
+from sshreader.utils import Hook, ServerJob, cpu_limit, shell_command
 
 
 def test_shell_command_basic():

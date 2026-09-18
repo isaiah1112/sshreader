@@ -77,10 +77,15 @@ class SSH:
     :type connect: bool, optional
     :param rsa_sha2: Enable/Disable RSA w/SHA2 hashes (Default: True)
     :type rsa_sha2: bool, optional
+    :param known_hosts: Path to a known_hosts file to be loaded for host verification (Default: None)
+    :type known_hosts: str, optional
+    :param allow_unknown_hosts: Accept unknown hosts with an insecure automatic policy (Default: False)
+    :type allow_unknown_hosts: bool, optional
     :raises: :class:`paramiko.SSHException`
     """
     def __init__(self, fqdn: str, username: str, password: str | None = None, keyfile: str | None = None,
-                 keypass: str | None = None, port: int = 22, connect: bool = True, rsa_sha2: bool = True) -> None:
+                 keypass: str | None = None, port: int = 22, connect: bool = True, rsa_sha2: bool = True,
+                 known_hosts: str | None = None, allow_unknown_hosts: bool = False) -> None:
         if not keyfile and len(paramiko.Agent().get_keys()) == 0 and not all((username, password)):
             paramiko.SSHException('username and password or keyfile not provided')
         self.host = fqdn
@@ -95,13 +100,27 @@ class SSH:
         self.rsa_sha2 = rsa_sha2
         self.keypass = keypass
         self.port = port
+        self.known_hosts = None if known_hosts is None else os.path.abspath(os.path.expanduser(known_hosts))
+        self.allow_unknown_hosts = bool(allow_unknown_hosts)
         self._connection = paramiko.SSHClient()
-        self._connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        if self.allow_unknown_hosts:
+            self._connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        else:
+            if hasattr(self._connection, 'load_system_host_keys'):
+                self._connection.load_system_host_keys()
+            if self.known_hosts and hasattr(self._connection, 'load_host_keys'):
+                self._connection.load_host_keys(self.known_hosts)
+            self._connection.set_missing_host_key_policy(paramiko.WarningPolicy())
         if connect:
             self.__connect()
 
     def __str__(self) -> str:
-        return str(self.__dict__)
+        safe_data = dict(self.__dict__)
+        if safe_data.get('password') is not None:
+            safe_data['password'] = '***redacted***'
+        if safe_data.get('keypass') is not None:
+            safe_data['keypass'] = '***redacted***'
+        return str(safe_data)
 
     def __enter__(self):
         if self.__alive() is False:

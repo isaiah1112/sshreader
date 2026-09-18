@@ -1,9 +1,10 @@
 import os
+
 from click.testing import CliRunner
 
 import sshreader
-from sshreader.scripts import pydsh
 from sshreader.customtypes import Command, EnvVars
+from sshreader.scripts import pydsh
 
 
 def test_copy_script_success():

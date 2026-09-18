@@ -3,7 +3,7 @@ import os
 import paramiko
 import pytest
 
-from sshreader.ssh import envvars, SSH
+from sshreader.ssh import SSH, envvars
 
 
 def test_envvars_with_ssh_keys_and_agent(monkeypatch, tmp_path):
@@ -55,6 +55,59 @@ def test_ssh_init_keyfile_type_error(monkeypatch):
         SSH('host', 'user', keyfile=123, connect=False)
 
 
+def test_ssh_defaults_to_warning_policy_and_known_hosts_file(monkeypatch, tmp_path):
+    class FakeAgent:
+        def get_keys(self):
+            return []
+
+    monkeypatch.setattr(paramiko, 'Agent', lambda: FakeAgent())
+
+    captured = {}
+
+    class FakeSSHClient:
+        def __init__(self):
+            self.loaded_hosts = None
+
+        def set_missing_host_key_policy(self, policy):
+            captured['policy'] = type(policy).__name__
+
+        def load_host_keys(self, path):
+            captured['known_hosts'] = path
+
+    monkeypatch.setattr(paramiko, 'SSHClient', FakeSSHClient)
+
+    known_hosts = tmp_path / 'known_hosts'
+    known_hosts.write_text('example.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC test\n')
+
+    SSH('host', 'user', password='pw', known_hosts=str(known_hosts), connect=False)
+
+    assert captured['policy'] == 'WarningPolicy'
+    assert captured['known_hosts'] == str(known_hosts)
+
+
+def test_ssh_accept_all_override_sets_autoadd_policy(monkeypatch):
+    class FakeAgent:
+        def get_keys(self):
+            return []
+
+    monkeypatch.setattr(paramiko, 'Agent', lambda: FakeAgent())
+
+    captured = {}
+
+    class FakeSSHClient:
+        def __init__(self):
+            pass
+
+        def set_missing_host_key_policy(self, policy):
+            captured['policy'] = type(policy).__name__
+
+    monkeypatch.setattr(paramiko, 'SSHClient', FakeSSHClient)
+
+    SSH('host', 'user', password='pw', allow_unknown_hosts=True, connect=False)
+
+    assert captured['policy'] == 'AutoAddPolicy'
+
+
 def test_ssh_command_and_sftp_and_alive(monkeypatch):
     class FakeAgent:
         def get_keys(self):
@@ -90,8 +143,8 @@ def test_ssh_command_and_sftp_and_alive(monkeypatch):
             return True
 
         def get(self, src, dst):
-            open(dst, 'w').write('ok')
-
+                        with open(dst, 'w') as handle:
+                            handle.write('ok')
         def close(self):
             return None
 
@@ -251,7 +304,7 @@ def test_context_manager_invokes_connect_and_close(monkeypatch):
     monkeypatch.setattr(paramiko, 'Agent', lambda: type('A', (), {'get_keys': lambda self: ['k']})())
     s = SSH('h', 'u', password='p', connect=False)
     called = {'connect': False, 'close': False}
-    setattr(s, '_SSH__alive', lambda: False)
+    s._SSH__alive = lambda: False
 
     def fake_connect(timeout=0.5):
         called['connect'] = True
@@ -259,8 +312,8 @@ def test_context_manager_invokes_connect_and_close(monkeypatch):
     def fake_close():
         called['close'] = True
 
-    setattr(s, '_SSH__connect', fake_connect)
-    setattr(s, '_SSH__close', fake_close)
+    s._SSH__connect = fake_connect
+    s._SSH__close = fake_close
     with s:
         assert called['connect'] is True
     assert called['close'] is True
