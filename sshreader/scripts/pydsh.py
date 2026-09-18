@@ -29,7 +29,7 @@ import sshreader
 
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '3.2.0'
+__version__ = '4.0.0'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
