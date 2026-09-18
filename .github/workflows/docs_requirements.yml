@@ -44,7 +44,7 @@ jobs:
         run: uv export --group docs --no-hashes --output-file docs/requirements.txt
 
       - name: Create pull request for docs requirements updates
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: chore/update-docs-requirements
           base: develop
