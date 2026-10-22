@@ -115,20 +115,36 @@ def test_ssh_command_and_sftp_and_alive(monkeypatch):
 
     monkeypatch.setattr(paramiko, 'Agent', lambda: FakeAgent())
 
+    class FakeChannel:
+        def __init__(self):
+            self._stdout = bytearray(b'out\n')
+            self._stderr = bytearray(b'err\n')
+
+        def recv_ready(self):
+            return bool(self._stdout)
+
+        def recv(self, size):
+            data = self._stdout[:size]
+            del self._stdout[:size]
+            return bytes(data)
+
+        def recv_stderr_ready(self):
+            return bool(self._stderr)
+
+        def recv_stderr(self, size):
+            data = self._stderr[:size]
+            del self._stderr[:size]
+            return bytes(data)
+
+        def exit_status_ready(self):
+            return True
+
+        def recv_exit_status(self):
+            return 0
+
     class FakeFile:
-        def __init__(self, data):
-            self._b = data.encode()
-
-        def read(self):
-            return self._b
-
-        @property
-        def channel(self):
-            class C:
-                def recv_exit_status(self):
-                    return 0
-
-            return C()
+        def __init__(self, channel):
+            self.channel = channel
 
     class FakeTransport:
         def is_alive(self):
@@ -156,7 +172,8 @@ def test_ssh_command_and_sftp_and_alive(monkeypatch):
             pass
 
         def exec_command(self, command, timeout=None, get_pty=False):
-            return (None, FakeFile('out\n'), FakeFile('err\n'))
+            channel = FakeChannel()
+            return (None, FakeFile(channel), FakeFile(channel))
 
         def get_transport(self):
             return self._transport
@@ -177,6 +194,7 @@ def test_ssh_command_and_sftp_and_alive(monkeypatch):
     res = s.ssh_command('echo hi', timeout=1, combine=False)
     assert res.return_code == 0
     assert 'out' in res.stdout
+    assert 'err' in res.stderr
     res2 = s.ssh_command('echo hi', timeout=1, combine=True)
     assert res2.stderr is None
 

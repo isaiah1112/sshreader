@@ -16,6 +16,7 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
 import os
+import select
 import socket
 from getpass import getuser
 from typing import Any, Optional
@@ -25,6 +26,23 @@ import paramiko
 from .customtypes import Command, EnvVars, Timeout
 
 log = logging.getLogger('sshreader')
+
+
+def _read_channel_output(channel, include_stderr: bool) -> tuple[bytes, bytes]:
+    stdout = bytearray()
+    stderr = bytearray()
+
+    while True:
+        while channel.recv_ready():
+            stdout.extend(channel.recv(32768))
+        if include_stderr:
+            while channel.recv_stderr_ready():
+                stderr.extend(channel.recv_stderr(32768))
+        if channel.exit_status_ready():
+            break
+        select.select([channel], [], [], 0.1)
+
+    return bytes(stdout), bytes(stderr)
 
 
 def envvars() -> EnvVars:
@@ -185,24 +203,23 @@ class SSH:
             raise paramiko.SSHException(f"connection to {self.host} not established")
         if combine:
             try:
-                stdin, stdout, stderr = self._connection.exec_command(command, timeout=timeout, get_pty=True)
+                _, stdout, _ = self._connection.exec_command(command, timeout=timeout, get_pty=True)
+                output, _ = _read_channel_output(stdout.channel, include_stderr=False)
                 if decodebytes:
-                    result = Command(cmd=command, stdout=stdout.read().decode().strip(), stderr=None,
-                                     return_code=stdout.channel.recv_exit_status())
-                else:
-                    result = Command(cmd=command, stdout=stdout.read().strip(), stderr=None,
-                                     return_code=stdout.channel.recv_exit_status())
+                    output = output.decode()
+                result = Command(cmd=command, stdout=output.strip(), stderr=None,
+                                 return_code=stdout.channel.recv_exit_status())
             except (TimeoutError, paramiko.buffered_pipe.PipeTimeout):  # ty:ignore[possibly-missing-submodule]
                 result = Command(cmd=command, stdout='command timed out', stderr=None, return_code=124)
         else:
             try:
-                stdin, stdout, stderr = self._connection.exec_command(command, timeout=timeout)
+                _, stdout, _ = self._connection.exec_command(command, timeout=timeout)
+                output, error_output = _read_channel_output(stdout.channel, include_stderr=True)
                 if decodebytes:
-                    result = Command(cmd=command, stdout=stdout.read().decode().strip(),
-                                     stderr=stderr.read().decode().strip(), return_code=stdout.channel.recv_exit_status())
-                else:
-                    result = Command(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip(),
-                                     return_code=stdout.channel.recv_exit_status())
+                    output = output.decode()
+                    error_output = error_output.decode()
+                result = Command(cmd=command, stdout=output.strip(), stderr=error_output.strip(),
+                                 return_code=stdout.channel.recv_exit_status())
             except (TimeoutError, paramiko.buffered_pipe.PipeTimeout):  # ty:ignore[possibly-missing-submodule]
                 result = Command(cmd=command, stdout='', stderr='command timed out', return_code=124)
         return result
