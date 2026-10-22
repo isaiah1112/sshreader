@@ -25,7 +25,7 @@ import time
 from collections import deque
 from collections.abc import Callable
 from queue import Empty, Queue
-from typing import Any, Optional, Union
+from typing import Any
 
 import paramiko
 from progressbar import ProgressBar
@@ -96,7 +96,8 @@ class Hook:
     :raises: TypeError
     """
 
-    def __init__(self, target: Callable, args: list | None = None, kwargs: dict | None = None,
+    def __init__(self, target: Callable[..., Any], args: list[Any] | None = None,
+                 kwargs: dict[str, Any] | None = None,
                  ssh_established: bool = False) -> None:
         self.target = target
         self.ssh_established = ssh_established
@@ -110,7 +111,7 @@ class Hook:
             self.kwargs = kwargs
         self.result = None
 
-    def run(self, *args, **kwargs) -> Any:
+    def run(self, *args: Any, **kwargs: Any) -> Any:
         """ Run the Hook.  You can add additional args or kwargs at this time!
 
         :param args: Append to args
@@ -121,9 +122,9 @@ class Hook:
         """
         # I perform the following actions this way specifically, so I don't "update" the pre-defined args and kwargs
         # in the Hook object.
-        args = self.args + list(args)
-        kwargs = dict(list(self.kwargs.items()) + list(kwargs.items()))
-        self.result = self.target(*args, **kwargs)
+        merged_args = self.args + list(args)
+        merged_kwargs = dict(list(self.kwargs.items()) + list(kwargs.items()))
+        self.result = self.target(*merged_args, **merged_kwargs)
         return self.result
 
     def __str__(self) -> str:
@@ -272,7 +273,7 @@ class ServerJob:
     def __str__(self) -> str:
         return str(self.__dict__)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Any:
         return self.__dict__[item]
 
 
@@ -296,7 +297,7 @@ def cpu_limit(factor: int = 1) -> int:
         return cpu_count
 
 
-def echo(*args, **kwargs) -> None:
+def echo(*args: Any, **kwargs: Any) -> None:
     """ Wrapper for print that implements a :class:`multiprocessing.Lock` object as well as uses unbuffered output
     to :class:`sys.stdout`.
 
@@ -315,7 +316,7 @@ def echo(*args, **kwargs) -> None:
     return None
 
 
-def _task_queue_get(task_queue):
+def _task_queue_get(task_queue: Any) -> Any:
     """Safely pull a task without depending on a queue's `empty()` semantics.
 
     Some queues used in tests expose only a blocking `get()` without a timeout argument,
@@ -333,8 +334,8 @@ def _task_queue_get(task_queue):
         return None
 
 
-def sshread(serverjobs: list, pcount: int | None = None, tcount: int | None = None,
-            progress_bar: bool = False, print_lock: bool = True) -> list:
+def sshread(serverjobs: list[ServerJob], pcount: int | None = None, tcount: int | None = None,
+            progress_bar: bool = False, print_lock: bool = True) -> list[ServerJob]:
     """Takes a list of ServerJob objects and puts them into threads/sub-processes and runs them
 
     :param serverjobs: List of ServerJob objects
@@ -466,7 +467,8 @@ def sshread(serverjobs: list, pcount: int | None = None, tcount: int | None = No
     return results
 
 
-def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress_bar):
+def _sub_process_(task_queue: Any, result_queue: Any, item_counter: Any,
+                  thread_count: int, progress_bar: bool) -> None:
     """ Private method for managing multiprocessing and spawning thread pools.
 
     DO NOT USE THIS METHOD!
@@ -498,7 +500,7 @@ def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress
     return None
 
 
-def _sub_thread_(task_queue, result_queue, item_counter, progress_bar):
+def _sub_thread_(task_queue: Any, result_queue: Any, item_counter: Any, progress_bar: bool) -> None:
     """ Private method for managing multiprocessing and spawning thread pools.
 
     DO NOT USE THIS METHOD!

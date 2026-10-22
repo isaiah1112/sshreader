@@ -14,7 +14,7 @@
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from typing import NamedTuple, Optional, Union
+from typing import NamedTuple
 
 
 class Command(NamedTuple):
@@ -26,7 +26,7 @@ class Command(NamedTuple):
 
 class EnvVars(NamedTuple):
     username: str | None
-    agent_keys: list | None
+    agent_keys: list[object] | None
     dsa_key: str | None
     ecdsa_key: str | None
     rsa_key: str | None

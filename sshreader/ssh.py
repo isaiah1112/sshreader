@@ -19,7 +19,8 @@ import os
 import select
 import socket
 from getpass import getuser
-from typing import Any, Optional
+from types import TracebackType
+from typing import Any, Self
 
 import paramiko
 
@@ -140,12 +141,13 @@ class SSH:
             safe_data['keypass'] = '***redacted***'
         return str(safe_data)
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         if self.__alive() is False:
             self.__connect()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None,
+                 exc_tb: TracebackType | None) -> None:
         self.__close()
 
     def sftp_put(self, srcfile: str, dstfile: str) -> Any:
@@ -224,14 +226,14 @@ class SSH:
                 result = Command(cmd=command, stdout='', stderr='command timed out', return_code=124)
         return result
 
-    def close(self):
+    def close(self) -> None:
         """Closes an established ssh connection
 
         :return: None
         """
-        return self._connection.close()
+        self._connection.close()
 
-    def alive(self):
+    def alive(self) -> bool:
         """Is an SSH connection alive
 
         :return: True or False
@@ -246,7 +248,7 @@ class SSH:
             else:
                 raise paramiko.SSHException("unable to determine state of ssh connection")
 
-    def reconnect(self):
+    def reconnect(self) -> bool:
         """Alias to connect
         """
         return self.__connect()
