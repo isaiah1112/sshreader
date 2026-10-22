@@ -39,6 +39,10 @@ log = logging.getLogger('sshreader')
 lockobj = None
 
 
+def _decode_subprocess_output(output: bytes, decode_bytes: bool) -> str | bytes:
+    return output.decode() if decode_bytes else output
+
+
 def shell_command(command: str | list[str] | tuple[str, ...], combine: bool = False,
                  decode_bytes: bool = True, shell: bool = False) -> Command:
     """Run a command on localhost and return the output.
@@ -67,19 +71,13 @@ def shell_command(command: str | list[str] | tuple[str, ...], combine: bool = Fa
 
     if combine:
         sp_output = subprocess.run(command, shell=shell, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        if decode_bytes:
-            result = Command(cmd=str(command), stdout=sp_output.stdout.decode(), stderr=None,
-                             return_code=sp_output.returncode)
-        else:
-            result = Command(cmd=str(command), stdout=sp_output.stdout, stderr=None, return_code=sp_output.returncode)
+        result = Command(cmd=str(command), stdout=_decode_subprocess_output(sp_output.stdout, decode_bytes),
+                         stderr=None, return_code=sp_output.returncode)
     else:
         sp_output = subprocess.run(command, shell=shell, capture_output=True)
-        if decode_bytes:
-            result = Command(cmd=str(command), stdout=sp_output.stdout.decode(), stderr=sp_output.stderr.decode(),
-                             return_code=sp_output.returncode)
-        else:
-            result = Command(cmd=str(command), stdout=sp_output.stdout, stderr=sp_output.stderr.decode(),
-                             return_code=sp_output.returncode)
+        result = Command(cmd=str(command), stdout=_decode_subprocess_output(sp_output.stdout, decode_bytes),
+                         stderr=_decode_subprocess_output(sp_output.stderr, decode_bytes),
+                         return_code=sp_output.returncode)
     return result
 
 

@@ -1,4 +1,5 @@
 import logging
+import sys
 from queue import Empty, Queue
 
 import pytest
@@ -24,8 +25,10 @@ def test_shell_command_combine_and_decode():
 
 
 def test_shell_command_decode_false():
-    res = shell_command('echo ok', decode_bytes=False)
-    assert isinstance(res.stdout, (bytes, str))
+    command = [sys.executable, '-c', "import sys; sys.stdout.write('out'); sys.stderr.write('err')"]
+    res = shell_command(command, decode_bytes=False)
+    assert res.stdout == b'out'
+    assert res.stderr == b'err'
 
 
 def test_shell_command_avoids_shell_metacharacters_by_default():
