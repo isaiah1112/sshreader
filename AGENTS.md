@@ -36,7 +36,7 @@ If the repo uses `uv` for project commands, prefer the local `.venv` for direct 
 
 ## Development expectations
 
-- Keep changes consistent with the existing package layout and Python 3.10+ conventions.
+- Keep changes consistent with the existing package layout and Python 3.11+ conventions.
 - Prefer small, targeted edits.
 - Run the relevant tests and lint checks before concluding work.
 - For Python code, use the repository virtual environment rather than any global interpreter.

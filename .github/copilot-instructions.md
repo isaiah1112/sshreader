@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**sshreader** is a Python library that provides a multi-threaded/multi-process wrapper around Paramiko for parallel SSH operations across multiple servers. It is production-stable (v6.3.0) and supports Python 3.10+.
+**sshreader** is a Python library that provides a multi-threaded/multi-process wrapper around Paramiko for parallel SSH operations across multiple servers. It is production-stable (v6.3.0) and supports Python 3.11+.
 
 - **License:** GNU Lesser General Public License v3.0 or later
 - **Key Dependencies:** paramiko, click, colorama, progressbar2, python-hostlist
@@ -16,7 +16,7 @@
 - Then imports organized by: stdlib → third-party → local modules
 
 ### Type Hints
-- Use modern Python type hints (Python 3.10+ union syntax with `|`)
+- Use modern Python type hints (Python 3.11+ union syntax with `|`)
 - NamedTuples for structured returns (Command, EnvVars, etc.)
 - Type hints in function signatures with return type annotations
 - Use `Optional[Type]` when values can be None
@@ -97,7 +97,7 @@ class TestSSH(unittest.TestCase):
 
 ## Key Principles
 
-1. **Backwards Compatibility:** Maintain Python 3.10+ support
+1. **Backwards Compatibility:** Maintain Python 3.11+ support
 2. **Robust Error Handling:** Paramiko exceptions should be caught and handled appropriately
 3. **Parallel Processing:** Leverage threading/multiprocessing for concurrent operations
 4. **Clean Interfaces:** Simple, intuitive APIs for SSH operations

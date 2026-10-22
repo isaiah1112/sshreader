@@ -68,7 +68,7 @@ API Documentation
 Compatibility
 -------------
 
-sshreader supports Python 3.10 and later.  The package is tested against the currently supported Python versions
+sshreader supports Python 3.11 and later.  The package is tested against the currently supported Python versions
 listed in the project metadata.
 
 .. note::
