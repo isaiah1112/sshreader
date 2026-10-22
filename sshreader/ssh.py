@@ -16,15 +16,34 @@
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
 import os
+import select
 import socket
 from getpass import getuser
-from typing import Any, Optional
+from types import TracebackType
+from typing import Any, Self
 
 import paramiko
 
 from .customtypes import Command, EnvVars, Timeout
 
 log = logging.getLogger('sshreader')
+
+
+def _read_channel_output(channel, include_stderr: bool) -> tuple[bytes, bytes]:
+    stdout = bytearray()
+    stderr = bytearray()
+
+    while True:
+        while channel.recv_ready():
+            stdout.extend(channel.recv(32768))
+        if include_stderr:
+            while channel.recv_stderr_ready():
+                stderr.extend(channel.recv_stderr(32768))
+        if channel.exit_status_ready():
+            break
+        select.select([channel], [], [], 0.1)
+
+    return bytes(stdout), bytes(stderr)
 
 
 def envvars() -> EnvVars:
@@ -77,10 +96,15 @@ class SSH:
     :type connect: bool, optional
     :param rsa_sha2: Enable/Disable RSA w/SHA2 hashes (Default: True)
     :type rsa_sha2: bool, optional
+    :param known_hosts: Path to a known_hosts file to be loaded for host verification (Default: None)
+    :type known_hosts: str, optional
+    :param allow_unknown_hosts: Accept unknown hosts with an insecure automatic policy (Default: False)
+    :type allow_unknown_hosts: bool, optional
     :raises: :class:`paramiko.SSHException`
     """
-    def __init__(self, fqdn: str, username: str, password: Optional[str] = None, keyfile: Optional[str] = None,
-                 keypass: Optional[str] = None, port: int = 22, connect: bool = True, rsa_sha2: bool = True) -> None:
+    def __init__(self, fqdn: str, username: str, password: str | None = None, keyfile: str | None = None,
+                 keypass: str | None = None, port: int = 22, connect: bool = True, rsa_sha2: bool = True,
+                 known_hosts: str | None = None, allow_unknown_hosts: bool = False) -> None:
         if not keyfile and len(paramiko.Agent().get_keys()) == 0 and not all((username, password)):
             paramiko.SSHException('username and password or keyfile not provided')
         self.host = fqdn
@@ -95,20 +119,35 @@ class SSH:
         self.rsa_sha2 = rsa_sha2
         self.keypass = keypass
         self.port = port
+        self.known_hosts = None if known_hosts is None else os.path.abspath(os.path.expanduser(known_hosts))
+        self.allow_unknown_hosts = bool(allow_unknown_hosts)
         self._connection = paramiko.SSHClient()
-        self._connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        if self.allow_unknown_hosts:
+            self._connection.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        else:
+            if hasattr(self._connection, 'load_system_host_keys'):
+                self._connection.load_system_host_keys()
+            if self.known_hosts and hasattr(self._connection, 'load_host_keys'):
+                self._connection.load_host_keys(self.known_hosts)
+            self._connection.set_missing_host_key_policy(paramiko.WarningPolicy())
         if connect:
             self.__connect()
 
     def __str__(self) -> str:
-        return str(self.__dict__)
+        safe_data = dict(self.__dict__)
+        if safe_data.get('password') is not None:
+            safe_data['password'] = '***redacted***'
+        if safe_data.get('keypass') is not None:
+            safe_data['keypass'] = '***redacted***'
+        return str(safe_data)
 
-    def __enter__(self):
+    def __enter__(self) -> Self:
         if self.__alive() is False:
             self.__connect()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
+    def __exit__(self, exc_type: type[BaseException] | None, exc_val: BaseException | None,
+                 exc_tb: TracebackType | None) -> None:
         self.__close()
 
     def sftp_put(self, srcfile: str, dstfile: str) -> Any:
@@ -166,36 +205,35 @@ class SSH:
             raise paramiko.SSHException(f"connection to {self.host} not established")
         if combine:
             try:
-                stdin, stdout, stderr = self._connection.exec_command(command, timeout=timeout, get_pty=True)
+                _, stdout, _ = self._connection.exec_command(command, timeout=timeout, get_pty=True)
+                output, _ = _read_channel_output(stdout.channel, include_stderr=False)
                 if decodebytes:
-                    result = Command(cmd=command, stdout=stdout.read().decode().strip(), stderr=None,
-                                     return_code=stdout.channel.recv_exit_status())
-                else:
-                    result = Command(cmd=command, stdout=stdout.read().strip(), stderr=None,
-                                     return_code=stdout.channel.recv_exit_status())
-            except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):  # ty:ignore[possibly-missing-submodule]
+                    output = output.decode()
+                result = Command(cmd=command, stdout=output.strip(), stderr=None,
+                                 return_code=stdout.channel.recv_exit_status())
+            except (TimeoutError, paramiko.buffered_pipe.PipeTimeout):  # ty:ignore[possibly-missing-submodule]
                 result = Command(cmd=command, stdout='command timed out', stderr=None, return_code=124)
         else:
             try:
-                stdin, stdout, stderr = self._connection.exec_command(command, timeout=timeout)
+                _, stdout, _ = self._connection.exec_command(command, timeout=timeout)
+                output, error_output = _read_channel_output(stdout.channel, include_stderr=True)
                 if decodebytes:
-                    result = Command(cmd=command, stdout=stdout.read().decode().strip(),
-                                     stderr=stderr.read().decode().strip(), return_code=stdout.channel.recv_exit_status())
-                else:
-                    result = Command(cmd=command, stdout=stdout.read().strip(), stderr=stderr.read().strip(),
-                                     return_code=stdout.channel.recv_exit_status())
-            except (paramiko.buffered_pipe.PipeTimeout, socket.timeout):  # ty:ignore[possibly-missing-submodule]
+                    output = output.decode()
+                    error_output = error_output.decode()
+                result = Command(cmd=command, stdout=output.strip(), stderr=error_output.strip(),
+                                 return_code=stdout.channel.recv_exit_status())
+            except (TimeoutError, paramiko.buffered_pipe.PipeTimeout):  # ty:ignore[possibly-missing-submodule]
                 result = Command(cmd=command, stdout='', stderr='command timed out', return_code=124)
         return result
 
-    def close(self):
+    def close(self) -> None:
         """Closes an established ssh connection
 
         :return: None
         """
-        return self._connection.close()
+        self._connection.close()
 
-    def alive(self):
+    def alive(self) -> bool:
         """Is an SSH connection alive
 
         :return: True or False
@@ -210,7 +248,7 @@ class SSH:
             else:
                 raise paramiko.SSHException("unable to determine state of ssh connection")
 
-    def reconnect(self):
+    def reconnect(self) -> bool:
         """Alias to connect
         """
         return self.__connect()

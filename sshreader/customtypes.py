@@ -14,23 +14,23 @@
 #
 #     You should have received a copy of the GNU Lesser General Public License
 #     along with this program.  If not, see <http://www.gnu.org/licenses/>.
-from typing import NamedTuple, Optional, Union
+from typing import NamedTuple
 
 
 class Command(NamedTuple):
     cmd: str
-    stdout: Optional[Union[str, bytes]]
-    stderr: Optional[Union[str, bytes]]
+    stdout: str | bytes | None
+    stderr: str | bytes | None
     return_code: int
 
 
 class EnvVars(NamedTuple):
-    username: Optional[str]
-    agent_keys: Optional[list]
-    dsa_key: Optional[str]
-    ecdsa_key: Optional[str]
-    rsa_key: Optional[str]
+    username: str | None
+    agent_keys: list[object] | None
+    dsa_key: str | None
+    ecdsa_key: str | None
+    rsa_key: str | None
 
 
-Timeout = Union[int, float]
+Timeout = int | float
 TimeoutTuple = tuple[Timeout, Timeout]

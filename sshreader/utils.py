@@ -17,11 +17,14 @@
 import logging
 import multiprocessing
 import os
+import shlex
 import subprocess
 import sys
 import threading
-import time
-from typing import Any, Callable, Optional, Union
+from collections import deque
+from collections.abc import Callable
+from queue import Empty, Queue
+from typing import Any, NamedTuple
 
 import paramiko
 from progressbar import ProgressBar
@@ -35,35 +38,54 @@ log = logging.getLogger('sshreader')
 lockobj = None
 
 
-def shell_command(command: str, combine: bool = False, decode_bytes: bool = True) -> Command:
-    """Run a command in the shell on localhost and return the output.  This attempts to be a simplified wrapper
-    for subprocess.run
+class _WorkerFailure(NamedTuple):
+    job_name: str
+    message: str
 
-    :param command: The shell script to run
-    :type command: str, required
+
+class _WorkerDone(NamedTuple):
+    pass
+
+
+def _decode_subprocess_output(output: bytes, decode_bytes: bool) -> str | bytes:
+    return output.decode() if decode_bytes else output
+
+
+def shell_command(command: str | list[str] | tuple[str, ...], combine: bool = False,
+                 decode_bytes: bool = True, shell: bool = False) -> Command:
+    """Run a command on localhost and return the output.
+
+    The default execution path is intentionally shell-free so untrusted input is not
+    reinterpreted by a shell. If a caller explicitly opts into ``shell=True``, the
+    command is executed through the system shell and responsibility for trust is
+    deferred to the caller.
+
+    :param command: The command string or argv sequence to run
+    :type command: str or list[str], required
     :param combine: Direct stderr to stdout (Default: False)
     :type combine: bool, optional
     :param decode_bytes: Decode bytes objects to unicode strings (Default: True)
     :type decode_bytes: bool, optional
+    :param shell: Execute through the system shell (Default: False)
+    :type shell: bool, optional
     :return: NamedTuple for (cmd, stdout, stderr) or (cmd, stdout)
     :rtype: Command
     :raises: None
     """
+    if shell:
+        log.warning('shell=True is enabled; command execution will use a shell and is unsafe for untrusted input')
+    if isinstance(command, str) and not shell:
+        command = shlex.split(command)
+
     if combine:
-        sp_output = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        if decode_bytes:
-            result = Command(cmd=command, stdout=sp_output.stdout.decode(), stderr=None,
-                             return_code=sp_output.returncode)
-        else:
-            result = Command(cmd=command, stdout=sp_output.stdout, stderr=None, return_code=sp_output.returncode)
+        sp_output = subprocess.run(command, shell=shell, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        result = Command(cmd=str(command), stdout=_decode_subprocess_output(sp_output.stdout, decode_bytes),
+                         stderr=None, return_code=sp_output.returncode)
     else:
-        sp_output = subprocess.run(command, shell=True, capture_output=True)
-        if decode_bytes:
-            result = Command(cmd=command, stdout=sp_output.stdout.decode(), stderr=sp_output.stderr.decode(),
-                             return_code=sp_output.returncode)
-        else:
-            result = Command(cmd=command, stdout=sp_output.stdout, stderr=sp_output.stderr.decode(),
-                             return_code=sp_output.returncode)
+        sp_output = subprocess.run(command, shell=shell, capture_output=True)
+        result = Command(cmd=str(command), stdout=_decode_subprocess_output(sp_output.stdout, decode_bytes),
+                         stderr=_decode_subprocess_output(sp_output.stderr, decode_bytes),
+                         return_code=sp_output.returncode)
     return result
 
 
@@ -82,7 +104,8 @@ class Hook:
     :raises: TypeError
     """
 
-    def __init__(self, target: Callable, args: Optional[list] = None, kwargs: Optional[dict] = None,
+    def __init__(self, target: Callable[..., Any], args: list[Any] | None = None,
+                 kwargs: dict[str, Any] | None = None,
                  ssh_established: bool = False) -> None:
         self.target = target
         self.ssh_established = ssh_established
@@ -96,7 +119,7 @@ class Hook:
             self.kwargs = kwargs
         self.result = None
 
-    def run(self, *args, **kwargs) -> Any:
+    def run(self, *args: Any, **kwargs: Any) -> Any:
         """ Run the Hook.  You can add additional args or kwargs at this time!
 
         :param args: Append to args
@@ -107,9 +130,9 @@ class Hook:
         """
         # I perform the following actions this way specifically, so I don't "update" the pre-defined args and kwargs
         # in the Hook object.
-        args = self.args + list(args)
-        kwargs = dict(list(self.kwargs.items()) + list(kwargs.items()))
-        self.result = self.target(*args, **kwargs)
+        merged_args = self.args + list(args)
+        merged_kwargs = dict(list(self.kwargs.items()) + list(kwargs.items()))
+        self.result = self.target(*merged_args, **merged_kwargs)
         return self.result
 
     def __str__(self) -> str:
@@ -149,11 +172,11 @@ class ServerJob:
     :property results: List of namedtuples (cmd, stdout, stderr, return_code) or (cmd, stdout, return_code)
     :property status: Sum of return codes for entire job (255 = ssh did not connect)
     """
-    def __init__(self, fqdn: str, cmds: Union[list, tuple, str], username: Optional[str] = None,
-                 password: Optional[str] = None, keyfile: Optional[str] = None, key_pass: Optional[str] = None,
-                 timeout: Optional[Union[Timeout, TimeoutTuple]] = (0.5, 30), run_local: bool = False,
-                 pre_hook: Optional[Hook] = None, post_hook: Optional[Hook] = None,
-                 combine_output: bool = False, ssh_port: int = 22, rsa_sha2: Optional[bool] = True) -> None:
+    def __init__(self, fqdn: str, cmds: list | tuple | str, username: str | None = None,
+                 password: str | None = None, keyfile: str | None = None, key_pass: str | None = None,
+                 timeout: Timeout | TimeoutTuple | None = (0.5, 30), run_local: bool = False,
+                 pre_hook: Hook | None = None, post_hook: Hook | None = None,
+                 combine_output: bool = False, ssh_port: int = 22, rsa_sha2: bool | None = True) -> None:
         self.name = str(fqdn)
         self.results = list()
         self.username = username
@@ -208,7 +231,10 @@ class ServerJob:
                 log.debug(f'{self.name}: running prehook')
                 self.pre_hook.run(self)
             for cmd in self.cmds:
-                result = shell_command(cmd, combine=self.combine_output)
+                try:
+                    result = shell_command(cmd, combine=self.combine_output)
+                except Exception as errorMsg:
+                    result = Command(cmd, '', str(errorMsg), 54)
                 log.debug(f'{self.name}: {str(result)}')
                 self.results.append(result)
                 self.status += result.return_code
@@ -227,7 +253,7 @@ class ServerJob:
             except Exception as errorMsg:
                 log.debug(str(errorMsg))
                 self.status = 255
-                self.results.append(str(errorMsg))
+                self.results.append(Command(cmd=self.name, stdout='', stderr=str(errorMsg), return_code=255))
             else:
                 if self.pre_hook and self.pre_hook.ssh_established:
                     log.debug(f'{self.name}: running prehook')
@@ -255,7 +281,7 @@ class ServerJob:
     def __str__(self) -> str:
         return str(self.__dict__)
 
-    def __getitem__(self, item):
+    def __getitem__(self, item: str) -> Any:
         return self.__dict__[item]
 
 
@@ -268,7 +294,9 @@ def cpu_limit(factor: int = 1) -> int:
     :rtype: int
     """
     global log
-    cpu_count = mpctx.cpu_count()
+    cpu_count = getattr(os, 'process_cpu_count', lambda: None)()
+    if cpu_count is None:
+        cpu_count = mpctx.cpu_count()
     if factor > 2:
         log.warning('Specifying a CPU factor greater than 2 can result in an unusable system.')
     if cpu_count > 1:
@@ -277,7 +305,7 @@ def cpu_limit(factor: int = 1) -> int:
         return cpu_count
 
 
-def echo(*args, **kwargs) -> None:
+def echo(*args: Any, **kwargs: Any) -> None:
     """ Wrapper for print that implements a :class:`multiprocessing.Lock` object as well as uses unbuffered output
     to :class:`sys.stdout`.
 
@@ -296,8 +324,26 @@ def echo(*args, **kwargs) -> None:
     return None
 
 
-def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int] = None,
-            progress_bar: bool = False, print_lock: bool = True) -> list:
+def _task_queue_get(task_queue: Any) -> Any:
+    """Safely pull a task without depending on a queue's `empty()` semantics.
+
+    Some queues used in tests expose only a blocking `get()` without a timeout argument,
+    while multiprocessing.Queue supports `get(timeout=...)`. We accept either form and
+    treat an empty queue as a normal exit condition.
+    """
+    try:
+        return task_queue.get(timeout=0.1)
+    except TypeError:
+        while not task_queue.empty():
+            return task_queue.get() # This can hang, so check whether the queue is empty first.
+        else:
+            return None
+    except Empty:
+        return None
+
+
+def sshread(serverjobs: list[ServerJob], pcount: int | None = None, tcount: int | None = None,
+            progress_bar: bool = False, print_lock: bool = True) -> list[ServerJob]:
     """Takes a list of ServerJob objects and puts them into threads/sub-processes and runs them
 
     :param serverjobs: List of ServerJob objects
@@ -323,6 +369,8 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
     if pcount is not None:
         assert isinstance(pcount, int)
     totaljobs = len(serverjobs)
+    if totaljobs == 0:
+        return []
     if logging.getLogger('sshreader').getEffectiveLevel() < 30 and progress_bar:
         log.info('logging enabled: disabling progress bar')
         progress_bar = False
@@ -338,16 +386,14 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
         lockobj = mpctx.Lock()
 
     task_queue = mpctx.Queue(maxsize=totaljobs)
-    result_queue = mpctx.Queue(maxsize=totaljobs)
+    result_queue = mpctx.Queue()
 
     log.debug('filling task_queue')
     for job in serverjobs:
         task_queue.put(job)
     else:
-        # I put this here because if you have 1 ServerJob the buffer is often not flushed in time for a thread to use
-        # the `get` method.
-        while task_queue.empty():
-            time.sleep(1)
+        # Do not poll Queue.empty() here: it can report stale values under multiprocessing and can drop work.
+        pass
 
     threads = list()  # Keep track of threads so we can join them later
     pids = list()  # Keep track of process-ids so we can join/close them later
@@ -395,78 +441,112 @@ def sshread(serverjobs: list, pcount: Optional[int] = None, tcount: Optional[int
             pid.start()
             pids.append(pid)
 
-    # Non-blocking way to wait for threads/processes
+    workers = threads or pids
+    completed_workers = 0
+    results: list[ServerJob] = []
+    worker_failures: list[_WorkerFailure] = []
+
     log.debug(f'main waiting for {totaljobs} ServerJobs to finish')
-    while result_queue.full() is False:
+    while completed_workers < len(workers):
+        try:
+            message = result_queue.get(timeout=0.1)
+        except Empty:
+            if progress_bar:
+                bar.update(item_counter.value)  # ty:ignore[unresolved-attribute]
+            if not any(worker.is_alive() for worker in workers):
+                break
+            continue
+
+        if isinstance(message, _WorkerDone):
+            completed_workers += 1
+        elif isinstance(message, _WorkerFailure):
+            worker_failures.append(message)
+        else:
+            results.append(message)
         if progress_bar:
             bar.update(item_counter.value)  # ty:ignore[unresolved-attribute]
-        time.sleep(1)
+
+    for thread in threads:
+        thread.join()
+
+    process_failures = []
+    for process in pids:
+        process.join()
+        if process.exitcode != 0:
+            process_failures.append(f'worker process exited with code {process.exitcode}')
+        process.close()
+
     if progress_bar:
         bar.finish()  # ty:ignore[unresolved-attribute]
 
-    if len(threads) > 0:
-        log.info(f'joining {len(threads)} threads')
-        for t in threads:
-            if t.is_alive():
-                t.join(timeout=1)
-    elif len(pids) > 0:
-        log.info(f'joining {len(pids)} processes')
-        for p in pids:
-            if p.is_alive():
-                p.join(timeout=1)
-            p.close()
-
-    # Extract items from the queue and return a list, just as we were passed
-    results = list()
-    while not result_queue.empty():
-        results.append(result_queue.get())
     task_queue.close()
     result_queue.close()
+
+    missing_results = totaljobs - len(results) - len(worker_failures)
+    if worker_failures or process_failures or missing_results:
+        errors = [f'{failure.job_name}: {failure.message}' for failure in worker_failures]
+        errors.extend(process_failures)
+        if missing_results > 0:
+            errors.append(f'{missing_results} job(s) did not produce a result')
+        raise RuntimeError('sshread worker failure: ' + '; '.join(errors))
+
     return results
 
 
-def _sub_process_(task_queue, result_queue, item_counter, thread_count, progress_bar):
+def _sub_process_(task_queue: Any, result_queue: Any, item_counter: Any,
+                  thread_count: int, progress_bar: bool) -> None:
     """ Private method for managing multiprocessing and spawning thread pools.
 
     DO NOT USE THIS METHOD!
     """
     pid = os.getpid()
     log.debug(f'starting process: {pid}')
-    if thread_count == 0:
-        while task_queue.empty() is False:
-            job = task_queue.get()
-            job.run()
-            result_queue.put(job)
-            if progress_bar:
-                with item_counter.get_lock():
-                    item_counter.value += 1
-    else:
-        threads = list()
-        log.debug(f'process: {pid} spawning: {thread_count} threads')
-        for thread in range(thread_count):
-            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar),
-                                      daemon=True)
-            thread.start()
-            threads.append(thread)
-        log.debug(f'process: {pid} waiting for: {len(threads)} threads')
-        for thread in threads:
-            thread.join()
-    log.debug(f'exiting process: {pid}')
-    return None
+    try:
+        if thread_count == 0:
+            _sub_thread_(task_queue, result_queue, item_counter, progress_bar, signal_completion=False)
+        else:
+            threads = list()
+            log.debug(f'process: {pid} spawning: {thread_count} threads')
+            for thread in range(thread_count):
+                thread = threading.Thread(
+                    target=_sub_thread_,
+                    args=(task_queue, result_queue, item_counter, progress_bar, False),
+                    daemon=True,
+                )
+                thread.start()
+                threads.append(thread)
+            log.debug(f'process: {pid} waiting for: {len(threads)} threads')
+            for thread in threads:
+                thread.join()
+    finally:
+        result_queue.put(_WorkerDone())
+        log.debug(f'exiting process: {pid}')
 
 
-def _sub_thread_(task_queue, result_queue, item_counter, progress_bar):
+def _sub_thread_(task_queue: Any, result_queue: Any, item_counter: Any, progress_bar: bool,
+                 signal_completion: bool = True) -> None:
     """ Private method for managing multiprocessing and spawning thread pools.
 
     DO NOT USE THIS METHOD!
     """
     log.debug('entering thread')
-    while task_queue.empty() is False:
-        job = task_queue.get()
-        job.run()
-        result_queue.put(job)
-        if progress_bar:
-            with item_counter.get_lock():
-                item_counter.value += 1
-    log.debug('existing thread')
-    return None
+    try:
+        while True:
+            job = _task_queue_get(task_queue)
+            if job is None:
+                break
+            try:
+                job.run()
+            except Exception as error:
+                log.exception('ServerJob %s failed', job.name)
+                result_queue.put(_WorkerFailure(job.name, f'{type(error).__name__}: {error}'))
+            else:
+                result_queue.put(job)
+            finally:
+                if progress_bar:
+                    with item_counter.get_lock():
+                        item_counter.value += 1
+    finally:
+        if signal_completion:
+            result_queue.put(_WorkerDone())
+    log.debug('exiting thread')

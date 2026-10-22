@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-# coding=utf-8
 """ Copy a file to hosts enmasse
 """
 
-from __future__ import print_function
-from hostlist import expand_hostlist
-import click
-import sshreader
 import sys
+
+import click
+from hostlist import expand_hostlist
+
+import sshreader
 
 __author__ = 'Jesse Almanrode'
 __version__ = '1.0'

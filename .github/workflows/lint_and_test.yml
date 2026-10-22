@@ -2,40 +2,44 @@ name: Lint and UnitTest
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: ["develop"]
   pull_request:
-    branches: [ "develop" ]
+    branches: ["develop"]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   build:
+    name: Python ${{ matrix.python-version }}
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+        python-version: ["3.11", "3.12", "3.13", "3.14", "3.15"]
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install UV
-      uses: astral-sh/setup-uv@v7
-    - name: Lint with ruff
-      run: |
-        uv run --group test ruff check sshreader/
-    - name: Type Checking with ty
-      run: |
-        uv run --group test ty check sshreader/
-    - name: Run Tests
-      run: |
-        export SSH_HOST=127.0.0.1;
-        export SSH_PORT=${{ job.services.sshd.ports['22'] }}
-        uv run --group test python -m pytest
-    services:
-      sshd:
-        image: isaiah1112/sshreader:latest
-        ports:
-          - 22
+      - uses: actions/checkout@v7
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install UV
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+
+      - name: Install dependencies
+        run: uv sync --locked --group test
+
+      - name: Lint with ruff
+        run: uv run ruff check sshreader/
+
+      - name: Type Checking with ty
+        run: uv run ty check sshreader/
+
+      - name: Run Tests
+        run: uv run python -m pytest

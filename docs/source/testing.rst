@@ -1,36 +1,35 @@
 Local Testing
 =============
 
-In order to make the testing/integration process as simple as possible, I utilize a custom `Docker Image`_ to run an ssh
-server.  To begin configuring your system for local testing, please `install Docker`_ first. After you have installed
-Docker and have it running, simply run the following command:
+The project uses :code:`uv` to manage its development environment. From the repository root, install the test dependencies and run the test suite with:
 
 .. code-block:: bash
 
-    make test
+    uv sync --group test
+    uv run --group test pytest
 
-This command pulls down the custom docker image, runs it on port :code:`22`, and then runs all the unit/integration
-tests.  If you would like to change which port this container runs on, simply export the :code:`SSH_PORT=<int>` environment
-variable prior to running :code:`make test` to whatever integer port you would like to map this container to. Alternatively,
-you can pass :code:`SSH_PORT=<int>` to the :code:`make test` target.
 
-To clean up after running the tests (stopping external docker containers) run:
+You can also use the Makefile targets :code:`make test`, :code:`make lint`, and :code:`make coverage`.
+
+Run :code:`ruff` and :code:`ty` checks with:
 
 .. code-block:: bash
 
-    make test-clean
+    uv run --group test ruff check sshreader tests
+    uv run --group test ty check sshreader
 
 Testing Coverage
 ----------------
 
-To generate a test coverage report, ensure all the requirements for running the unit/integration tests are installed and
-running and then simply run the following command:
+To generate an HTML coverage report, run:
 
 .. code-block:: bash
 
     make coverage
 
-Then, open the HTML files in your default browser using :code:`open htmlcov/index.html`!
+Open :code:`htmlcov/index.html` in a browser to view the report.
+
+To test against a specific Python version in Docker, use :code:`make docker-test PYTHON_VERSION=3.15` (the default is Python 3.15).
 
 Indices and tables
 ------------------
@@ -42,5 +41,3 @@ Indices and tables
 * `JA Computing`_
 
 .. _JA Computing: http://www.jacomputing.net
-.. _Docker Image: https://hub.docker.com/repository/docker/isaiah1112/sshreader
-.. _install Docker: https://www.docker.com/get-started/
