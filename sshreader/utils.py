@@ -21,11 +21,10 @@ import shlex
 import subprocess
 import sys
 import threading
-import time
 from collections import deque
 from collections.abc import Callable
 from queue import Empty, Queue
-from typing import Any
+from typing import Any, NamedTuple
 
 import paramiko
 from progressbar import ProgressBar
@@ -37,6 +36,15 @@ from .ssh import SSH
 mpctx = multiprocessing.get_context('spawn')  # Forcing the forking type to spawn in older versions of Python3
 log = logging.getLogger('sshreader')
 lockobj = None
+
+
+class _WorkerFailure(NamedTuple):
+    job_name: str
+    message: str
+
+
+class _WorkerDone(NamedTuple):
+    pass
 
 
 def _decode_subprocess_output(output: bytes, decode_bytes: bool) -> str | bytes:
@@ -361,6 +369,8 @@ def sshread(serverjobs: list[ServerJob], pcount: int | None = None, tcount: int 
     if pcount is not None:
         assert isinstance(pcount, int)
     totaljobs = len(serverjobs)
+    if totaljobs == 0:
+        return []
     if logging.getLogger('sshreader').getEffectiveLevel() < 30 and progress_bar:
         log.info('logging enabled: disabling progress bar')
         progress_bar = False
@@ -376,7 +386,7 @@ def sshread(serverjobs: list[ServerJob], pcount: int | None = None, tcount: int 
         lockobj = mpctx.Lock()
 
     task_queue = mpctx.Queue(maxsize=totaljobs)
-    result_queue = mpctx.Queue(maxsize=totaljobs)
+    result_queue = mpctx.Queue()
 
     log.debug('filling task_queue')
     for job in serverjobs:
@@ -431,39 +441,55 @@ def sshread(serverjobs: list[ServerJob], pcount: int | None = None, tcount: int 
             pid.start()
             pids.append(pid)
 
-    # Wait for worker threads/processes to finish
+    workers = threads or pids
+    completed_workers = 0
+    results: list[ServerJob] = []
+    worker_failures: list[_WorkerFailure] = []
+
     log.debug(f'main waiting for {totaljobs} ServerJobs to finish')
-    if len(threads) > 0:
-        log.info(f'joining {len(threads)} threads')
-        while any(t.is_alive() for t in threads):
+    while completed_workers < len(workers):
+        try:
+            message = result_queue.get(timeout=0.1)
+        except Empty:
             if progress_bar:
                 bar.update(item_counter.value)  # ty:ignore[unresolved-attribute]
-            time.sleep(0.1)
-        for t in threads:
-            t.join(timeout=1)
-    elif len(pids) > 0:
-        log.info(f'joining {len(pids)} processes')
-        while any(p.is_alive() for p in pids):
-            if progress_bar:
-                bar.update(item_counter.value)  # ty:ignore[unresolved-attribute]
-            time.sleep(0.1)
-        for p in pids:
-            if p.is_alive():
-                p.join(timeout=1)
-            p.close()
+            if not any(worker.is_alive() for worker in workers):
+                break
+            continue
+
+        if isinstance(message, _WorkerDone):
+            completed_workers += 1
+        elif isinstance(message, _WorkerFailure):
+            worker_failures.append(message)
+        else:
+            results.append(message)
+        if progress_bar:
+            bar.update(item_counter.value)  # ty:ignore[unresolved-attribute]
+
+    for thread in threads:
+        thread.join()
+
+    process_failures = []
+    for process in pids:
+        process.join()
+        if process.exitcode != 0:
+            process_failures.append(f'worker process exited with code {process.exitcode}')
+        process.close()
 
     if progress_bar:
         bar.finish()  # ty:ignore[unresolved-attribute]
 
-    # Extract items from the queue and return a list, just as we were passed
-    results = list()
-    while True:
-        try:
-            results.append(result_queue.get_nowait())
-        except Empty:
-            break
     task_queue.close()
     result_queue.close()
+
+    missing_results = totaljobs - len(results) - len(worker_failures)
+    if worker_failures or process_failures or missing_results:
+        errors = [f'{failure.job_name}: {failure.message}' for failure in worker_failures]
+        errors.extend(process_failures)
+        if missing_results > 0:
+            errors.append(f'{missing_results} job(s) did not produce a result')
+        raise RuntimeError('sshread worker failure: ' + '; '.join(errors))
+
     return results
 
 
@@ -475,45 +501,52 @@ def _sub_process_(task_queue: Any, result_queue: Any, item_counter: Any,
     """
     pid = os.getpid()
     log.debug(f'starting process: {pid}')
-    if thread_count == 0:
-        while True:
-            job = _task_queue_get(task_queue)
-            if job is None:
-                break
-            job.run()
-            result_queue.put(job)
-            if progress_bar:
-                with item_counter.get_lock():
-                    item_counter.value += 1
-    else:
-        threads = list()
-        log.debug(f'process: {pid} spawning: {thread_count} threads')
-        for thread in range(thread_count):
-            thread = threading.Thread(target=_sub_thread_, args=(task_queue, result_queue, item_counter, progress_bar),
-                                      daemon=True)
-            thread.start()
-            threads.append(thread)
-        log.debug(f'process: {pid} waiting for: {len(threads)} threads')
-        for thread in threads:
-            thread.join()
-    log.debug(f'exiting process: {pid}')
-    return None
+    try:
+        if thread_count == 0:
+            _sub_thread_(task_queue, result_queue, item_counter, progress_bar, signal_completion=False)
+        else:
+            threads = list()
+            log.debug(f'process: {pid} spawning: {thread_count} threads')
+            for thread in range(thread_count):
+                thread = threading.Thread(
+                    target=_sub_thread_,
+                    args=(task_queue, result_queue, item_counter, progress_bar, False),
+                    daemon=True,
+                )
+                thread.start()
+                threads.append(thread)
+            log.debug(f'process: {pid} waiting for: {len(threads)} threads')
+            for thread in threads:
+                thread.join()
+    finally:
+        result_queue.put(_WorkerDone())
+        log.debug(f'exiting process: {pid}')
 
 
-def _sub_thread_(task_queue: Any, result_queue: Any, item_counter: Any, progress_bar: bool) -> None:
+def _sub_thread_(task_queue: Any, result_queue: Any, item_counter: Any, progress_bar: bool,
+                 signal_completion: bool = True) -> None:
     """ Private method for managing multiprocessing and spawning thread pools.
 
     DO NOT USE THIS METHOD!
     """
     log.debug('entering thread')
-    while True:
-        job = _task_queue_get(task_queue)
-        if job is None:
-            break
-        job.run()
-        result_queue.put(job)
-        if progress_bar:
-            with item_counter.get_lock():
-                item_counter.value += 1
-    log.debug('existing thread')
-    return None
+    try:
+        while True:
+            job = _task_queue_get(task_queue)
+            if job is None:
+                break
+            try:
+                job.run()
+            except Exception as error:
+                log.exception('ServerJob %s failed', job.name)
+                result_queue.put(_WorkerFailure(job.name, f'{type(error).__name__}: {error}'))
+            else:
+                result_queue.put(job)
+            finally:
+                if progress_bar:
+                    with item_counter.get_lock():
+                        item_counter.value += 1
+    finally:
+        if signal_completion:
+            result_queue.put(_WorkerDone())
+    log.debug('exiting thread')
