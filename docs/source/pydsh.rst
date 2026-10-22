@@ -1,94 +1,88 @@
 pydsh
 =====
 
-Pydsh is a Python-based replication of `pdsh`_ that uses sshreader as the engine for parallelizing ssh tasks.  It
-also attempts to format the output from commands for you in a easy to read manner.  Below are some examples of how it
-can be used.
+:code:`pydsh` runs a command on multiple hosts using SSHreader. It expands hostlist expressions and can print results as jobs complete, group output by host, or coalesce identical output.
 
-.. warning::
+Installation
+------------
 
-    With :code:`pydsh v1.3` I have moved away from the :code:`argparse` module in favor of the `Click`_ module.  Some of
-    the cli flags have changed.
+The :code:`pydsh` executable is installed with the :code:`sshreader` package:
 
-Debugging
----------
+.. code-block:: bash
 
-pydsh uses the :mod:`click` logging flags present in the current script and the underlying :code:`sshreader` module.  There are 4 levels of debugging available:
-
-* debug = pydsh:INFO
-* debug + verbose = pydsh:INFO + sshreader:INFO
-* debug + 2verbose = pydsh:DEBUG + sshreader:INFO
-* debug + 3verbose = pydsh:DEBUG + sshreader:DEBUG
-
-Keep in mind that most people will probably only ever need the INFO levels of debugging.  DEBUG levels may generate a lot
-of output and are generally used to find issues within the :code:`sshreader` package itself.
+    python -m pip install sshreader
 
 Examples
 --------
 
-Simplest form of pydsh [1]_.  Run a command and show the output of the commands as they complete: [2]_
+Run a command on a host list:
 
 .. code-block:: bash
 
-    pydsh -w myhost[1-100].example.com 'uname -r'
+    pydsh -w 'web[01-10].example.com' 'uname -r'
 
-.. note::
-
-    When using the :code:`--dshbak` or :code:`--coalesce` options, a progress bar will be shown to the user as jobs
-    are processing.
-
-Run a script file rather than a simple command on remote hosts:
+By default, :code:`pydsh` uses the current username and discovered SSH keys or the SSH agent. Supply a username and private key explicitly with :code:`-u` and :code:`-k`:
 
 .. code-block:: bash
 
-    pydsh -F -w myhost[1-100].example.com my_complex_script.sh
+    pydsh -u jdoe -k ~/.ssh/id_ed25519 -w 'web[01-10].example.com' 'uname -r'
 
-.. note::
+Use :code:`-p` to be prompted for a password, or :code:`-P` to provide one on the command line. Be aware that command-line passwords may be visible to other local users through process inspection or shell history.
 
-    At this time scripts must have the first line start with :code:`#!` in order to be loaded and run as a script by pydsh.
-
-Print output organized by host (similar to piping to :code:`dshbak` command):
+Group command output by host with :code:`-D`, or coalesce identical output with :code:`-C`:
 
 .. code-block:: bash
 
-    pydsh -D -w myhost[1-100].example.com 'uname -r'
+    pydsh -D -w 'web[01-10].example.com' 'uname -r'
+    pydsh -C -w 'web[01-10].example.com' 'uname -r'
 
-Print output coalesced by host (similar to piping to :code:`dshbak -c` command):
-
-.. code-block:: bash
-
-    pydsh -C -w myhost[1-100].example.com 'uname -r'
-
-Override ssh with a username/password combo:
+Run a script file on each host with :code:`-F`. The script must start with a shebang line (for example, :code:`#!/usr/bin/env bash`). By default, :code:`pydsh` asks for confirmation before executing the script; use :code:`--confirm` to skip that prompt:
 
 .. code-block:: bash
 
-    pydsh -u myuser -P Password1234 -w myhost[1-100].example.com 'uname -r'
+    pydsh -F -w 'web[01-10].example.com' ./maintenance.sh
 
-Override ssh with a username/password combo (but prompt for the password):
+Options
+-------
 
-.. code-block:: bash
+.. list-table::
+   :header-rows: 1
+   :widths: 24 76
 
-    pydsh -u myuser -p -w myhost[1-100].example.com 'uname -r'
+   * - Option
+     - Description
+   * - :code:`-w`, :code:`--hostlist EXPR`
+     - Required hostlist expression. Host entries may include an SSH port, such as :code:`host.example.com:2222`.
+   * - :code:`-u`, :code:`--username`
+     - SSH username; defaults to the current username when discoverable.
+   * - :code:`-k`, :code:`--keyfile`
+     - Private key file to use.
+   * - :code:`-K`, :code:`--keypass`
+     - Prompt for the private key passphrase.
+   * - :code:`-p`, :code:`--prompt`
+     - Prompt for the SSH password.
+   * - :code:`-P`, :code:`--password`
+     - Supply the SSH password on the command line.
+   * - :code:`-D`, :code:`--dshbak`
+     - Group output by host.
+   * - :code:`-C`, :code:`--coalesce`
+     - Coalesce similar output from hosts.
+   * - :code:`-F`, :code:`--file`
+     - Treat the command argument as a script file.
+   * - :code:`--confirm`
+     - Skip the script execution confirmation prompt.
+   * - :code:`--redline`
+     - Use multiprocessing and multithreading for job execution.
+   * - :code:`--port`
+     - Default SSH port (22).
+   * - :code:`--timeout`
+     - SSH command timeout in seconds (30 by default).
+   * - :code:`-d`, :code:`--debug`
+     - Enable debug output; :code:`-v` can be repeated to increase verbosity.
+   * - :code:`--help`
+     - Display all options and usage information.
 
-Supply an encrypted SSH key and prompt for its passphrase:
-
-.. code-block:: bash
-
-    pydsh -u myuser -k ~/.ssh/id_rsa -K -w myhost[1-100].example.com 'uname -r'
-
-Use SHA2 key exchange for RSA keys when connecting to newer OpenSSH servers:
-
-.. code-block:: bash
-
-    pydsh --sha2 -u myuser -k ~/.ssh/id_rsa -w myhost[1-100].example.com 'uname -r'
-
-Run pydsh faster (uses multi-processing and multi-threading): [3]_
-
-.. code-block:: bash
-
-    pydsh --redline -w myhost[1-100].example.com 'uname -r'
-
+When :code:`-D` or :code:`-C` is enabled, :code:`pydsh` buffers job output and displays a progress bar. Without output aggregation, results are printed as jobs complete. The :code:`--redline` option uses multiprocessing, so invoke :code:`pydsh` as a command-line program rather than calling its CLI from unguarded multiprocessing code.
 
 Indices and tables
 ------------------
@@ -97,12 +91,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-* `JA Computing`_
-
-.. _JA Computing: http://www.jacomputing.net
-.. _pdsh: https://github.com/chaos/pdsh
-.. _hostlist expressions: https://www.nsc.liu.se/~kent/python-hostlist/
-.. _Click: http://click.pocoo.org/6/
-.. [1] Pydsh supports `hostlist expressions`_ to make listing hosts easier.
-.. [2] Output can be piped to :code:`dshbak` command
-.. [3] You may notice your fans spin up when using the :code:`redline` option. This is normal.

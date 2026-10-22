@@ -1,169 +1,123 @@
 Getting Started
 ===============
 
-Installing sshreader
---------------------
+Installation
+------------
 
-The easiest way to get working with sshreader is to use :code:`pip` to install the module.  You can do that by running
-the following in your terminal
-
-.. code-block:: bash
-
-    pip install sshreader
-
-.. note::
-
-    If you already have sshreader installed and would like to update to the latest release, run the following:
+Install SSHreader from PyPI:
 
 .. code-block:: bash
 
-    pip install --upgrade sshreader
+    python -m pip install sshreader
 
-Congratulations!  You are now ready to begin working with sshreader!
+SSHreader supports Python 3.11 and later.
 
-Working With SSH Objects
-------------------------
+Connecting to one host
+----------------------
 
-To start working with ssh connections (without multiprocessing or threading) right away simply import the SSH class
-and setup a connection!
+Use :class:`sshreader.ssh.SSH` to open a connection and run commands. A context manager closes the connection when the block ends. Authentication can use a private key, an SSH agent, or a password.
 
 .. code-block:: python
 
     from sshreader import SSH
 
-    with SSH('myhost.example.com', username='jdoe', password='jdoe1') as s:
-        result = s.ssh_command('uname -a')
+    with SSH("myhost.example.com", username="jdoe", keyfile="~/.ssh/id_ed25519") as ssh:
+        result = ssh.ssh_command("uname -a")
         print(result.stdout)
+        print(result.return_code)
 
-.. note::
-    By using the :code:`with` statement you do not have to worry about running :code:`SSH.close()` when you are finished with
-    an ssh connection.
+SSHreader loads system host keys and uses Paramiko's warning policy for hosts without a known key. Unknown host keys are accepted after a warning, so ensure the host is present in a trusted known-hosts file when host identity must be verified. You can provide an additional known-hosts file with :code:`known_hosts`. Set :code:`allow_unknown_hosts=True` only when you intentionally want unknown host keys to be accepted automatically.
 
-Working With ServerJob Objects
+Running jobs on multiple hosts
 ------------------------------
 
-ServerJob objects are a way to run multiple commands via ssh and return/tabulate the results.  ServerJobs can be placed
-into a list and then processed using multiprocessing and multithreading via the :code:`sshread` method.
-
-To create a ServerJob object and run it is nearly as simple as working with SSH objects:
+:class:`sshreader.utils.ServerJob` represents one host and one or more commands. Commands in a job run sequentially. Pass a list of jobs to :func:`sshreader.utils.sshread` to run them concurrently:
 
 .. code-block:: python
 
     from sshreader import ServerJob, sshread
 
-    job = ServerJob('myhost.example.com', ['uname -a', 'hostname', 'whoami'], username='jdoe', password='jdoe1')
-    finished = sshread([job], tcount=0)
-    print(finished[0].status, finished[0].results)
+    hosts = ["server1.example.com", "server2.example.com"]
+    jobs = [
+        ServerJob(
+            host,
+            ["hostname", "uptime"],
+            username="jdoe",
+            keyfile="~/.ssh/id_ed25519",
+        )
+        for host in hosts
+    ]
 
-What happens here is that you create a ServerJob object that will run three commands in succession and record the results
-in itself.  When you call :code:`sshread` you actually connect to the server and run the commands.
+    finished_jobs = sshread(jobs, tcount=0)
+    for job in finished_jobs:
+        print(job.name, job.status)
+        for result in job.results:
+            print(result.cmd, result.stdout, result.stderr, result.return_code)
 
-Working With multiple ServerJobs
---------------------------------
+Each result provides :code:`cmd`, :code:`stdout`, :code:`stderr`, and :code:`return_code`. A job's :code:`results` list contains its command results, and :code:`status` is the sum of the command return codes (or 255 if the SSH connection failed). Jobs are returned in completion order, not necessarily in the order they were submitted.
 
-To sshread multiple ServerJob objects at the same time simply create a list of them and feed that list to the :code:`sshread`
-method.  The :code:`sshread` method will return a list of the completed ServerJob objects for you to then parse
-as needed.
-
-.. code-block:: python
-
-    from sshreader import ServerJob, sshread
-
-    jobs = list()
-    for host in ['myhost1.example.com', 'myhost2.example.com', 'myhost3.example.com']:
-        job = ServerJob(host, ['uname -a', 'hostname', 'whoami'], username='jdoe', password='jdoe1')
-        jobs.append(job)
-
-    finished = sshread(jobs, tcount=0)
-    for job in finished:
-        print(job.status, job.results)
-
-.. note::
-    The :code:`sshread` helper requires a list of :class:`sshreader.utils.ServerJob` objects. If you pass a single job, wrap it
-    in a list like :code:`sshread([job], tcount=0)`.
-
-Now you are ready to sshread all your servers as fast as possible!
-
-Working With Hooks
-------------------
-
-Sometimes you want to run bits of code before or after a ServerJob executes as part of the :code:`sshread` method.
-Sshreader provides a way to do this through :code:`Hook` objects.  Hook objects are simply a wrapper for a function you
-have defined that will run before or after a ServerJob executes.  They will contain the ServerJob object itself as one of
-the arguments so it is easy to write a Hook that can look at or react to the status of the ServerJob.
-
-Creating a Hook is as is as simple as:
+Set :code:`tcount=0` to let SSHreader choose a thread count based on the CPU limit and number of jobs. Set :code:`pcount=0` to use processes; you may combine processes and threads with :code:`pcount` and :code:`tcount`. With multiprocessing, use the standard entry-point guard:
 
 .. code-block:: python
 
-    from sshreader import ServerJob, sshread, Hook
+    if __name__ == "__main__":
+        finished_jobs = sshread(jobs, pcount=0, tcount=0)
 
-    def print_name(job):
-        # You will need to ensure you accept at least one arg since
-        # the ServerJob will be passed to your hook
-        print('Entering hook')
+The :func:`sshreader.utils.sshread` function takes a list, including when running one job: :code:`sshread([job], tcount=0)`.
+
+Hooks
+-----
+
+Use :class:`sshreader.utils.Hook` to call a function before or after a job. The job is passed to the hook. By default, a pre-hook runs before connecting and a post-hook runs after disconnecting. Set :code:`ssh_established=True` to run the hook while the job's SSH connection is open.
+
+.. code-block:: python
+
+    from sshreader import Hook, ServerJob, sshread
+
+    def report_host(job):
         print(job.name)
-        print('Leaving hook')
 
+    job = ServerJob(
+        "myhost.example.com",
+        "hostname",
+        username="jdoe",
+        keyfile="~/.ssh/id_ed25519",
+        pre_hook=Hook(target=report_host),
+    )
 
-    # Create the function as a hook object
-    myhook = Hook(target=print_name)
-    # Create a ServerJob with a prehook
-    job = ServerJob('myhost.example.com',['uname -a', 'hostname', 'whoami'], username='jdoe', password='jdoe1',
-                    prehook=myhook)
-    # Now, run the job
-    sshread([job], tcount=1)
+    if __name__ == "__main__":
+        sshread([job], tcount=1)
 
-.. note::
+Local commands
+--------------
 
-    By default the pre/post Hooks run before the ssh connection is established and after it is closed.  If you would like
-    the hook to run after the ssh connection is established or before it closes set the :code:`ssh_established` flag to
-    :code:`True` when creating the Hook.  This gives you ability to use the existing SSH connection within a job instead
-    of creating a new one within the Hook itself.
-
-Running Shell Commands
-----------------------
-Sometimes you don't want to run commands via ssh but want to run them in the shell on the localhost.  Sshreader provides
-this via the :code:`shell_command` method.
+Use :func:`sshreader.utils.shell_command` to run a command locally, or set :code:`run_local=True` on a :class:`sshreader.utils.ServerJob` to run local jobs through :func:`sshreader.utils.sshread`.
 
 .. code-block:: python
 
     from sshreader import shell_command
 
-    r = shell_command('uname -a', decode_bytes=True)
-    print(r.stdout)
+    result = shell_command("uname -a")
+    print(result.stdout)
 
-Discovering Environment Variables
----------------------------------
-Sshreader includes a helper that attempts to determine the currently logged in username, any ssh keys located in
-:code:`~/.ssh/`, and keys available in the SSH agent.  You can see what sshreader can discover by calling the
-:code:`envvars()` method from the :mod:`sshreader.ssh` module.
+Local string commands are split into arguments and run without a shell by default. To intentionally run through the shell, pass :code:`shell=True`; do not use this with untrusted command input.
 
-.. code-block:: python
+SSH helpers and SFTP
+--------------------
 
-    from sshreader.ssh import envvars
+The :func:`sshreader.ssh.envvars` helper returns an :class:`sshreader.customtypes.EnvVars` tuple containing the username, discovered private-key paths, and keys available through the SSH agent.
 
-    print(envvars())  # Returns a NamedTuple of info sshreader was able to gather from the OS
-
-Copying Files
--------------
-
-sshreader supports basic file transfer over SFTP with the :code:`sftp_put()` and :code:`sftp_get()` methods on the
-:class:`sshreader.ssh.SSH` object. This allows you to copy files to and from a remote host while working with the same
-SSH session.
+Use :meth:`sshreader.ssh.SSH.sftp_put` and :meth:`sshreader.ssh.SSH.sftp_get` to transfer files over an established SSH connection:
 
 .. code-block:: python
 
     from sshreader import SSH
 
-    with SSH('myhost.example.com', username='jdoe', password='jdoe1') as s:
-        s.sftp_put('~/secret_script.sh', '/tmp/secret_script.sh')
-        s.ssh_command('/tmp/secret_script.sh')
-        s.sftp_get('/tmp/secret_output.txt', '~/secret_output.txt')
-        s.ssh_command('rm /tmp/secret_output.txt')
+    with SSH("myhost.example.com", username="jdoe", keyfile="~/.ssh/id_ed25519") as ssh:
+        ssh.sftp_put("./report.txt", "/tmp/report.txt")
+        ssh.sftp_get("/tmp/result.txt", "./result.txt")
 
-.. warning::
-    SFTP support is available, but sshreader remains focused on SSH command execution and parallel remote jobs.
+See :doc:`sshreader` and :doc:`ssh` for the complete API reference and :doc:`pydsh` for the command-line tool.
 
 Indices and tables
 ------------------
@@ -172,6 +126,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-* `JA Computing`_
-
-.. _JA Computing: http://www.jacomputing.net

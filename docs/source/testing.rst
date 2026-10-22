@@ -1,30 +1,35 @@
 Local Testing
 =============
 
-To run all unit tests in your current version of Python simply run:
+The project uses :code:`uv` to manage its development environment. From the repository root, install the test dependencies and run the test suite with:
 
 .. code-block:: bash
 
-    make test
+    uv sync --group test
+    uv run --group test pytest
 
 
-To test :code:`ruff` linting and :code:`ty` typing, simply run:
+You can also use the Makefile targets :code:`make test`, :code:`make lint`, and :code:`make coverage`.
+
+Run :code:`ruff` and :code:`ty` checks with:
 
 .. code-block:: bash
 
-    make lint
+    uv run --group test ruff check sshreader tests
+    uv run --group test ty check sshreader
 
 Testing Coverage
 ----------------
 
-To generate a test coverage report, ensure all the requirements for running the unit/integration tests are installed and
-running and then simply run the following command:
+To generate an HTML coverage report, run:
 
 .. code-block:: bash
 
     make coverage
 
-Then, open the HTML files in your default browser using :code:`open htmlcov/index.html`!
+Open :code:`htmlcov/index.html` in a browser to view the report.
+
+To test against a specific Python version in Docker, use :code:`make docker-test PYTHON_VERSION=3.15` (the default is Python 3.15).
 
 Indices and tables
 ------------------
