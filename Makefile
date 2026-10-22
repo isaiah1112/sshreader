@@ -11,7 +11,7 @@ help:
 	@echo "  lint                  Run 'ruff' linting and 'ty' type-checking on project"
 	@echo "  docker-test           Run unit tests in Docker for a given Python version"
 
-PYTHON_VERSION ?= 3.14
+PYTHON_VERSION ?= 3.15
 
 # Install UV if not installed
 .PHONY: uv-init

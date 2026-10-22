@@ -1,56 +1,99 @@
 # AGENTS.md
 
-## Project overview
+Project-wide development instructions for `sshreader`. Keep this file as the
+single canonical source of repository guidance; `.github/copilot-instructions.md`
+points here.
 
-This repository is `sshreader`, a Python library for parallel SSH operations built on Paramiko.
+## Project
 
-Key project files:
-- `sshreader/` — package implementation
-- `tests/` — unit tests
-- `pyproject.toml` — project configuration and dependencies
-- `Makefile` — common dev/test/lint commands
+`sshreader` is a Python library built on Paramiko for parallel SSH operations.
+The package implementation is in `sshreader/`, tests are in `tests/`, Sphinx
+documentation is in `docs/`, and examples are in `examples/`.
 
-## Required working rules
+Use `pyproject.toml` as the source of truth for package metadata, dependencies,
+and Ruff configuration. The supported Python range is Python 3.11 and later
+(currently tested on Python 3.11–3.15); keep the metadata, CI, and documentation
+consistent when changing compatibility.
 
-### Python environment
+## Python environment
 
-Whenever working with Python modules, commands, tests, or tooling in this repository, always use the project-local virtual environment at `.venv`.
+Use the project-local `.venv` for Python commands, tests, and tooling. Do not
+run project Python commands with a system interpreter or install project
+dependencies globally.
 
-Use commands such as:
-- `./.venv/bin/python`
-- `./.venv/bin/pytest`
-- `./.venv/bin/ruff`
-- `./.venv/bin/ty`
-
-Do not use bare `python`, `pytest`, `pip`, or `ruff` from the system environment when working on this repo. The local `.venv` is the source of truth for package resolution and project execution.
-
-If the virtual environment is missing, create it before running Python work:
+Use `uv` to create or synchronize the project environment and its dependencies:
 
 ```bash
-python3 -m venv .venv
-./.venv/bin/python -m pip install --upgrade pip
-./.venv/bin/python -m pip install -e .
+uv sync --group test
+uv sync --group test --group docs
 ```
 
-If the repo uses `uv` for project commands, prefer the local `.venv` for direct Python execution and module-level work; do not bypass the project environment with the system interpreter.
+For direct execution, use the explicit environment paths:
 
-## Development expectations
+```bash
+./.venv/bin/python
+./.venv/bin/pytest
+./.venv/bin/ruff
+./.venv/bin/ty
+```
 
-- Keep changes consistent with the existing package layout and Python 3.10+ conventions.
-- Prefer small, targeted edits.
-- Run the relevant tests and lint checks before concluding work.
-- For Python code, use the repository virtual environment rather than any global interpreter.
+If `.venv` is missing, `uv sync` can create it. Do not use `make install` for
+environment setup; that Make target invokes the system `python`.
 
-## Common verification commands
+## Implementation conventions
 
-Use the local environment for project checks:
+- Keep changes focused and consistent with existing APIs and patterns. Preserve
+  backward compatibility for Python 3.11 and later unless a requested change
+  explicitly alters it.
+- Follow the existing Python formatting and Ruff rules in `pyproject.toml`.
+  Use modern annotations supported by Python 3.11, including `|` unions where
+  appropriate.
+- Keep imports ordered as in nearby modules: standard library, third-party,
+  then package-local imports.
+- Package modules use a module docstring followed by the LGPL copyright and
+  license header. Match that layout when adding package modules.
+- Document public APIs with docstrings. Follow nearby documentation conventions,
+  including Sphinx/reStructuredText parameter, return, and exception fields
+  where applicable.
+- Reuse the project's structured types in `sshreader/customtypes.py` and
+  preserve their public shapes when changing return values.
+- Use context managers for SSH sessions and other resources where supported.
+  Preserve secure SSH host-key verification defaults; do not silently weaken
+  verification.
+- Keep shell execution safe by default. If changing command execution behavior,
+  preserve the existing distinction between shell-free execution and explicit
+  shell use.
+- Handle expected library errors explicitly. Avoid broad exception handling or
+  silently converting failures into success-shaped results.
+- Update directly related tests and documentation with behavior or API changes.
+
+## Tests and checks
+
+Tests use pytest and live in `tests/`. Run focused tests while iterating, then
+the full suite when appropriate:
 
 ```bash
 ./.venv/bin/pytest
+```
+
+Run lint and type checks with the project tools:
+
+```bash
 ./.venv/bin/ruff check sshreader tests
 ./.venv/bin/ty check sshreader
 ```
 
-## Notes
+The Makefile also provides `make test`, `make lint`, `make coverage`, and
+`make docs`; its `docker-test` target defaults to Python 3.15 and accepts an
+override through `PYTHON_VERSION`.
 
-This file is intended to guide agents and contributors working in this repository so they use the same environment and coding conventions throughout the project.
+For documentation changes, build the Sphinx site with the `docs` dependency
+group, for example:
+
+```bash
+uv run --group docs sphinx-build -b html docs/source/ docs/build/html/
+```
+
+Do not edit `uv.lock` by hand. When changing project dependencies or Python
+compatibility metadata, regenerate it with `uv lock` and verify it with
+`uv lock --check`.

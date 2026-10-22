@@ -1,4 +1,5 @@
 import logging
+import sys
 from queue import Empty, Queue
 
 import pytest
@@ -24,8 +25,10 @@ def test_shell_command_combine_and_decode():
 
 
 def test_shell_command_decode_false():
-    res = shell_command('echo ok', decode_bytes=False)
-    assert isinstance(res.stdout, (bytes, str))
+    command = [sys.executable, '-c', "import sys; sys.stdout.write('out'); sys.stderr.write('err')"]
+    res = shell_command(command, decode_bytes=False)
+    assert res.stdout == b'out'
+    assert res.stderr == b'err'
 
 
 def test_shell_command_avoids_shell_metacharacters_by_default():
@@ -113,13 +116,27 @@ def test_serverjob_getitem_and_str():
 
 
 def test_cpu_limit_monkeypatch(monkeypatch):
+    monkeypatch.setattr(utils.os, 'process_cpu_count', lambda: None, raising=False)
     monkeypatch.setattr(utils.mpctx, 'cpu_count', lambda: 4)
     assert utils.cpu_limit(1) == 4
     assert utils.cpu_limit(2) == 8
 
 
+def test_cpu_limit_uses_process_cpu_count(monkeypatch):
+    monkeypatch.setattr(utils.os, 'process_cpu_count', lambda: 3, raising=False)
+    monkeypatch.setattr(utils.mpctx, 'cpu_count', lambda: 8)
+    assert utils.cpu_limit(2) == 6
+
+
+def test_cpu_limit_falls_back_when_process_cpu_count_unavailable(monkeypatch):
+    monkeypatch.delattr(utils.os, 'process_cpu_count', raising=False)
+    monkeypatch.setattr(utils.mpctx, 'cpu_count', lambda: 4)
+    assert utils.cpu_limit() == 4
+
+
 def test_cpu_limit_warning(caplog, monkeypatch):
     caplog.set_level(logging.WARNING)
+    monkeypatch.setattr(utils.os, 'process_cpu_count', lambda: None, raising=False)
     monkeypatch.setattr('sshreader.utils.mpctx.cpu_count', lambda: 4)
     cpu_limit(3)
     assert any('greater than 2' in r.message for r in caplog.records)
@@ -158,6 +175,20 @@ def test_sshread_threads():
     assert len(results) == 2
 
 
+def test_sshread_reports_job_exceptions(monkeypatch):
+    def fail(_job):
+        raise ValueError('hook failed')
+
+    class LocalQueue(Queue):
+        def close(self):
+            pass
+
+    monkeypatch.setattr(utils.mpctx, 'Queue', lambda *args, **kwargs: LocalQueue())
+    job = ServerJob('broken', 'echo hi', run_local=True, pre_hook=Hook(fail))
+    with pytest.raises(RuntimeError, match='broken: ValueError: hook failed'):
+        utils.sshread([job], tcount=1, pcount=None, print_lock=False)
+
+
 def test__sub_thread_worker(monkeypatch, tmp_path):
     job = ServerJob('t1', 'echo hi', run_local=True)
 
@@ -187,6 +218,7 @@ def test_sshread_process_mode_monkeypatched(monkeypatch):
         def __init__(self, target=None, args=(), daemon=False):
             self._target = target
             self._args = args
+            self.exitcode = 0
 
         def start(self):
             self._target(*self._args)
@@ -215,6 +247,7 @@ def test_sshread_pcount_zero_and_negative(monkeypatch):
         def __init__(self, target=None, args=(), daemon=False):
             self._target = target
             self._args = args
+            self.exitcode = 0
 
         def start(self):
             self._target(*self._args)
@@ -239,6 +272,37 @@ def test_sshread_pcount_zero_and_negative(monkeypatch):
     resneg = utils.sshread(jobs, pcount=-1, tcount=0, progress_bar=False, print_lock=False)
     assert isinstance(resneg, list)
     assert len(resneg) == 3
+
+
+def test_sshread_reports_process_failures(monkeypatch):
+    class FailedProcess:
+        exitcode = 1
+
+        def __init__(self, target=None, args=(), daemon=False):
+            pass
+
+        def start(self):
+            pass
+
+        def is_alive(self):
+            return False
+
+        def join(self, timeout=None):
+            pass
+
+        def close(self):
+            pass
+
+    monkeypatch.setattr(utils.mpctx, 'Process', FailedProcess)
+    monkeypatch.setattr(utils.mpctx, 'allow_connection_pickling', lambda: None)
+
+    job = ServerJob('lost', 'echo hi', run_local=True)
+    with pytest.raises(RuntimeError, match='worker process exited with code 1'):
+        utils.sshread([job], pcount=1, tcount=0, print_lock=False)
+
+
+def test_sshread_empty_jobs():
+    assert utils.sshread([], tcount=0, pcount=None, print_lock=False) == []
 
 
 def test_sub_thread_handles_stale_empty_queue():
@@ -267,7 +331,7 @@ def test_sub_thread_handles_stale_empty_queue():
     tq = StaleEmptyQueue([job])
     rq = ResultQueue()
     utils._sub_thread_(tq, rq, None, False)
-    assert len(rq.items) == 1
+    assert sum(isinstance(item, ServerJob) for item in rq.items) == 1
 
 
 def test_sshread_progress_bar(monkeypatch):

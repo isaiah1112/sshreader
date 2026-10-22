@@ -3,7 +3,7 @@ authors = [
     {name = "Jesse Almanrode", email = "jesse@almanrode.com"},
 ]
 license = {text = "LGPL-3.0-or-later"}
-requires-python = ">=3.10,<4.0"
+requires-python = ">=3.11,<4.0"
 dependencies = [
     "click>=8.4.2",
     "colorama>=0.4.6",
@@ -12,7 +12,7 @@ dependencies = [
     "python-hostlist>=2.3.0",
 ]
 name = "sshreader"
-version = "6.3.0"
+version = "7.0.0"
 description = "Multi-threading/processing wrapper for Paramiko"
 readme = "README.md"
 classifiers = [
@@ -21,24 +21,26 @@ classifiers = [
     "License :: OSI Approved :: GNU Lesser General Public License v3 or later (LGPLv3+)",
     "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Programming Language :: Python :: 3.15",
     "Topic :: Software Development :: Libraries",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
 [tool.pdm.build]
 includes = ["sshreader", "sshreader/scripts"]
+excludes = ["**/.DS_Store"]
+
 [build-system]
 requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
 [project.urls]
-homepage = "http://sshreader.readthedocs.io/"
-repository = "https://bitbucket.org/isaiah1112/sshreader/"
+homepage = "https://sshreader.readthedocs.io/"
+repository = "https://github.com/isaiah1112/sshreader"
 
 [project.scripts]
 pydsh = "sshreader.scripts.pydsh:cli"

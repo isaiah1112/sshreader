@@ -19,8 +19,8 @@ import logging
 import os
 import sys
 from collections import defaultdict
-from hashlib import md5
 from pathlib import Path
+from typing import Any, Protocol
 
 import click
 from hostlist import collect_hostlist, expand_hostlist
@@ -29,7 +29,7 @@ import sshreader
 
 # GLOBALS
 __author__ = 'Jesse Almanrode'
-__version__ = '3.2.0'
+__version__ = '4.0.0'
 __examples__ = """\b
 Examples:
     pydsh -w host1,host2,host3 "uname -r"
@@ -46,7 +46,24 @@ log.setLevel(logging.WARNING)
 log.propagate = False  # Keeps our messages out of the root logger.
 
 
-def copy_script(scriptfile, job):
+def _job_output(job: sshreader.ServerJob) -> str:
+    result = job.results[0]
+    output = result.stderr if job.status == 255 else result.stdout
+    if output is None:
+        return ''
+    return output.decode() if isinstance(output, bytes) else output
+
+
+class _SFTPUploader(Protocol):
+    def sftp_put(self, srcfile: str, dstfile: str) -> Any: ...
+
+
+class _ScriptJob(Protocol):
+    _conn: _SFTPUploader
+    name: str
+
+
+def copy_script(scriptfile: str, job: _ScriptJob) -> bool:
     """ Copy script to remote host using SFTP connection
 
     :param scriptfile: Path to script file
@@ -62,20 +79,20 @@ def copy_script(scriptfile, job):
     return True
 
 
-def output(thisjob):
+def output(thisjob: sshreader.ServerJob) -> None:
     """ Print output from jobs as they complete in a format that could be piped to dshbak
 
     :param thisjob: <ServerJob> object
     :return: None
     """
-    result = thisjob.results[0] if thisjob.status == 255 else thisjob.results[0].stdout
+    result = _job_output(thisjob)
     if len(result) != 0:
         for line in result.split('\n'):
             sshreader.echo(str(thisjob.name) + ': ' + str(line))
     return None
 
 
-def dshbak(jobresults):
+def dshbak(jobresults: list[sshreader.ServerJob]) -> None:
     """ Output the results of the jobs grouped by hosts
 
     Similar to piping output to `dshbak`
@@ -84,17 +101,14 @@ def dshbak(jobresults):
     :return: None
     """
     for thisjob in jobresults:
-        if thisjob.status == 255:
-            result = thisjob.results[0]
-        else:
-            result = thisjob.results[0].stdout
+        result = _job_output(thisjob)
         if len(result) != 0:
             click.echo(str('-' * 16) + '\n' + str(thisjob.name) + '\n' + str('-' * 16))
             click.echo(result)
     return None
 
 
-def coalesce(jobresults):
+def coalesce(jobresults: list[sshreader.ServerJob]) -> None:
     """ Output the results of jobs coalescing identical output from hosts
 
     Similar to piping output to `dshbak -c`
@@ -102,23 +116,18 @@ def coalesce(jobresults):
     :param jobresults: List of <ServerJob> objects
     :return: None
     """
-    job_hashes = defaultdict(list)
-    output_hashes = dict()
+    output_groups: dict[str, list[str]] = defaultdict(list)
     for job in jobresults:
-        result = job.results[0] if job.status == 255 else job.results[0].stdout
-        md5sum = md5(result.encode()).hexdigest()
-        job_hashes[md5sum].append(job.name)
-        if md5sum not in output_hashes:
-            output_hashes[md5sum] = result
+        output_groups[_job_output(job)].append(job.name)
 
-    for md5sum, stdout in output_hashes.items():
+    for stdout, hosts in output_groups.items():
         if len(stdout) != 0:
-            click.echo(str('-' * 16) + '\n' + collect_hostlist(job_hashes[md5sum]) + '\n' + str('-' * 16))
+            click.echo(str('-' * 16) + '\n' + collect_hostlist(hosts) + '\n' + str('-' * 16))
             click.echo(stdout)
     return None
 
 
-def setup_script_file(cmd, file_flag, confirm_flag):
+def setup_script_file(cmd: str, file_flag: bool, confirm_flag: bool) -> tuple[str | list[str], sshreader.Hook | None]:
     """ Prepare script file for remote execution
 
     Validates script file, extracts shebang, and creates pre-hook for copying.
@@ -157,7 +166,10 @@ def setup_script_file(cmd, file_flag, confirm_flag):
     return cmd_list, prehook
 
 
-def create_jobs(hostlist, cmd, username, password, keyfile, keypass, port, timeout, sha2, prehook, posthook, file_flag):
+def create_jobs(hostlist: list[str], cmd: str | list[str], username: str, password: str | None,
+                keyfile: str | None, keypass: str | None, port: int, timeout: int, sha2: bool,
+                prehook: sshreader.Hook | None, posthook: sshreader.Hook | None,
+                file_flag: bool) -> list[sshreader.ServerJob]:
     """ Create ServerJob objects for each host
 
     :param hostlist: List of hosts from expanded hostlist expression
@@ -214,7 +226,8 @@ def create_jobs(hostlist, cmd, username, password, keyfile, keypass, port, timeo
     return jobs
 
 
-def execute_jobs(jobs, dshbak_flag, coalesce_flag, redline_flag):
+def execute_jobs(jobs: list[sshreader.ServerJob], dshbak_flag: bool, coalesce_flag: bool,
+                 redline_flag: bool) -> list[sshreader.ServerJob]:
     """ Execute jobs and handle output formatting
 
     :param jobs: List of ServerJob objects
@@ -246,7 +259,7 @@ def execute_jobs(jobs, dshbak_flag, coalesce_flag, redline_flag):
     return jobs
 
 
-def validate_hostlist(ctx, param, value):
+def validate_hostlist(ctx: click.Context | None, param: click.Parameter | str, value: str) -> list[str]:
     """ Callback for click to expand hostlist expressions or error
 
     :param ctx: Click context
@@ -257,10 +270,11 @@ def validate_hostlist(ctx, param, value):
     try:
         return expand_hostlist(value)
     except Exception:
-        raise click.BadOptionUsage(param, 'Invalid hostlist expression') from None
+        option_name = param if isinstance(param, str) else param.name
+        raise click.BadOptionUsage(option_name, 'Invalid hostlist expression') from None
 
 
-def setup_authentication(kwargs, sshenv):
+def setup_authentication(kwargs: dict[str, Any], sshenv: sshreader.EnvVars) -> dict[str, Any]:
     """ Configure SSH authentication credentials
 
     Handles the logic for determining which authentication method to use
@@ -343,7 +357,7 @@ def setup_authentication(kwargs, sshenv):
 @click.option('--timeout', default=30, type=click.IntRange(1, 3600), help='SSH connection timeout in seconds')
 @click.option('--sha2', is_flag=True, default=True, help='Use SHA2 Hash Algorithm for Keys')
 @click.argument('cmd', nargs=1)
-def cli(**kwargs):
+def cli(**kwargs: Any) -> None:
     """  Run ssh commands in parallel across hosts
     """
     # Setup logging
