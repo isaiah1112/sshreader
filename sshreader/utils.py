@@ -287,7 +287,9 @@ def cpu_limit(factor: int = 1) -> int:
     :rtype: int
     """
     global log
-    cpu_count = mpctx.cpu_count()
+    cpu_count = getattr(os, 'process_cpu_count', lambda: None)()
+    if cpu_count is None:
+        cpu_count = mpctx.cpu_count()
     if factor > 2:
         log.warning('Specifying a CPU factor greater than 2 can result in an unusable system.')
     if cpu_count > 1:

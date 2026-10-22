@@ -113,13 +113,27 @@ def test_serverjob_getitem_and_str():
 
 
 def test_cpu_limit_monkeypatch(monkeypatch):
+    monkeypatch.setattr(utils.os, 'process_cpu_count', lambda: None, raising=False)
     monkeypatch.setattr(utils.mpctx, 'cpu_count', lambda: 4)
     assert utils.cpu_limit(1) == 4
     assert utils.cpu_limit(2) == 8
 
 
+def test_cpu_limit_uses_process_cpu_count(monkeypatch):
+    monkeypatch.setattr(utils.os, 'process_cpu_count', lambda: 3, raising=False)
+    monkeypatch.setattr(utils.mpctx, 'cpu_count', lambda: 8)
+    assert utils.cpu_limit(2) == 6
+
+
+def test_cpu_limit_falls_back_when_process_cpu_count_unavailable(monkeypatch):
+    monkeypatch.delattr(utils.os, 'process_cpu_count', raising=False)
+    monkeypatch.setattr(utils.mpctx, 'cpu_count', lambda: 4)
+    assert utils.cpu_limit() == 4
+
+
 def test_cpu_limit_warning(caplog, monkeypatch):
     caplog.set_level(logging.WARNING)
+    monkeypatch.setattr(utils.os, 'process_cpu_count', lambda: None, raising=False)
     monkeypatch.setattr('sshreader.utils.mpctx.cpu_count', lambda: 4)
     cpu_limit(3)
     assert any('greater than 2' in r.message for r in caplog.records)
