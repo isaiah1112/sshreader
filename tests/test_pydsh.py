@@ -60,6 +60,34 @@ def test_output_and_dshbak_and_coalesce(monkeypatch, capsys):
     assert 'a' in out2
 
 
+def test_output_grouping_displays_connection_errors(monkeypatch, capsys):
+    failed_jobs = [
+        type('J', (), {
+            'name': 'host1',
+            'status': 255,
+            'results': [Command('host1', '', 'connection failed', 255)],
+        })(),
+        type('J', (), {
+            'name': 'host2',
+            'status': 255,
+            'results': [Command('host2', '', 'connection failed', 255)],
+        })(),
+    ]
+    streamed = []
+    monkeypatch.setattr(sshreader, 'echo', streamed.append)
+
+    pydsh.output(failed_jobs[0])
+    pydsh.dshbak(failed_jobs)
+    dshbak_output = capsys.readouterr().out
+    pydsh.coalesce(failed_jobs)
+    coalesced_output = capsys.readouterr().out
+
+    assert streamed == ['host1: connection failed']
+    assert 'connection failed' in dshbak_output
+    assert 'connection failed' in coalesced_output
+    assert 'host[1-2]' in coalesced_output
+
+
 def test_validate_hostlist_good_and_bad():
     res = pydsh.validate_hostlist(None, 'hosts', 'host[1-2]')
     assert isinstance(res, list)

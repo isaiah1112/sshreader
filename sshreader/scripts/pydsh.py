@@ -19,7 +19,6 @@ import logging
 import os
 import sys
 from collections import defaultdict
-from hashlib import md5
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -45,6 +44,14 @@ log_handler.setFormatter(logging.Formatter('%(levelname)s:%(funcName)s:%(message
 log.addHandler(log_handler)
 log.setLevel(logging.WARNING)
 log.propagate = False  # Keeps our messages out of the root logger.
+
+
+def _job_output(job: sshreader.ServerJob) -> str:
+    result = job.results[0]
+    output = result.stderr if job.status == 255 else result.stdout
+    if output is None:
+        return ''
+    return output.decode() if isinstance(output, bytes) else output
 
 
 class _SFTPUploader(Protocol):
@@ -78,7 +85,7 @@ def output(thisjob: sshreader.ServerJob) -> None:
     :param thisjob: <ServerJob> object
     :return: None
     """
-    result = thisjob.results[0] if thisjob.status == 255 else thisjob.results[0].stdout
+    result = _job_output(thisjob)
     if len(result) != 0:
         for line in result.split('\n'):
             sshreader.echo(str(thisjob.name) + ': ' + str(line))
@@ -94,10 +101,7 @@ def dshbak(jobresults: list[sshreader.ServerJob]) -> None:
     :return: None
     """
     for thisjob in jobresults:
-        if thisjob.status == 255:
-            result = thisjob.results[0]
-        else:
-            result = thisjob.results[0].stdout
+        result = _job_output(thisjob)
         if len(result) != 0:
             click.echo(str('-' * 16) + '\n' + str(thisjob.name) + '\n' + str('-' * 16))
             click.echo(result)
@@ -112,18 +116,13 @@ def coalesce(jobresults: list[sshreader.ServerJob]) -> None:
     :param jobresults: List of <ServerJob> objects
     :return: None
     """
-    job_hashes = defaultdict(list)
-    output_hashes = dict()
+    output_groups: dict[str, list[str]] = defaultdict(list)
     for job in jobresults:
-        result = job.results[0] if job.status == 255 else job.results[0].stdout
-        md5sum = md5(result.encode()).hexdigest()
-        job_hashes[md5sum].append(job.name)
-        if md5sum not in output_hashes:
-            output_hashes[md5sum] = result
+        output_groups[_job_output(job)].append(job.name)
 
-    for md5sum, stdout in output_hashes.items():
+    for stdout, hosts in output_groups.items():
         if len(stdout) != 0:
-            click.echo(str('-' * 16) + '\n' + collect_hostlist(job_hashes[md5sum]) + '\n' + str('-' * 16))
+            click.echo(str('-' * 16) + '\n' + collect_hostlist(hosts) + '\n' + str('-' * 16))
             click.echo(stdout)
     return None
 
