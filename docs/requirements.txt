@@ -15,7 +15,7 @@ cffi==2.1.1 ; platform_python_implementation != 'PyPy'
     #   pynacl
 charset-normalizer==3.5.2
     # via requests
-click==8.4.2
+click==8.5.1
     # via sshreader
 colorama==0.4.6
     # via
@@ -50,7 +50,7 @@ pynacl==1.6.2
     # via paramiko
 python-hostlist==2.3.0
     # via sshreader
-python-utils==4.2.0
+python-utils==4.2.1
     # via progressbar2
 requests==2.34.2
     # via sphinx
